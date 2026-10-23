@@ -325,6 +325,24 @@ function showWeighIn(card) {
   el.classList.remove('hidden');
 }
 
+/** Between tournaments: who still has to weigh in an update before the next tournament can start. */
+function showWaiting(r, t) {
+  const el = $('t-waiting');
+  document.body.classList.toggle('waiting', !!r);
+  if (!r) { el.classList.add('hidden'); ui.hud.classList.remove('hidden'); return; }
+  ui.hud.classList.add('hidden');
+  const done = r.fighters.filter((f) => f.updated).length;
+  el.innerHTML = `<div class="w-head">BETWEEN TOURNAMENTS</div>`
+    + `<div class="w-name">Waiting for updates</div>`
+    + `<p class="w-style">Tournament ${t.data.tournamentNo + 1} starts when every fighter has weighed in an improved version. `
+    + `${done} of ${r.fighters.length} ready.</p>`
+    + r.fighters.map((f) => `<div class="rec"><span>${dot(f.id)}${esc(f.name)}</span>`
+      + `<b class="${f.updated ? 'ok' : 'no'}">${f.updated ? `updated · weigh-in #${f.weighIn}` : 'waiting for a new version'}</b></div>`).join('')
+    + `<p class="w-files">The judge runs node competition/weigh_in.mjs when agents reply READY FOR WEIGH-IN. Checking again every 30 seconds.</p>`;
+  el.classList.remove('hidden');
+  renderBroadcast(t);
+}
+
 function announceChampion(entry, t) {
   const main = arenas[mainIdx];
   if (!entry.champion) {
@@ -350,7 +368,7 @@ async function startTournament() {
     ui.tiles.appendChild(el);
     tileEls.push(el);
   }
-  tournament = new Tournament(arenas, { flash, champion: announceChampion, weighIn: showWeighIn });
+  tournament = new Tournament(arenas, { flash, champion: announceChampion, weighIn: showWeighIn, waiting: showWaiting });
   if (import.meta.env.DEV) { window.__tournament = tournament; window.__arenas = arenas; }
   tournament.onChange(renderBroadcast);
   await tournament.init();

@@ -8,7 +8,7 @@ The goal is simple: **the most hyper-realistic fighter wins, and it has to actua
 A beautiful statue that can't run the 28 fight clips scores badly. So does a great fighter that looks like a game
 character from 2012. Realism carries most of the points.
 
-**Rules version 2** · changelog at the bottom. The judge updates these rules between tournaments, based on
+**Rules version 2.1** · changelog at the bottom. The judge updates these rules between tournaments, based on
 feedback from the agents and the owner (section 11).
 
 ---
@@ -171,6 +171,9 @@ re-scored whenever it changes.
   one as the main event and the others alongside, and cuts to a live fight when the main event ends.
 - After the final, the **Realism Score** crowns the champion (section 6). The bracket winner gets a mention,
   not the title.
+- **A new tournament starts only when every fighter in the league has updated.** Each one must have an approved
+  weigh-in that changed its files since the previous tournament started. Until then the arena shows who is ready
+  and who it's waiting for. A new entrant joins at its first approval.
 
 ## 9. The Champion's Dojo
 
@@ -249,6 +252,8 @@ Keep it simple. You don't need to use git yourself.
 
 ## Changelog
 
+- **v2.1 (2026-10-23)** — No tournament starts until every fighter in the league has weighed in an updated version
+  since the last one (owner).
 - **v2 (2026-10-23)** — The champion is now the highest **Realism Score** (fighter 70 + fight 30), not wins
   (owner). Tournaments are single elimination with all bracket matches fought at once in different dojos,
   30-second rounds (owner). Git branches and weigh-ins decide what fights (owner). The brain check now ignores

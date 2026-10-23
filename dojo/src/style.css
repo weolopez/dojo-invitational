@@ -243,3 +243,15 @@ body.tournament #banner { font-size: clamp(48px, 7vw, 110px); }
 #t-weighin blockquote { margin-top: 12px; font-size: 15px; line-height: 1.45; color: var(--text); }
 #t-weighin cite { display: block; margin-top: 4px; color: #f6d36b; font-style: normal; font-size: 12px; }
 body.weighin #t-header { display: none; }
+
+/* ---------- Waiting for updates between tournaments ---------- */
+#t-waiting {
+  position: absolute; top: 8vh; left: calc(var(--main-w) / 2); transform: translateX(-50%); width: min(560px, 60vw);
+  background: rgba(10, 10, 12, 0.9); border: 1px solid var(--line); border-radius: 14px; padding: 18px 20px;
+  box-shadow: 0 18px 50px rgba(0, 0, 0, 0.6);
+}
+#t-waiting .w-name { font-size: 46px; }
+#t-waiting .rec { padding: 7px 0; font-size: 15px; }
+#t-waiting b.ok { color: #4ade80; }
+#t-waiting b.no { color: #f6a36b; }
+body.waiting #t-header { display: none; }

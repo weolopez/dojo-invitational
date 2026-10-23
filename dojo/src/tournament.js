@@ -33,6 +33,8 @@ export class Tournament {
     this.key = `bracket-v1|${this.league}|${this.defs.map((d) => d.id).sort().join(',')}`;
     const saved = await fetch('/api/tournament').then((r) => r.json()).catch(() => null);
     this.data = saved?.key === this.key ? saved.data : this.freshData();
+    // Leagues saved before the update rule: count every weigh-in already introduced as "used".
+    this.data.lastStartWeighIn ??= this.data.lastWeighIn ?? 0;
     await this.refreshScores();
     await this.refreshDojos();
   }
@@ -89,7 +91,39 @@ export class Tournament {
     return left === 1 ? 'Final' : left === 2 ? 'Semifinals' : left === 3 ? 'Quarterfinals' : `Round ${i + 1}`;
   }
 
+  /**
+   * RULES.md §8: in the Invitational a new tournament starts only when every fighter in the league has weighed in
+   * an updated version (an approval that changed files) since the previous tournament started.
+   */
+  async readiness() {
+    const cards = await fetch('/api/weighins').then((r) => r.json()).catch(() => []);
+    const mark = this.data.lastStartWeighIn ?? 0;
+    const fighters = this.defs.map((d) => {
+      const update = cards.filter((c) => `entry:${c.id}` === d.id && c.no > mark && c.decision === 'approved'
+        && (c.fighterChanged || c.changedFiles?.length)).pop();
+      return { id: d.id, name: d.name, updated: !!update, weighIn: update?.no ?? null };
+    });
+    const gated = this.league === 'Dojo Invitational';
+    return { ready: !gated || fighters.every((f) => f.updated), gated, fighters, latest: cards.at(-1)?.no ?? 0 };
+  }
+
   async start() {
+    await this.init();
+    const r = await this.readiness();
+    if (!r.ready) {
+      this.waiting = r;
+      this.arenas.forEach((a) => a.clear());
+      // Keep the dojos on screen while waiting.
+      if (this.arenas.some((a) => !a.preset)) {
+        await Promise.all(this.arenas.map((a, i) => a.setDojo(this.dojos[i % this.dojos.length])));
+      }
+      this.ui.waiting(r, this);
+      setTimeout(() => this.start(), 30000);
+      return;
+    }
+    this.waiting = null;
+    this.ui.waiting(null, this);
+    this.data.lastStartWeighIn = r.latest;
     this.data.tournamentNo++;
     await this.refreshScores();
     await this.refreshDojos();
