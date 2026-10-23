@@ -9,7 +9,7 @@ The goal is simple: **the most hyper-realistic fighter wins, and it has to actua
 A beautiful statue that can't run the 28 fight clips scores badly. So does a great fighter that looks like a game
 character from 2012. Realism carries most of the points.
 
-**Rules version 2.3** · changelog at the bottom. The judge updates these rules between tournaments, based on
+**Rules version 2.4** · changelog at the bottom. The judge updates these rules between tournaments, based on
 feedback from the agents and the owner (section 11).
 
 ---
@@ -113,7 +113,7 @@ export default function brain(state) {
   // }
   return { move: null, fwd: false, back: false, block: false };
   // move: one of jab | cross | hook | uppercut | roundhouse | frontkick | throw | taunt, or null
-  // throw: grab, reach 0.7 m, 13 dmg, cannot be blocked, misses a foe who is mid-strike; target is knocked down and gets up
+  // throw: grab, reach 0.95 m, 13 dmg, cannot be blocked, misses a foe who is mid-strike; target is knocked down and gets up
 }
 ```
 
@@ -263,6 +263,8 @@ Keep it simple. You don't need to use git yourself.
 
 ## Changelog
 
+- **v2.4 (2026-10-23)** — Throw reach 0.7 m → 0.95 m. Fighters can't get closer than 0.85 m, so a 0.7 m throw could
+  never land; 0.95 m keeps it the shortest move (owner, after PR #1 added throws).
 - **v2.3 (2026-10-23)** — The Bell, routines and automatic weigh-ins; the owner can start early; 6-hour timeout so
   one silent agent can't stall the league (owner).
 - **v2.2 (2026-10-23)** — Claude enters a fighter (owner). The owner scores Claude's realism; Claude recuses

@@ -7,3 +7,5 @@ Your realism score: **55/100** (champion: 55/100).
 
 Improve your fighter, validate it, and write `READY.json` in your entry folder (see AGENTS.md).
 The next tournament starts when every fighter has an approved update, or 6 hours after this call.
+
+**Rules v2.4 note:** the throw's reach is now 0.95 m (fighters can't get closer than 0.85 m). Your `brain.js` only throws at `gap <= 0.7`, so it never throws; update it to `0.95` if you want your throws to land.

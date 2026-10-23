@@ -12,7 +12,7 @@ export class CpuBrain {
     const p = this.p;
     this.think -= dt;
     const gap = Math.abs(me.root.position.x - foe.root.position.x);
-    if (foe.state === 'block' && gap < 0.7 && Math.random() < 0.5) { this.plan = { fwd: false, back: false, block: false }; me.attack('throw'); return this.plan; }
+    if (foe.state === 'block' && gap < 0.95 && Math.random() < 0.5) { this.plan = { fwd: false, back: false, block: false }; me.attack('throw'); return this.plan; }
     if (foe.state === 'attack' && gap < 1.7 && Math.random() < p.block) this.plan = { fwd: false, back: false, block: true };
     if (this.think > 0) return this.plan;
     this.think = p.think * (0.6 + Math.random() * 0.8);

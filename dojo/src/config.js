@@ -35,7 +35,7 @@ export const MOVES = {
   frontkick: { clip: 'front_kick', dmg: 12, reach: 1.5, from: 0.3, to: 0.55, react: 'hit_reaction' },
   // Throw (grab): short reach, ignores block, but whiffs if the target is mid-strike (strikes beat throws).
   // Attacker reuses the 'hook' clip slowed down as the grab/turn; defender plays knocked_out then getting_up.
-  throw: { clip: 'hook', dmg: 13, reach: 0.7, from: 0.3, to: 0.55, react: 'knocked_out', grab: true, timeScale: 0.7 },
+  throw: { clip: 'hook', dmg: 13, reach: 0.95, from: 0.3, to: 0.55, react: 'knocked_out', grab: true, timeScale: 0.7 },
 };
 export const MOVE_LABELS = { jab: 'Jab', cross: 'Cross', hook: 'Hook', uppercut: 'Uppercut', roundhouse: 'Roundhouse', frontkick: 'Front kick', throw: 'Throw' };
 
