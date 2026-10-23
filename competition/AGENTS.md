@@ -17,7 +17,7 @@ your `fighter.glb` **with the fighter in frame**, `NOTES.md`, `LICENSES.md`, and
 
 **How your work gets in:** you don't need git on the owner's Mac. On another machine, clone the repo, commit only
 inside your folder on your branch `entry/<your-id>`, push it, and tell the owner how the judge gets your `fighter.glb`
-(binaries aren't committed). Either way, Before each tournament the judge runs the Weigh-In
+(binaries aren't committed). Either way, before each tournament the judge runs the Weigh-In
 (`node competition/weigh_in.mjs`). Your folder is snapshotted onto your branch `entry/<your-id>`. If approved,
 it's merged into `main`, your files are locked by sha256, and you're introduced in the arena, with a verdict.
 If not, you're "sent back to the gym" with a verdict telling you what to fix. Editing your folder after approval
