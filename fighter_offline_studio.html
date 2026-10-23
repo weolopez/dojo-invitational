@@ -1,0 +1,567 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Offline 3D Fighter Studio & Asset Exporter (Zero-CDN Airplane Mode)</title>
+  <style>
+    :root {
+      --bg: #0b0e14;
+      --panel: rgba(20, 25, 34, 0.92);
+      --border: rgba(255, 255, 255, 0.14);
+      --accent: #ef4444;
+      --blue: #3b82f6;
+      --green: #10b981;
+      --text: #f3f4f6;
+      --muted: #9ca3af;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background: radial-gradient(circle at 55% 40%, #1c2433 0%, #090b10 100%);
+      color: var(--text);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      overflow: hidden;
+      height: 100vh;
+      width: 100vw;
+      user-select: none;
+    }
+    canvas { display: block; width: 100vw; height: 100vh; cursor: grab; }
+    canvas:active { cursor: grabbing; }
+    .hud {
+      position: fixed;
+      top: 16px;
+      left: 16px;
+      width: 345px;
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 16px;
+      backdrop-filter: blur(12px);
+      box-shadow: 0 14px 36px rgba(0, 0, 0, 0.55);
+      z-index: 10;
+    }
+    .hud h1 {
+      font-size: 15px;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 4px;
+    }
+    .pill {
+      font-size: 10px;
+      background: rgba(16, 185, 129, 0.18);
+      color: #34d399;
+      border: 1px solid rgba(16, 185, 129, 0.4);
+      padding: 2px 8px;
+      border-radius: 99px;
+      font-weight: 600;
+    }
+    .hud p {
+      font-size: 12px;
+      color: var(--muted);
+      margin-bottom: 12px;
+      line-height: 1.4;
+    }
+    .sec {
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: var(--muted);
+      margin: 10px 0 6px;
+    }
+    .grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 6px;
+    }
+    button {
+      background: #1e2636;
+      color: var(--text);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 8px 9px;
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.14s ease;
+    }
+    button:hover { background: #2a354b; }
+    button.active {
+      background: var(--accent);
+      border-color: var(--accent);
+      color: #fff;
+    }
+    button.dl {
+      background: #172a3a;
+      border-color: rgba(59, 130, 246, 0.45);
+    }
+    .hint {
+      margin-top: 10px;
+      padding-top: 8px;
+      border-top: 1px solid var(--border);
+      font-size: 11px;
+      color: var(--muted);
+      line-height: 1.5;
+    }
+  </style>
+</head>
+<body>
+  <div class="hud">
+    <h1>Offline 3D Fighter Studio <span class="pill">100% Offline &bull; 0 CDN</span></h1>
+    <p>Self-contained 3D engine &amp; offline asset generator built for Airplane Mode with zero external dependencies.</p>
+
+    <div class="sec">Combat Animations (1–4)</div>
+    <div class="grid">
+      <button id="btn-stance" class="active" onclick="setAnim('stance')">1. Guard Bounce</button>
+      <button id="btn-combo" onclick="setAnim('combo')">2. Jab-Cross-Hook</button>
+      <button id="btn-kick" onclick="setAnim('kick')">3. Roundhouse Kick</button>
+      <button id="btn-uppercut" onclick="setAnim('uppercut')">4. Power Uppercut</button>
+    </div>
+
+    <div class="sec">Shading &amp; Rig Overlay</div>
+    <div class="grid">
+      <button id="btn-solid" class="active" onclick="setRenderMode('solid')">Lit Shaded</button>
+      <button id="btn-wire" onclick="setRenderMode('wire')">Quad Wireframe</button>
+      <button id="btn-bones" class="active" onclick="toggleBones()">Bone Rig: ON</button>
+      <button id="btn-bag" onclick="strikeBag()">Hit Heavy Bag (Space)</button>
+    </div>
+
+    <div class="sec">Offline Asset Generators (Instant Local Export)</div>
+    <div class="grid">
+      <button class="dl" onclick="exportOBJ()">Export .OBJ Mesh</button>
+      <button class="dl" onclick="exportBVH()">Export Combat .BVH</button>
+      <button class="dl" onclick="exportPlaidPNG()">Export Shirt Texture</button>
+      <button class="dl" onclick="exportMatPNG()">Export Dojo Mat Tex</button>
+    </div>
+
+    <div class="hint">
+      <b>Drag</b>: Orbit 360&deg; &bull; <b>Scroll</b>: Zoom &bull; <b>WASD</b>: Move Fighter &bull; <b>Space</b>: Strike Heavy Bag
+    </div>
+  </div>
+
+  <canvas id="viewport"></canvas>
+
+  <script>
+    // Self-contained 3D Math, Mesh, Rig, and Software/Canvas3D Projection Engine (Zero External Dependencies)
+    const canvas = document.getElementById('viewport');
+    const ctx = canvas.getContext('2d');
+
+    let W = window.innerWidth, H = window.innerHeight;
+    function resize() {
+      W = window.innerWidth; H = window.innerHeight;
+      canvas.width = W * window.devicePixelRatio;
+      canvas.height = H * window.devicePixelRatio;
+      ctx.setTransform(window.devicePixelRatio, 0, 0, window.devicePixelRatio, 0, 0);
+    }
+    window.addEventListener('resize', resize);
+    resize();
+
+    // Camera Orbit State
+    let camYaw = -0.55, camPitch = 0.22, camDist = 4.5;
+    let dragging = false, lastX = 0, lastY = 0;
+    canvas.addEventListener('mousedown', e => { dragging = true; lastX = e.clientX; lastY = e.clientY; });
+    window.addEventListener('mouseup', () => dragging = false);
+    window.addEventListener('mousemove', e => {
+      if (!dragging) return;
+      camYaw += (e.clientX - lastX) * 0.007;
+      camPitch = Math.max(-0.2, Math.min(1.1, camPitch + (e.clientY - lastY) * 0.007));
+      lastX = e.clientX; lastY = e.clientY;
+    });
+    canvas.addEventListener('wheel', e => {
+      camDist = Math.max(2.2, Math.min(8.5, camDist + e.deltaY * 0.003));
+    });
+
+    let animMode = 'stance';
+    let renderMode = 'solid';
+    let showBones = true;
+    let bagAngle = 0, bagVel = 0;
+    let fighterPos = { x: -0.35, z: 0 };
+    const keys = {};
+
+    window.setAnim = (m) => {
+      animMode = m;
+      ['stance','combo','kick','uppercut'].forEach(k => {
+        document.getElementById('btn-' + k).classList.toggle('active', k === m);
+      });
+    };
+    window.setRenderMode = (m) => {
+      renderMode = m;
+      document.getElementById('btn-solid').classList.toggle('active', m === 'solid');
+      document.getElementById('btn-wire').classList.toggle('active', m === 'wire');
+    };
+    window.toggleBones = () => {
+      showBones = !showBones;
+      const b = document.getElementById('btn-bones');
+      b.textContent = 'Bone Rig: ' + (showBones ? 'ON' : 'OFF');
+      b.classList.toggle('active', showBones);
+    };
+    window.strikeBag = () => { bagVel = 0.35; };
+
+    window.addEventListener('keydown', e => {
+      keys[e.code] = true;
+      if (e.key === '1') setAnim('stance');
+      if (e.key === '2') setAnim('combo');
+      if (e.key === '3') setAnim('kick');
+      if (e.key === '4') setAnim('uppercut');
+      if (e.code === 'Space') strikeBag();
+    });
+    window.addEventListener('keyup', e => keys[e.code] = false);
+
+    // 3D Vector & Matrix Helpers
+    function rotX(p, a) {
+      const c = Math.cos(a), s = Math.sin(a);
+      return { x: p.x, y: p.y * c - p.z * s, z: p.y * s + p.z * c };
+    }
+    function rotY(p, a) {
+      const c = Math.cos(a), s = Math.sin(a);
+      return { x: p.x * c + p.z * s, y: p.y, z: -p.x * s + p.z * c };
+    }
+    function rotZ(p, a) {
+      const c = Math.cos(a), s = Math.sin(a);
+      return { x: p.x * c - p.y * s, y: p.x * s + p.y * c, z: p.z };
+    }
+    function add(a, b) { return { x: a.x + b.x, y: a.y + b.y, z: a.z + b.z }; }
+    function sub(a, b) { return { x: a.x - b.x, y: a.y - b.y, z: a.z - b.z }; }
+    function cross(a, b) {
+      return { x: a.y * b.z - a.z * b.y, y: a.z * b.x - a.x * b.z, z: a.x * b.y - a.y * b.x };
+    }
+    function norm(v) {
+      const l = Math.hypot(v.x, v.y, v.z) || 1;
+      return { x: v.x / l, y: v.y / l, z: v.z / l };
+    }
+
+    function project(pt) {
+      // Camera target at (0, 1.05, 0)
+      let p = { x: pt.x, y: pt.y - 1.05, z: pt.z };
+      p = rotY(p, -camYaw);
+      p = rotX(p, camPitch);
+      p.z += camDist;
+      if (p.z < 0.2) return null;
+      const fov = Math.min(W, H) * 0.92;
+      return {
+        x: W * 0.5 + (p.x / p.z) * fov,
+        y: H * 0.5 - (p.y / p.z) * fov,
+        z: p.z
+      };
+    }
+
+    // Generate UV Sphere / Capsule Part
+    function makeEllipsoid(rx, ry, rz, segU = 14, segV = 10, color = [196, 140, 113], sculptHead = false) {
+      const verts = [];
+      for (let iv = 0; iv <= segV; iv++) {
+        const v = iv / segV;
+        const phi = (v - 0.5) * Math.PI;
+        for (let iu = 0; iu <= segU; iu++) {
+          const u = iu / segU;
+          const theta = u * Math.PI * 2;
+          let x = Math.cos(phi) * Math.sin(theta);
+          let y = Math.sin(phi);
+          let z = Math.cos(phi) * Math.cos(theta);
+          if (sculptHead) {
+            // Nose bridge & brow contour matching user profile
+            if (z > 0.45 && Math.abs(x) < 0.25 && y > -0.35 && y < 0.15) {
+              z += 0.22 * Math.exp(-(x * x) / 0.03) * Math.exp(-Math.pow(y + 0.08, 2) / 0.04);
+            }
+            if (y < -0.4) x *= 0.84;
+          }
+          verts.push({ x: x * rx, y: y * ry, z: z * rz });
+        }
+      }
+      const faces = [];
+      for (let iv = 0; iv < segV; iv++) {
+        for (let iu = 0; iu < segU; iu++) {
+          const a = iv * (segU + 1) + iu;
+          const b = a + 1;
+          const c = a + (segU + 1) + 1;
+          const d = a + (segU + 1);
+          faces.push([a, b, c, d, color]);
+        }
+      }
+      return { verts, faces };
+    }
+
+    const headMesh = makeEllipsoid(0.125, 0.165, 0.14, 18, 14, [196, 140, 113], true);
+    const hairMesh = makeEllipsoid(0.135, 0.12, 0.145, 12, 10, [45, 43, 42], false);
+    const chestMesh = makeEllipsoid(0.24, 0.28, 0.16, 14, 10, [28, 35, 49], false);
+    const pelvisMesh = makeEllipsoid(0.20, 0.16, 0.14, 12, 8, [20, 24, 34], false);
+    const limbUpper = makeEllipsoid(0.062, 0.15, 0.062, 10, 8, [196, 140, 113], false);
+    const limbLower = makeEllipsoid(0.052, 0.14, 0.052, 10, 8, [196, 140, 113], false);
+    const gloveMesh = makeEllipsoid(0.072, 0.082, 0.075, 10, 8, [220, 38, 38], false);
+    const thighMesh = makeEllipsoid(0.095, 0.22, 0.095, 10, 8, [22, 27, 38], false);
+    const shinMesh = makeEllipsoid(0.072, 0.21, 0.072, 10, 8, [30, 35, 46], false);
+    const bagMesh = makeEllipsoid(0.28, 0.78, 0.28, 16, 12, [155, 28, 28], false);
+
+    let lastSkeleton = {};
+
+    function computeFighterRig(t) {
+      const bounce = Math.sin(t * 5.0) * 0.035;
+      let jab = 0, cross = 0, kick = 0, upper = 0;
+
+      if (animMode === 'combo') {
+        const ph = (t * 4.5) % (Math.PI * 2);
+        jab = Math.max(0, Math.sin(ph));
+        cross = Math.max(0, Math.sin(ph - 1.3));
+        if (cross > 0.96 && bagVel < 0.1) bagVel = 0.26;
+      } else if (animMode === 'kick') {
+        kick = Math.max(0, Math.sin(t * 3.8));
+        if (kick > 0.96 && bagVel < 0.12) bagVel = 0.36;
+      } else if (animMode === 'uppercut') {
+        upper = Math.max(0, Math.sin(t * 4.2));
+        if (upper > 0.96 && bagVel < 0.12) bagVel = 0.32;
+      }
+
+      const root = { x: fighterPos.x, y: 0, z: fighterPos.z };
+      const pelvis = { x: root.x, y: 0.92 + bounce + upper * 0.06, z: root.z };
+      const chest = { x: pelvis.x + (jab * 0.06 + cross * 0.12), y: pelvis.y + 0.38, z: pelvis.z };
+      const head = { x: chest.x + 0.02, y: chest.y + 0.28, z: chest.z };
+
+      // Facing +X toward the heavy bag
+      const shL = { x: chest.x + 0.04, y: chest.y + 0.12, z: chest.z + 0.22 };
+      const shR = { x: chest.x - 0.04, y: chest.y + 0.12, z: chest.z - 0.22 };
+
+      const elL = {
+        x: shL.x + 0.18 + jab * 0.22,
+        y: shL.y - 0.16 + jab * 0.12,
+        z: shL.z - 0.05
+      };
+      const wrL = {
+        x: elL.x + 0.20 + jab * 0.32,
+        y: elL.y + 0.16 + jab * 0.04,
+        z: elL.z - 0.08
+      };
+
+      const elR = {
+        x: shR.x + 0.14 + cross * 0.26 + upper * 0.20,
+        y: shR.y - 0.18 + cross * 0.14 + upper * 0.12,
+        z: shR.z + 0.05
+      };
+      const wrR = {
+        x: elR.x + 0.18 + cross * 0.38 + upper * 0.18,
+        y: elR.y + 0.16 + cross * 0.05 + upper * 0.32,
+        z: elR.z + 0.10
+      };
+
+      const hipL = { x: pelvis.x + 0.06, y: pelvis.y - 0.06, z: pelvis.z + 0.12 };
+      const kneeL = { x: hipL.x + 0.12, y: 0.48 + bounce * 0.5, z: hipL.z + 0.04 };
+      const ankleL = { x: kneeL.x + 0.04, y: 0.05, z: kneeL.z + 0.02 };
+
+      const hipR = { x: pelvis.x - 0.06, y: pelvis.y - 0.06, z: pelvis.z - 0.12 };
+      const kneeR = {
+        x: hipR.x - 0.08 + kick * 0.42,
+        y: 0.48 + bounce * 0.5 + kick * 0.48,
+        z: hipR.z - 0.04 + kick * 0.12
+      };
+      const ankleR = {
+        x: kneeR.x - 0.06 + kick * 0.52,
+        y: 0.05 + kick * 1.05,
+        z: kneeR.z - 0.02 + kick * 0.15
+      };
+
+      return { pelvis, chest, head, shL, elL, wrL, shR, elR, wrR, hipL, kneeL, ankleL, hipR, kneeR, ankleR };
+    }
+
+    function pushTransformedMesh(triList, mesh, center, rotEuler = {x:0, y:0, z:0}) {
+      const tVerts = mesh.verts.map(v => {
+        let p = rotX(v, rotEuler.x);
+        p = rotY(p, rotEuler.y);
+        p = rotZ(p, rotEuler.z);
+        return add(p, center);
+      });
+      for (const f of mesh.faces) {
+        const v0 = tVerts[f[0]], v1 = tVerts[f[1]], v2 = tVerts[f[2]], v3 = tVerts[f[3]];
+        triList.push({ verts: [v0, v1, v2, v3], color: f[4] });
+      }
+    }
+
+    function drawOctagonFloor() {
+      const radius = 3.6;
+      const pts = [];
+      for (let i = 0; i < 8; i++) {
+        const a = (i / 8) * Math.PI * 2 + Math.PI / 8;
+        pts.push(project({ x: Math.cos(a) * radius, y: 0, z: Math.sin(a) * radius }));
+      }
+      if (pts.every(Boolean)) {
+        ctx.beginPath();
+        pts.forEach((p, i) => i === 0 ? ctx.moveTo(p.x, p.y) : ctx.lineTo(p.x, p.y));
+        ctx.closePath();
+        ctx.fillStyle = 'rgba(26, 34, 48, 0.85)';
+        ctx.fill();
+        ctx.lineWidth = 2.5;
+        ctx.strokeStyle = '#3b82f6';
+        ctx.stroke();
+      }
+    }
+
+    let startTime = performance.now();
+    function renderLoop(now) {
+      requestAnimationFrame(renderLoop);
+      const t = (now - startTime) * 0.001;
+
+      if (keys['KeyW'] || keys['ArrowUp']) fighterPos.z -= 0.03;
+      if (keys['KeyS'] || keys['ArrowDown']) fighterPos.z += 0.03;
+      if (keys['KeyA'] || keys['ArrowLeft']) fighterPos.x -= 0.03;
+      if (keys['KeyD'] || keys['ArrowRight']) fighterPos.x += 0.03;
+
+      bagAngle += bagVel;
+      bagVel -= bagAngle * 0.08;
+      bagVel *= 0.92;
+
+      ctx.clearRect(0, 0, W, H);
+      drawOctagonFloor();
+
+      const skel = computeFighterRig(t);
+      lastSkeleton = skel;
+
+      const faceList = [];
+      // Head (facing +X -> rotate Y by PI/2)
+      pushTransformedMesh(faceList, headMesh, skel.head, { x: 0, y: Math.PI / 2, z: 0 });
+      pushTransformedMesh(faceList, hairMesh, { x: skel.head.x - 0.03, y: skel.head.y + 0.05, z: skel.head.z }, { x: 0, y: Math.PI / 2, z: 0 });
+      pushTransformedMesh(faceList, chestMesh, skel.chest, { x: 0, y: Math.PI / 2, z: 0 });
+      pushTransformedMesh(faceList, pelvisMesh, skel.pelvis, { x: 0, y: Math.PI / 2, z: 0 });
+
+      const mid = (a, b) => ({ x: (a.x + b.x) * 0.5, y: (a.y + b.y) * 0.5, z: (a.z + b.z) * 0.5 });
+      pushTransformedMesh(faceList, limbUpper, mid(skel.shL, skel.elL));
+      pushTransformedMesh(faceList, limbLower, mid(skel.elL, skel.wrL));
+      pushTransformedMesh(faceList, gloveMesh, skel.wrL);
+
+      pushTransformedMesh(faceList, limbUpper, mid(skel.shR, skel.elR));
+      pushTransformedMesh(faceList, limbLower, mid(skel.elR, skel.wrR));
+      pushTransformedMesh(faceList, gloveMesh, skel.wrR);
+
+      pushTransformedMesh(faceList, thighMesh, mid(skel.hipL, skel.kneeL));
+      pushTransformedMesh(faceList, shinMesh, mid(skel.kneeL, skel.ankleL));
+      pushTransformedMesh(faceList, thighMesh, mid(skel.hipR, skel.kneeR));
+      pushTransformedMesh(faceList, shinMesh, mid(skel.kneeR, skel.ankleR));
+
+      // Heavy Punching Bag
+      const bagCenter = { x: 0.78 + Math.sin(bagAngle) * 0.45, y: 1.45, z: 0 };
+      pushTransformedMesh(faceList, bagMesh, bagCenter, { x: 0, y: 0, z: -bagAngle * 0.6 });
+
+      // Painter's Algorithm Depth Sort + Lighting
+      const lightDir = norm({ x: -0.5, y: 0.8, z: 0.4 });
+      const projectedFaces = [];
+
+      for (const f of faceList) {
+        const p0 = project(f.verts[0]), p1 = project(f.verts[1]), p2 = project(f.verts[2]), p3 = project(f.verts[3]);
+        if (!p0 || !p1 || !p2 || !p3) continue;
+        const depth = (p0.z + p1.z + p2.z + p3.z) * 0.25;
+        const n = norm(cross(sub(f.verts[1], f.verts[0]), sub(f.verts[3], f.verts[0])));
+        const diff = Math.max(0.22, n.x * lightDir.x + n.y * lightDir.y + n.z * lightDir.z);
+        projectedFaces.push({ pts: [p0, p1, p2, p3], depth, diff, color: f.color });
+      }
+
+      projectedFaces.sort((a, b) => b.depth - a.depth);
+
+      for (const pf of projectedFaces) {
+        ctx.beginPath();
+        ctx.moveTo(pf.pts[0].x, pf.pts[0].y);
+        ctx.lineTo(pf.pts[1].x, pf.pts[1].y);
+        ctx.lineTo(pf.pts[2].x, pf.pts[2].y);
+        ctx.lineTo(pf.pts[3].x, pf.pts[3].y);
+        ctx.closePath();
+
+        if (renderMode === 'solid') {
+          const [r, g, b] = pf.color;
+          ctx.fillStyle = `rgb(${Math.min(255, (r * pf.diff) | 0)}, ${Math.min(255, (g * pf.diff) | 0)}, ${Math.min(255, (b * pf.diff) | 0)})`;
+          ctx.fill();
+        } else {
+          ctx.strokeStyle = 'rgba(96, 165, 250, 0.55)';
+          ctx.lineWidth = 0.8;
+          ctx.stroke();
+        }
+      }
+
+      // Draw Rig Bones Overlay
+      if (showBones) {
+        const bonePairs = [
+          ['pelvis', 'chest'], ['chest', 'head'],
+          ['chest', 'shL'], ['shL', 'elL'], ['elL', 'wrL'],
+          ['chest', 'shR'], ['shR', 'elR'], ['elR', 'wrR'],
+          ['pelvis', 'hipL'], ['hipL', 'kneeL'], ['kneeL', 'ankleL'],
+          ['pelvis', 'hipR'], ['hipR', 'kneeR'], ['kneeR', 'ankleR']
+        ];
+        ctx.strokeStyle = '#fbbf24';
+        ctx.lineWidth = 2.2;
+        for (const [a, b] of bonePairs) {
+          const pa = project(skel[a]), pb = project(skel[b]);
+          if (pa && pb) {
+            ctx.beginPath();
+            ctx.moveTo(pa.x, pa.y);
+            ctx.lineTo(pb.x, pb.y);
+            ctx.stroke();
+          }
+        }
+      }
+    }
+    requestAnimationFrame(renderLoop);
+
+    // Offline Exporters (.OBJ, .BVH, Procedural Textures)
+    window.exportOBJ = () => {
+      let out = "# Offline Full-Body Fighter OBJ Export\n";
+      let vOffset = 1;
+      const parts = [
+        [headMesh, lastSkeleton.head],
+        [chestMesh, lastSkeleton.chest],
+        [pelvisMesh, lastSkeleton.pelvis],
+        [gloveMesh, lastSkeleton.wrL],
+        [gloveMesh, lastSkeleton.wrR]
+      ];
+      for (const [m, c] of parts) {
+        for (const v of m.verts) {
+          out += `v ${(v.x + c.x).toFixed(4)} ${(v.y + c.y).toFixed(4)} ${(v.z + c.z).toFixed(4)}\n`;
+        }
+        for (const f of m.faces) {
+          out += `f ${f[0]+vOffset} ${f[1]+vOffset} ${f[2]+vOffset} ${f[3]+vOffset}\n`;
+        }
+        vOffset += m.verts.length;
+      }
+      const blob = new Blob([out], { type: 'text/plain' });
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = 'fighter_offline_mesh.obj';
+      a.click();
+    };
+
+    window.exportBVH = () => {
+      let bvh = `HIERARCHY\nROOT Hips\n{\n  OFFSET 0.00 92.00 0.00\n  CHANNELS 6 Xposition Yposition Zposition Zrotation Xrotation Yrotation\n  JOINT Chest\n  {\n    OFFSET 0.00 38.00 0.00\n    CHANNELS 3 Zrotation Xrotation Yrotation\n    End Site\n    {\n      OFFSET 0.00 28.00 0.00\n    }\n  }\n}\nMOTION\nFrames: 60\nFrame Time: 0.033333\n`;
+      for (let i = 0; i < 60; i++) {
+        const a = (i / 60) * Math.PI * 2;
+        bvh += `0.00 ${(92 + Math.sin(a * 2) * 3.5).toFixed(2)} 0.00 0.00 0.00 ${(Math.sin(a) * 18).toFixed(2)} 0.00 10.00 ${(Math.cos(a) * 25).toFixed(2)}\n`;
+      }
+      const blob = new Blob([bvh], { type: 'text/plain' });
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = 'fighter_combat_combo.bvh';
+      a.click();
+    };
+
+    window.exportPlaidPNG = () => {
+      const c = document.createElement('canvas');
+      c.width = 512; c.height = 512;
+      const g = c.getContext('2d');
+      g.fillStyle = '#473c2e'; g.fillRect(0,0,512,512);
+      g.fillStyle = '#2b2219';
+      for (let i = 0; i < 512; i += 64) { g.fillRect(i,0,28,512); g.fillRect(0,i,512,28); }
+      const a = document.createElement('a');
+      a.href = c.toDataURL('image/png');
+      a.download = 'plaid_shirt_albedo_512.png';
+      a.click();
+    };
+
+    window.exportMatPNG = () => {
+      const c = document.createElement('canvas');
+      c.width = 512; c.height = 512;
+      const g = c.getContext('2d');
+      g.fillStyle = '#1b2230'; g.fillRect(0,0,512,512);
+      g.strokeStyle = '#3b82f6'; g.lineWidth = 10;
+      g.strokeRect(24, 24, 464, 464);
+      const a = document.createElement('a');
+      a.href = c.toDataURL('image/png');
+      a.download = 'dojo_octagon_mat_512.png';
+      a.click();
+    };
+  </script>
+</body>
+</html>

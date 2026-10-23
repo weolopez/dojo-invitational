@@ -1,0 +1,38 @@
+# Tooling
+node_modules/
+dist/
+.DS_Store
+*.blend1
+.claude/
+
+# Large, licence-restricted or personal files stay out of git (competition/RULES.md §11).
+assets/
+!assets/README.md
+photos/
+previews/
+my_head_*
+my_fighter.*
+user_hyperrealistic_avatar.*
+fullbody_fighter_arena.*
+blender_viewport_render.png
+dojo/public/fighters/
+
+# 3D binaries: shared on this Mac and locked by sha256 at weigh-in, never committed.
+*.glb
+*.gltf
+*.fbx
+*.blend
+*.hdr
+*.exr
+*.dmg
+*.zip
+
+# Agent scratch space (anything bulky belongs here)
+competition/entries/*/.work/
+competition/entries/*/tmp/
+competition/dojos/*/.work/
+
+# Runtime data written by the arena and the weigh-in
+competition/.approved/
+competition/tournament_state.json
+competition/results.jsonl

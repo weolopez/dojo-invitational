@@ -1,0 +1,488 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>3D Avatar Studio Viewport — Blender Cycles / Topology Viewer</title>
+  <style>
+    :root {
+      --bg: #141619;
+      --panel: rgba(28, 31, 36, 0.92);
+      --border: rgba(255, 255, 255, 0.12);
+      --accent: #4d9eff;
+      --text: #e8eaed;
+      --muted: #9aa0a6;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background: radial-gradient(circle at 50% 35%, #262a30 0%, #101215 100%);
+      color: var(--text);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      overflow: hidden;
+      height: 100vh;
+      width: 100vw;
+    }
+    #canvas-container {
+      width: 100%;
+      height: 100%;
+    }
+    .hud {
+      position: fixed;
+      top: 18px;
+      left: 18px;
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 16px 18px;
+      width: 310px;
+      backdrop-filter: blur(12px);
+      box-shadow: 0 12px 32px rgba(0, 0, 0, 0.45);
+      z-index: 10;
+    }
+    .hud h1 {
+      font-size: 15px;
+      font-weight: 600;
+      margin-bottom: 4px;
+      letter-spacing: 0.2px;
+    }
+    .hud p {
+      font-size: 12px;
+      color: var(--muted);
+      margin-bottom: 14px;
+      line-height: 1.4;
+    }
+    .control-group {
+      margin-bottom: 12px;
+    }
+    .control-group label {
+      display: flex;
+      justify-content: space-between;
+      font-size: 12px;
+      color: var(--muted);
+      margin-bottom: 5px;
+    }
+    .btn-row {
+      display: flex;
+      gap: 6px;
+      margin-bottom: 12px;
+    }
+    button {
+      flex: 1;
+      background: #252930;
+      color: var(--text);
+      border: 1px solid var(--border);
+      border-radius: 7px;
+      padding: 8px 10px;
+      font-size: 12px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.15s ease;
+    }
+    button:hover {
+      background: #303640;
+    }
+    button.active {
+      background: var(--accent);
+      color: #fff;
+      border-color: var(--accent);
+    }
+    button.export-btn {
+      background: #2b394a;
+      border-color: rgba(77, 158, 255, 0.4);
+    }
+    input[type="range"] {
+      width: 100%;
+      accent-color: var(--accent);
+    }
+    .footer-hint {
+      font-size: 11px;
+      color: var(--muted);
+      border-top: 1px solid var(--border);
+      padding-top: 10px;
+      margin-top: 6px;
+    }
+  </style>
+</head>
+<body>
+  <div class="hud">
+    <h1>3D Avatar Studio Viewport</h1>
+    <p>Sculpted bust matched to front, left, and right reference captures</p>
+
+    <div class="control-group">
+      <label><span>Viewport Shading Pass</span></label>
+      <div class="btn-row">
+        <button id="mode-sss" class="active" onclick="setShadingMode('sss')">Textured SSS</button>
+        <button id="mode-clay" onclick="setShadingMode('clay')">Clay Sculpt</button>
+        <button id="mode-wire" onclick="setShadingMode('wire')">Quad Wire</button>
+      </div>
+    </div>
+
+    <div class="control-group">
+      <label><span>Key Light Intensity</span><span id="val-key">2.2</span></label>
+      <input type="range" id="slider-key" min="0" max="4" step="0.1" value="2.2" oninput="updateLighting()" />
+    </div>
+
+    <div class="control-group">
+      <label><span>Rim Light Intensity</span><span id="val-rim">1.6</span></label>
+      <input type="range" id="slider-rim" min="0" max="4" step="0.1" value="1.6" oninput="updateLighting()" />
+    </div>
+
+    <div class="control-group">
+      <label><span>Auto-Turntable Speed</span><span id="val-rot">0.3</span></label>
+      <input type="range" id="slider-rot" min="0" max="2" step="0.1" value="0.3" oninput="updateRotation()" />
+    </div>
+
+    <div class="btn-row">
+      <button class="export-btn" onclick="exportOBJ()">Download .OBJ Mesh</button>
+    </div>
+
+    <div class="footer-hint">
+      Left-drag: Orbit &bull; Right-drag: Pan &bull; Scroll: Zoom
+    </div>
+  </div>
+
+  <div id="canvas-container"></div>
+
+  <script type="importmap">
+    {
+      "imports": {
+        "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
+        "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/"
+      }
+    }
+  </script>
+
+  <script type="module">
+    import * as THREE from 'three';
+    import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+    import { OBJExporter } from 'three/addons/exporters/OBJExporter.js';
+
+    const container = document.getElementById('canvas-container');
+    const scene = new THREE.Scene();
+
+    const camera = new THREE.PerspectiveCamera(35, window.innerWidth / window.innerHeight, 0.1, 100);
+    camera.position.set(-0.6, 1.55, 4.2);
+
+    const renderer = new THREE.WebGLRenderer({ antialias: true });
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    renderer.shadowMap.enabled = true;
+    renderer.toneMapping = THREE.ACESFilmicToneMapping;
+    renderer.toneMappingExposure = 1.1;
+    container.appendChild(renderer.domElement);
+
+    const controls = new OrbitControls(camera, renderer.domElement);
+    controls.target.set(0, 1.25, 0);
+    controls.enableDamping = true;
+
+    // 3-Point Studio Lighting
+    const ambientLight = new THREE.AmbientLight(0xdbe4f0, 0.55);
+    scene.add(ambientLight);
+
+    const keyLight = new THREE.DirectionalLight(0xfff4e8, 2.2);
+    keyLight.position.set(-2.8, 3.2, 3.0);
+    keyLight.castShadow = true;
+    scene.add(keyLight);
+
+    const fillLight = new THREE.DirectionalLight(0xc8daf4, 0.9);
+    fillLight.position.set(2.8, 1.8, 2.2);
+    scene.add(fillLight);
+
+    const rimLight = new THREE.DirectionalLight(0x9ec5ff, 1.6);
+    rimLight.position.set(0.2, 2.8, -3.0);
+    scene.add(rimLight);
+
+    // Procedural Checkered Shirt Texture
+    function createPlaidTexture() {
+      const c = document.createElement('canvas');
+      c.width = 256;
+      c.height = 256;
+      const ctx = c.getContext('2d');
+      ctx.fillStyle = '#473c2e';
+      ctx.fillRect(0, 0, 256, 256);
+      ctx.fillStyle = '#2d241b';
+      for (let i = 0; i < 256; i += 32) {
+        ctx.fillRect(i, 0, 14, 256);
+        ctx.fillRect(0, i, 256, 14);
+      }
+      ctx.strokeStyle = '#6e5f49';
+      ctx.lineWidth = 2;
+      for (let i = 16; i < 256; i += 32) {
+        ctx.beginPath(); ctx.moveTo(i, 0); ctx.lineTo(i, 256); ctx.stroke();
+        ctx.beginPath(); ctx.moveTo(0, i); ctx.lineTo(256, i); ctx.stroke();
+      }
+      const tex = new THREE.CanvasTexture(c);
+      tex.wrapS = tex.wrapT = THREE.RepeatWrapping;
+      tex.repeat.set(8, 8);
+      return tex;
+    }
+
+    const materials = {
+      skin: new THREE.MeshPhysicalMaterial({
+        color: 0xc48c71,
+        roughness: 0.42,
+        metalness: 0.02,
+        clearcoat: 0.08,
+        clearcoatRoughness: 0.45,
+        sheen: 0.25,
+        sheenColor: new THREE.Color(0xe69c82)
+      }),
+      hair: new THREE.MeshStandardMaterial({
+        color: 0x292726,
+        roughness: 0.65,
+        metalness: 0.05
+      }),
+      sclera: new THREE.MeshPhysicalMaterial({
+        color: 0xf4f1ed,
+        roughness: 0.12,
+        clearcoat: 0.9
+      }),
+      iris: new THREE.MeshPhysicalMaterial({
+        color: 0x3b2110,
+        roughness: 0.1,
+        clearcoat: 1.0
+      }),
+      airpod: new THREE.MeshPhysicalMaterial({
+        color: 0xf5f7fa,
+        roughness: 0.15,
+        clearcoat: 0.8
+      }),
+      shirt: new THREE.MeshStandardMaterial({
+        map: createPlaidTexture(),
+        roughness: 0.8
+      }),
+      blazer: new THREE.MeshStandardMaterial({
+        color: 0x1c2633,
+        roughness: 0.72
+      }),
+      clay: new THREE.MeshStandardMaterial({
+        color: 0x9ea3a8,
+        roughness: 0.48,
+        metalness: 0.02
+      }),
+      wire: new THREE.MeshBasicMaterial({
+        color: 0x8ab4f8,
+        wireframe: true
+      })
+    };
+
+    const avatarGroup = new THREE.Group();
+    scene.add(avatarGroup);
+
+    // Sculpted Head Geometry matching cranial, nose, brow, cheek, and jaw contours
+    const headGeo = new THREE.SphereGeometry(1.0, 96, 72);
+    const pos = headGeo.attributes.position;
+    for (let i = 0; i < pos.count; i++) {
+      let x = pos.getX(i);
+      let y = pos.getY(i);
+      let z = pos.getZ(i);
+
+      // Cranial proportions (Y is up, +Z is front)
+      x *= 0.85;
+      y *= 1.18;
+      z *= 0.97;
+
+      // High broad forehead
+      if (y > 0.25) {
+        x *= 0.97 - 0.07 * Math.max(0, y - 0.5);
+        if (z > 0) z *= 1.04;
+      }
+
+      // Brow ridge
+      if (y > -0.1 && y < 0.35 && z > 0.4) {
+        const brow = Math.exp(-Math.pow(y - 0.16, 2) / 0.015) * Math.exp(-(x * x) / 0.22);
+        z += 0.055 * brow;
+      }
+
+      // Eye sockets
+      for (const side of [-1, 1]) {
+        const dx = x - side * 0.28;
+        const dy = y - 0.05;
+        const d2 = dx * dx + dy * dy;
+        if (z > 0.35 && d2 < 0.045) {
+          z -= 0.085 * Math.exp(-d2 / 0.014);
+        }
+      }
+
+      // Prominent nose bridge & rounded tip
+      if (Math.abs(x) < 0.22 && y > -0.35 && y < 0.14 && z > 0.45) {
+        const nx = Math.exp(-(x * x) / (0.012 + 0.02 * Math.max(0, -y)));
+        const bridge = Math.exp(-Math.pow(y + 0.09, 2) / 0.03);
+        const tip = Math.exp(-Math.pow(y + 0.21, 2) / 0.008);
+        z += (0.16 * bridge + 0.11 * tip) * nx;
+      }
+
+      // Full cheeks & nasolabial contour
+      if (y > -0.45 && y < 0.02 && z > 0.15) {
+        const cheek = Math.exp(-Math.pow(Math.abs(x) - 0.38, 2) / 0.04) * Math.exp(-Math.pow(y + 0.18, 2) / 0.045);
+        x += (x > 0 ? 0.055 : -0.055) * cheek;
+        z += 0.038 * cheek;
+      }
+
+      // Lips contour
+      if (Math.abs(x) < 0.26 && y > -0.56 && y < -0.34 && z > 0.45) {
+        const lip = Math.exp(-(x * x) / 0.035) * Math.exp(-Math.pow(y + 0.44, 2) / 0.004);
+        z += 0.042 * lip;
+      }
+
+      // Rounded chin and submental fullness
+      if (y < -0.45) {
+        const taper = Math.max(0.52, 1.0 + 0.38 * (y + 0.45));
+        x *= taper;
+        if (z > 0.2) {
+          const chin = Math.exp(-(x * x) / 0.06) * Math.exp(-Math.pow(y + 0.72, 2) / 0.025);
+          z += 0.05 * chin;
+        }
+        if (z > 0.15 && z < 0.65 && y < -0.68) {
+          y -= 0.045 * Math.exp(-(x * x) / 0.12);
+        }
+      }
+
+      pos.setXYZ(i, x, y, z);
+    }
+    headGeo.computeVertexNormals();
+
+    const meshRegistry = [];
+    function registerMesh(mesh, baseMat) {
+      mesh.userData.baseMaterial = baseMat;
+      mesh.castShadow = true;
+      mesh.receiveShadow = true;
+      avatarGroup.add(mesh);
+      meshRegistry.push(mesh);
+    }
+
+    const headMesh = new THREE.Mesh(headGeo, materials.skin);
+    headMesh.position.set(0, 1.65, 0);
+    registerMesh(headMesh, materials.skin);
+
+    // Neck
+    const neckGeo = new THREE.CylinderGeometry(0.43, 0.50, 0.75, 48);
+    const neckMesh = new THREE.Mesh(neckGeo, materials.skin);
+    neckMesh.position.set(0, 0.76, -0.06);
+    registerMesh(neckMesh, materials.skin);
+
+    // Eyes & Irises
+    for (const side of [-1, 1]) {
+      const eyeMesh = new THREE.Mesh(new THREE.SphereGeometry(0.112, 32, 24), materials.sclera);
+      eyeMesh.position.set(side * 0.28, 1.70, 0.78);
+      registerMesh(eyeMesh, materials.sclera);
+
+      const irisMesh = new THREE.Mesh(new THREE.SphereGeometry(0.06, 24, 16), materials.iris);
+      irisMesh.scale.set(1, 1, 0.35);
+      irisMesh.position.set(side * 0.28, 1.70, 0.88);
+      registerMesh(irisMesh, materials.iris);
+    }
+
+    // Ears
+    for (const side of [-1, 1]) {
+      const earMesh = new THREE.Mesh(new THREE.SphereGeometry(0.22, 32, 24), materials.skin);
+      earMesh.scale.set(0.32, 1.15, 0.62);
+      earMesh.position.set(side * 0.85, 1.58, -0.05);
+      earMesh.rotation.set(0.12, side * 0.2, 0);
+      registerMesh(earMesh, materials.skin);
+    }
+
+    // Right Ear AirPod Pro (-X is character's right ear)
+    const podHead = new THREE.Mesh(new THREE.SphereGeometry(0.072, 24, 16), materials.airpod);
+    podHead.position.set(-0.90, 1.54, 0.02);
+    registerMesh(podHead, materials.airpod);
+
+    const podStem = new THREE.Mesh(new THREE.CylinderGeometry(0.024, 0.022, 0.18, 20), materials.airpod);
+    podStem.position.set(-0.93, 1.44, 0.08);
+    podStem.rotation.set(0.45, 0, -0.22);
+    registerMesh(podStem, materials.airpod);
+
+    // Wavy Salt-and-Pepper Hair Clusters (Sides, Back, and Top Strands)
+    const hairClusters = [
+      [-0.78, 1.92, -0.12, 0.30, 0.56, 0.65],
+      [0.78, 1.92, -0.12, 0.30, 0.56, 0.65],
+      [-0.84, 1.58, -0.26, 0.26, 0.48, 0.54],
+      [0.84, 1.58, -0.26, 0.26, 0.48, 0.54],
+      [0.0, 1.75, -0.76, 0.78, 0.72, 0.45],
+      [0.0, 1.32, -0.72, 0.72, 0.48, 0.38],
+      [0.0, 2.52, -0.22, 0.68, 0.26, 0.65],
+      [-0.16, 2.58, 0.34, 0.26, 0.14, 0.32],
+      [0.14, 2.56, 0.36, 0.22, 0.13, 0.30]
+    ];
+    hairClusters.forEach(([hx, hy, hz, sx, sy, sz]) => {
+      const hGeo = new THREE.IcosahedronGeometry(1.0, 4);
+      const hp = hGeo.attributes.position;
+      for (let i = 0; i < hp.count; i++) {
+        const vx = hp.getX(i), vy = hp.getY(i), vz = hp.getZ(i);
+        const wave = 1.0 + 0.08 * Math.sin(vx * 9.0) * Math.cos(vy * 9.0) * Math.sin(vz * 9.0);
+        hp.setXYZ(i, vx * wave, vy * wave, vz * wave);
+      }
+      hGeo.computeVertexNormals();
+      const hMesh = new THREE.Mesh(hGeo, materials.hair);
+      hMesh.position.set(hx, hy, hz);
+      hMesh.scale.set(sx, sy, sz);
+      registerMesh(hMesh, materials.hair);
+    });
+
+    // Brown Plaid Button-Down Shirt & Dark Navy Blazer Shoulders
+    const shirtMesh = new THREE.Mesh(new THREE.SphereGeometry(1.0, 64, 32), materials.shirt);
+    shirtMesh.position.set(0, -0.05, -0.06);
+    shirtMesh.scale.set(1.32, 0.75, 0.78);
+    registerMesh(shirtMesh, materials.shirt);
+
+    const blazerMesh = new THREE.Mesh(new THREE.SphereGeometry(1.03, 64, 32), materials.blazer);
+    blazerMesh.position.set(0, -0.08, -0.10);
+    blazerMesh.scale.set(1.52, 0.76, 0.84);
+    registerMesh(blazerMesh, materials.blazer);
+
+    // Interactive Controls
+    let rotSpeed = 0.3;
+    window.setShadingMode = (mode) => {
+      document.querySelectorAll('.btn-row button').forEach(b => b.classList.remove('active'));
+      const btn = document.getElementById('mode-' + mode);
+      if (btn) btn.classList.add('active');
+
+      meshRegistry.forEach(m => {
+        if (mode === 'sss') m.material = m.userData.baseMaterial;
+        else if (mode === 'clay') m.material = materials.clay;
+        else if (mode === 'wire') m.material = materials.wire;
+      });
+    };
+
+    window.updateLighting = () => {
+      const k = parseFloat(document.getElementById('slider-key').value);
+      const r = parseFloat(document.getElementById('slider-rim').value);
+      document.getElementById('val-key').textContent = k.toFixed(1);
+      document.getElementById('val-rim').textContent = r.toFixed(1);
+      keyLight.intensity = k;
+      rimLight.intensity = r;
+    };
+
+    window.updateRotation = () => {
+      rotSpeed = parseFloat(document.getElementById('slider-rot').value);
+      document.getElementById('val-rot').textContent = rotSpeed.toFixed(1);
+    };
+
+    window.exportOBJ = () => {
+      const exporter = new OBJExporter();
+      const result = exporter.parse(avatarGroup);
+      const blob = new Blob([result], { type: 'text/plain' });
+      const link = document.createElement('a');
+      link.href = URL.createObjectURL(blob);
+      link.download = 'user_hyperrealistic_avatar.obj';
+      link.click();
+    };
+
+    window.addEventListener('resize', () => {
+      camera.aspect = window.innerWidth / window.innerHeight;
+      camera.updateProjectionMatrix();
+      renderer.setSize(window.innerWidth, window.innerHeight);
+    });
+
+    const clock = new THREE.Clock();
+    function animate() {
+      requestAnimationFrame(animate);
+      const dt = clock.getDelta();
+      avatarGroup.rotation.y += dt * rotSpeed * 0.5;
+      controls.update();
+      renderer.render(scene, camera);
+    }
+    animate();
+  </script>
+</body>
+</html>

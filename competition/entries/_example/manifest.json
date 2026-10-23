@@ -1,0 +1,12 @@
+{
+  "id": "_example",
+  "displayName": "EXAMPLE",
+  "agent": "Template — not a competitor",
+  "category": "A",
+  "fighter": "fighter.glb",
+  "brain": "brain.js",
+  "style": "Template entry that shows the required layout",
+  "claims": [
+    "Each claim must be something the judge can check in fighter.glb, the renders or the source, e.g. 'skin uses a 4096 px albedo, normal and roughness map from a CC0 scan (see LICENSES.md)'"
+  ]
+}

@@ -1,0 +1,80 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Dojo Fighters</title>
+  <link rel="stylesheet" href="/src/style.css" />
+</head>
+<body>
+  <div id="stage"></div>
+
+  <div id="loading" class="screen">
+    <h1>DOJO FIGHTERS</h1>
+    <p id="loading-text">Loading fighters…</p>
+  </div>
+
+  <div id="select" class="screen hidden">
+    <h1>DOJO FIGHTERS</h1>
+    <p id="select-prompt">Player 1 — choose your fighter</p>
+    <div id="roster"></div>
+    <div class="mode-row">
+      <label><input type="radio" name="mode" value="cpu" checked /> vs CPU</label>
+      <label><input type="radio" name="mode" value="pvp" /> 2 players (same keyboard)</label>
+      <a class="mode-link" href="/?tournament">Watch the tournament →</a>
+    </div>
+  </div>
+
+  <!-- HUD for the main arena (full screen in play mode, the main event in tournament mode). -->
+  <div id="hud" class="hidden">
+    <div class="bar-row">
+      <div class="fighter-bar left">
+        <div class="name-row"><span class="name" id="p1-name"></span><span class="pips" id="p1-pips"></span></div>
+        <div class="bar"><div class="fill" id="p1-fill"></div></div>
+      </div>
+      <div class="center">
+        <div id="timer">60</div>
+        <div id="round-label"></div>
+      </div>
+      <div class="fighter-bar right">
+        <div class="name-row"><span class="pips" id="p2-pips"></span><span class="name" id="p2-name"></span></div>
+        <div class="bar"><div class="fill" id="p2-fill"></div></div>
+      </div>
+    </div>
+    <div id="banner"></div>
+    <div id="controls">
+      <div><b>P1</b> A/D move · S block · J jab · K cross · L hook · I uppercut · U roundhouse · O front kick · H taunt</div>
+      <div id="p2-controls"><b>P2</b> ←/→ move · ↓ block · 1 jab · 2 cross · 3 hook · 4 uppercut · 5 roundhouse · 6 front kick</div>
+      <div>R rematch · Esc fighter select</div>
+    </div>
+  </div>
+
+  <!-- Tournament broadcast overlay. -->
+  <div id="tournament" class="hidden">
+    <div id="t-header">
+      <div id="t-league"></div>
+      <div id="t-stage"></div>
+      <div id="t-dojo"></div>
+    </div>
+    <div id="t-tiles"></div>
+    <div id="t-band">
+      <section class="t-panel" id="t-bracket-panel">
+        <h2>Bracket</h2>
+        <div id="t-bracket"></div>
+      </section>
+      <section class="t-panel" id="t-realism-panel">
+        <h2>Realism ranking <small>judge's score decides the champion</small></h2>
+        <table id="t-board"></table>
+      </section>
+      <section class="t-panel" id="t-info-panel">
+        <h2 id="t-info-title">Main event</h2>
+        <div id="t-info"></div>
+      </section>
+    </div>
+    <div id="t-ticker"></div>
+    <div id="t-flash"></div>
+  </div>
+
+  <script type="module" src="/src/main.js"></script>
+</body>
+</html>

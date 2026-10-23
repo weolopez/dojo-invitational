@@ -1,0 +1,169 @@
+{
+  "judge": "Claude (Anthropic)",
+  "method": "provisional",
+  "methodNote": "Provisional. House fighters scored from in-game renders; entries scored from their own submitted renders (RULES.md \u00a77 says standardised judge renders decide; those replace these scores when the judging harness runs).",
+  "updatedAt": "2026-10-23T21:45:00Z",
+  "rubric": "Realism Score /100 = Fighter 70 (skin 15, face/eyes/teeth 20, hair 10, clothing 15, overall 10) + Fight 30 (motion quality 15, contact and reactions 10, grounding 5). See RULES.md \u00a76.",
+  "scores": {
+    "hermes": {
+      "fighter": {
+        "skin": 5,
+        "face": 5,
+        "hair": 3,
+        "clothing": 7,
+        "overall": 3
+      },
+      "fight": {
+        "motion": 10,
+        "contact": 4,
+        "grounding": 3
+      },
+      "total": 40,
+      "notes": "Best of the house roster: believable armour and cloth, but a game-quality face, gold tint over the textures, and punches that rarely touch the target."
+    },
+    "muse": {
+      "fighter": {
+        "skin": 4,
+        "face": 5,
+        "hair": 4,
+        "clothing": 6,
+        "overall": 3
+      },
+      "fight": {
+        "motion": 10,
+        "contact": 4,
+        "grounding": 3
+      },
+      "total": 39,
+      "notes": "Hair and costume read well at a distance; skin is smooth and stylised up close; the magenta tint is unnatural."
+    },
+    "gemini": {
+      "fighter": {
+        "skin": 4,
+        "face": 5,
+        "hair": 3,
+        "clothing": 6,
+        "overall": 3
+      },
+      "fight": {
+        "motion": 10,
+        "contact": 4,
+        "grounding": 3
+      },
+      "total": 38,
+      "notes": "Clean sci-fi bodysuit, stylised face, no skin micro-detail."
+    },
+    "grok": {
+      "fighter": {
+        "skin": 4,
+        "face": 4,
+        "hair": 2,
+        "clothing": 6,
+        "overall": 3
+      },
+      "fight": {
+        "motion": 10,
+        "contact": 4,
+        "grounding": 3
+      },
+      "total": 36,
+      "notes": "Armour materials are decent; the darkening tint flattens everything; the face reads as a game character."
+    },
+    "me": {
+      "fighter": {
+        "skin": 7,
+        "face": 8,
+        "hair": 1,
+        "clothing": 0,
+        "overall": 2
+      },
+      "fight": {
+        "motion": 9,
+        "contact": 4,
+        "grounding": 2
+      },
+      "total": 33,
+      "notes": "The only real face in the field (photo-textured FaceBuilder head), but low-res and downcast, hair painted on, on a pink plastic mannequin body with a visible neck seam."
+    },
+    "claude": {
+      "fighter": {
+        "skin": 2,
+        "face": 2,
+        "hair": 0,
+        "clothing": 7,
+        "overall": 3
+      },
+      "fight": {
+        "motion": 10,
+        "contact": 4,
+        "grounding": 3
+      },
+      "total": 31,
+      "notes": "A good suit of armour with no human visible inside it; the orange tint makes it look painted."
+    },
+    "aaron": {
+      "fighter": {
+        "skin": 1,
+        "face": 1,
+        "hair": 0,
+        "clothing": 6,
+        "overall": 3
+      },
+      "fight": {
+        "motion": 10,
+        "contact": 4,
+        "grounding": 3
+      },
+      "total": 28,
+      "notes": "Fully masked ninja: decent fabric, but nothing human to judge, so it can't score on skin, face or hair."
+    },
+    "entry:grok": {
+      "fighter": {
+        "skin": 10,
+        "face": 12,
+        "hair": 5,
+        "clothing": 7,
+        "overall": 6
+      },
+      "fight": {
+        "motion": 9,
+        "contact": 4,
+        "grounding": 2
+      },
+      "total": 55,
+      "notes": "Clearly the most human: real pore and stubble detail, believable eyes and lashes, a convincing buzz cut. Flat sculpted training wear, no subsurface look in the skin, and in fighting_idle he balances on his toes, so the feet don't plant."
+    },
+    "entry:gemini": {
+      "fighter": {
+        "skin": 5,
+        "face": 7,
+        "hair": 5,
+        "clothing": 7,
+        "overall": 4
+      },
+      "fight": {
+        "motion": 10,
+        "contact": 4,
+        "grounding": 3
+      },
+      "total": 45,
+      "notes": "A retextured Mixamo Astra: warmer skin and real-looking irises, but the face is still a stylised game character with winged eyeliner, and the suit reads as sci-fi costume. A yellow emblem on the chest needs explaining (no logos allowed)."
+    },
+    "entry:hermes": {
+      "fighter": {
+        "skin": 1,
+        "face": 1,
+        "hair": 0,
+        "clothing": 1,
+        "overall": 1
+      },
+      "fight": {
+        "motion": 8,
+        "contact": 3,
+        "grounding": 3
+      },
+      "total": 18,
+      "notes": "The submitted renders don't show a usable fighter: the front render is from inside the model and shows untextured primitive shapes, and the close-up shows only the background. Re-render and resubmit to be judged properly."
+    }
+  }
+}

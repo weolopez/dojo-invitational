@@ -1,0 +1,714 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>3D Fighter Virtual Dojo — Full-Body Interactive Arena</title>
+  <style>
+    :root {
+      --bg: #0d1015;
+      --panel: rgba(20, 24, 31, 0.90);
+      --border: rgba(255, 255, 255, 0.12);
+      --accent: #ef4444;
+      --accent-blue: #3b82f6;
+      --text: #f3f4f6;
+      --muted: #9ca3af;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
+      overflow: hidden;
+      height: 100vh;
+      width: 100vw;
+      user-select: none;
+    }
+    #canvas-container { width: 100%; height: 100%; }
+    .hud {
+      position: fixed;
+      top: 18px;
+      left: 18px;
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 14px;
+      padding: 16px 18px;
+      width: 340px;
+      backdrop-filter: blur(14px);
+      box-shadow: 0 16px 40px rgba(0, 0, 0, 0.55);
+      z-index: 10;
+    }
+    .hud h1 {
+      font-size: 16px;
+      font-weight: 700;
+      margin-bottom: 3px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .badge {
+      font-size: 10px;
+      background: var(--accent);
+      color: #fff;
+      padding: 2px 7px;
+      border-radius: 99px;
+      text-transform: uppercase;
+      letter-spacing: 0.6px;
+    }
+    .hud p {
+      font-size: 12px;
+      color: var(--muted);
+      margin-bottom: 14px;
+      line-height: 1.4;
+    }
+    .section-title {
+      font-size: 11px;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.5px;
+      color: var(--muted);
+      margin: 10px 0 6px;
+    }
+    .grid-btns {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 6px;
+      margin-bottom: 10px;
+    }
+    button {
+      background: #1f2633;
+      color: var(--text);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 8px 10px;
+      font-size: 12px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.14s ease;
+      text-align: center;
+    }
+    button:hover {
+      background: #2b3548;
+      border-color: rgba(255,255,255,0.28);
+    }
+    button.active {
+      background: var(--accent);
+      border-color: var(--accent);
+      color: #fff;
+      box-shadow: 0 0 14px rgba(239, 68, 68, 0.4);
+    }
+    button.secondary.active {
+      background: var(--accent-blue);
+      border-color: var(--accent-blue);
+      box-shadow: 0 0 14px rgba(59, 130, 246, 0.4);
+    }
+    .slider-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      font-size: 12px;
+      color: var(--muted);
+      margin-bottom: 6px;
+    }
+    input[type="range"] {
+      width: 140px;
+      accent-color: var(--accent);
+    }
+    .controls-card {
+      background: rgba(255, 255, 255, 0.04);
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      padding: 9px 11px;
+      font-size: 11px;
+      color: var(--muted);
+      line-height: 1.55;
+      margin-top: 8px;
+    }
+    .controls-card b { color: var(--text); }
+    .combo-banner {
+      position: fixed;
+      top: 24px;
+      right: 28px;
+      font-size: 26px;
+      font-weight: 800;
+      font-style: italic;
+      color: #fbbf24;
+      text-shadow: 0 4px 18px rgba(239, 68, 68, 0.75);
+      opacity: 0;
+      transform: scale(0.85);
+      transition: all 0.15s ease;
+      pointer-events: none;
+    }
+    .combo-banner.show {
+      opacity: 1;
+      transform: scale(1);
+    }
+  </style>
+</head>
+<body>
+  <div class="hud">
+    <h1>Full-Body 3D Fighter <span class="badge">Live Dojo</span></h1>
+    <p>Sculpted portrait head + full articulated combat rig in a virtual MMA/Dojo arena</p>
+
+    <div class="section-title">Combat Animations (Click or Press 1–6)</div>
+    <div class="grid-btns">
+      <button id="anim-stance" class="active" onclick="setAnim('stance')">1. Fighting Stance</button>
+      <button id="anim-jabcross" onclick="setAnim('jabcross')">2. Jab-Cross Combo</button>
+      <button id="anim-kick" onclick="setAnim('kick')">3. Roundhouse Kick</button>
+      <button id="anim-uppercut" onclick="setAnim('uppercut')">4. Power Uppercut</button>
+      <button id="anim-flurry" onclick="setAnim('flurry')">5. Speed Flurry</button>
+      <button id="anim-victory" onclick="setAnim('victory')">6. Victory Pose</button>
+    </div>
+
+    <div class="section-title">Camera & Viewport Mode</div>
+    <div class="grid-btns">
+      <button id="cam-orbit" class="secondary active" onclick="setCamMode('orbit')">Free Orbit Cam</button>
+      <button id="cam-action" class="secondary" onclick="setCamMode('action')">Action Ring Cam</button>
+      <button id="toggle-wire" class="secondary" onclick="toggleWireframe()">Quad Wireframe</button>
+      <button id="export-obj" class="secondary" onclick="exportFighterOBJ()">Download .OBJ</button>
+    </div>
+
+    <div class="slider-row">
+      <span>Animation Speed</span>
+      <input type="range" id="speed-slider" min="0.2" max="2.2" step="0.1" value="1.0" />
+    </div>
+
+    <div class="controls-card">
+      <b>Keyboard Fighter Controls:</b><br/>
+      &bull; <b>W A S D / Arrows</b>: Footwork around the octagon mat<br/>
+      &bull; <b>1–6</b>: Switch combat animation loops<br/>
+      &bull; <b>SPACE</b>: Strike the heavy bag with shockwave impact
+    </div>
+  </div>
+
+  <div id="combo-banner" class="combo-banner">HEAVY IMPACT!</div>
+  <div id="canvas-container"></div>
+
+  <script type="importmap">
+    {
+      "imports": {
+        "three": "https://unpkg.com/three@0.160.0/build/three.module.js",
+        "three/addons/": "https://unpkg.com/three@0.160.0/examples/jsm/"
+      }
+    }
+  </script>
+
+  <script type="module">
+    import * as THREE from 'three';
+    import { OrbitControls } from 'three/addons/controls/OrbitControls.js';
+    import { OBJExporter } from 'three/addons/exporters/OBJExporter.js';
+
+    const container = document.getElementById('canvas-container');
+    const scene = new THREE.Scene();
+    scene.background = new THREE.Color(0x0b0e13);
+    scene.fog = new THREE.FogExp2(0x0b0e13, 0.045);
+
+    const camera = new THREE.PerspectiveCamera(42, window.innerWidth / window.innerHeight, 0.1, 100);
+    camera.position.set(-2.4, 2.1, 4.3);
+
+    const renderer = new THREE.WebGLRenderer({ antialias: true });
+    renderer.setSize(window.innerWidth, window.innerHeight);
+    renderer.setPixelRatio(Math.min(window.devicePixelRatio, 2));
+    renderer.shadowMap.enabled = true;
+    renderer.shadowMap.type = THREE.PCFSoftShadowMap;
+    renderer.toneMapping = THREE.ACESFilmicToneMapping;
+    renderer.toneMappingExposure = 1.15;
+    container.appendChild(renderer.domElement);
+
+    const controls = new OrbitControls(camera, renderer.domElement);
+    controls.target.set(0.2, 1.15, 0);
+    controls.enableDamping = true;
+    controls.maxPolarAngle = Math.PI / 2 - 0.02;
+
+    // Studio & Dojo Lighting
+    scene.add(new THREE.AmbientLight(0xdbeafe, 0.55));
+
+    const keyLight = new THREE.SpotLight(0xfff3e0, 48);
+    keyLight.position.set(-3.5, 6.0, 4.0);
+    keyLight.angle = Math.PI / 3;
+    keyLight.penumbra = 0.65;
+    keyLight.castShadow = true;
+    keyLight.shadow.mapSize.set(2048, 2048);
+    scene.add(keyLight);
+
+    const rimLightBlue = new THREE.PointLight(0x3b82f6, 18, 12);
+    rimLightBlue.position.set(-3.8, 3.0, -3.5);
+    scene.add(rimLightBlue);
+
+    const rimLightRed = new THREE.PointLight(0xef4444, 18, 12);
+    rimLightRed.position.set(3.8, 3.0, -3.2);
+    scene.add(rimLightRed);
+
+    // Virtual Dojo / MMA Training Room
+    const roomGroup = new THREE.Group();
+    scene.add(roomGroup);
+
+    // Hardwood / Gym Floor
+    const floorMesh = new THREE.Mesh(
+      new THREE.PlaneGeometry(28, 28),
+      new THREE.MeshStandardMaterial({ color: 0x12161f, roughness: 0.75, metalness: 0.1 })
+    );
+    floorMesh.rotation.x = -Math.PI / 2;
+    floorMesh.receiveShadow = true;
+    roomGroup.add(floorMesh);
+
+    // Octagon Padded Combat Mat
+    const octGeo = new THREE.CylinderGeometry(4.2, 4.3, 0.08, 8);
+    const octMat = new THREE.MeshStandardMaterial({ color: 0x1e2533, roughness: 0.62 });
+    const octMesh = new THREE.Mesh(octGeo, octMat);
+    octMesh.position.y = 0.04;
+    octMesh.rotation.y = Math.PI / 8;
+    octMesh.receiveShadow = true;
+    roomGroup.add(octMesh);
+
+    // Glowing Octagon Ring Line
+    const ringGeo = new THREE.RingGeometry(3.82, 3.92, 8);
+    const ringMat = new THREE.MeshBasicMaterial({ color: 0x3b82f6, side: THREE.DoubleSide });
+    const ringMesh = new THREE.Mesh(ringGeo, ringMat);
+    ringMesh.rotation.x = -Math.PI / 2;
+    ringMesh.rotation.z = Math.PI / 8;
+    ringMesh.position.y = 0.085;
+    roomGroup.add(ringMesh);
+
+    // Octagon Cage Posts & Mesh Panels in Background
+    const postMat = new THREE.MeshStandardMaterial({ color: 0x111318, roughness: 0.4, metalness: 0.6 });
+    for (let i = 0; i < 8; i++) {
+      const ang = (i / 8) * Math.PI * 2 + Math.PI / 8;
+      const px = Math.cos(ang) * 4.2;
+      const pz = Math.sin(ang) * 4.2;
+      if (pz < 1.8) { // Keep front open for camera
+        const post = new THREE.Mesh(new THREE.CylinderGeometry(0.09, 0.09, 2.6, 16), postMat);
+        post.position.set(px, 1.3, pz);
+        post.castShadow = true;
+        roomGroup.add(post);
+      }
+    }
+
+    // Back Dojo Accent Wall & Neon Strips
+    const wallMesh = new THREE.Mesh(
+      new THREE.BoxGeometry(14, 5.5, 0.25),
+      new THREE.MeshStandardMaterial({ color: 0x10131a, roughness: 0.85 })
+    );
+    wallMesh.position.set(0, 2.75, -5.4);
+    wallMesh.receiveShadow = true;
+    roomGroup.add(wallMesh);
+
+    for (const side of [-1, 1]) {
+      const neonBar = new THREE.Mesh(
+        new THREE.BoxGeometry(0.08, 4.2, 0.08),
+        new THREE.MeshBasicMaterial({ color: side < 0 ? 0x3b82f6 : 0xef4444 })
+      );
+      neonBar.position.set(side * 4.5, 2.6, -5.2);
+      roomGroup.add(neonBar);
+    }
+
+    // Hanging Heavy Punching Bag (Reacting to Strikes)
+    const bagPivot = new THREE.Group();
+    bagPivot.position.set(0.95, 3.6, -0.15);
+    roomGroup.add(bagPivot);
+
+    const chainMesh = new THREE.Mesh(
+      new THREE.CylinderGeometry(0.02, 0.02, 1.1, 12),
+      new THREE.MeshStandardMaterial({ color: 0x9ca3af, metalness: 0.9, roughness: 0.2 })
+    );
+    chainMesh.position.y = -0.55;
+    bagPivot.add(chainMesh);
+
+    const bagBody = new THREE.Mesh(
+      new THREE.CylinderGeometry(0.28, 0.28, 1.55, 32),
+      new THREE.MeshPhysicalMaterial({ color: 0x991b1b, roughness: 0.38, clearcoat: 0.25 })
+    );
+    bagBody.position.y = -1.85;
+    bagBody.castShadow = true;
+    bagPivot.add(bagBody);
+
+    // Impact Shockwave Ring
+    const shockGeo = new THREE.RingGeometry(0.1, 0.35, 32);
+    const shockMat = new THREE.MeshBasicMaterial({ color: 0xfbbf24, side: THREE.DoubleSide, transparent: true, opacity: 0.0 });
+    const shockRing = new THREE.Mesh(shockGeo, shockMat);
+    shockRing.position.set(0.65, 1.55, -0.15);
+    shockRing.rotation.y = Math.PI / 2;
+    scene.add(shockRing);
+
+    // Fighter Materials
+    const allMeshes = [];
+    const mats = {
+      skin: new THREE.MeshPhysicalMaterial({
+        color: 0xc48c71,
+        roughness: 0.40,
+        clearcoat: 0.12,
+        sheen: 0.25,
+        sheenColor: new THREE.Color(0xe69c82)
+      }),
+      hair: new THREE.MeshStandardMaterial({ color: 0x292726, roughness: 0.62 }),
+      sclera: new THREE.MeshPhysicalMaterial({ color: 0xf5f2ee, roughness: 0.1, clearcoat: 0.9 }),
+      iris: new THREE.MeshPhysicalMaterial({ color: 0x3b2110, roughness: 0.1, clearcoat: 1.0 }),
+      airpod: new THREE.MeshPhysicalMaterial({ color: 0xf8fafc, roughness: 0.15, clearcoat: 0.8 }),
+      rashguard: new THREE.MeshStandardMaterial({ color: 0x1b2230, roughness: 0.65 }),
+      pants: new THREE.MeshStandardMaterial({ color: 0x14171f, roughness: 0.72 }),
+      glove: new THREE.MeshPhysicalMaterial({ color: 0x111317, roughness: 0.32, clearcoat: 0.4 }),
+      wraps: new THREE.MeshStandardMaterial({ color: 0xdc2626, roughness: 0.55 }),
+      wire: new THREE.MeshBasicMaterial({ color: 0x60a5fa, wireframe: true })
+    };
+
+    function addPart(geo, mat, parent, pos = [0,0,0], scale = [1,1,1], rot = [0,0,0]) {
+      const m = new THREE.Mesh(geo, mat);
+      m.userData.baseMat = mat;
+      m.position.set(...pos);
+      m.scale.set(...scale);
+      m.rotation.set(...rot);
+      m.castShadow = true;
+      m.receiveShadow = true;
+      parent.add(m);
+      allMeshes.push(m);
+      return m;
+    }
+
+    // Build Sculpted Head Geometry (Matched to User Reference Captures)
+    function createSculptedHeadGeo() {
+      const headGeo = new THREE.SphereGeometry(0.14, 64, 48);
+      const pos = headGeo.attributes.position;
+      for (let i = 0; i < pos.count; i++) {
+        let x = pos.getX(i) / 0.14;
+        let y = pos.getY(i) / 0.14;
+        let z = pos.getZ(i) / 0.14;
+
+        x *= 0.85; y *= 1.18; z *= 0.97;
+        if (y > 0.25) {
+          x *= 0.97 - 0.07 * Math.max(0, y - 0.5);
+          if (z > 0) z *= 1.04;
+        }
+        if (y > -0.1 && y < 0.35 && z > 0.4) {
+          const brow = Math.exp(-Math.pow(y - 0.16, 2) / 0.015) * Math.exp(-(x * x) / 0.22);
+          z += 0.055 * brow;
+        }
+        for (const side of [-1, 1]) {
+          const dx = x - side * 0.28, dy = y - 0.05;
+          const d2 = dx * dx + dy * dy;
+          if (z > 0.35 && d2 < 0.045) z -= 0.085 * Math.exp(-d2 / 0.014);
+        }
+        if (Math.abs(x) < 0.22 && y > -0.35 && y < 0.14 && z > 0.45) {
+          const nx = Math.exp(-(x * x) / (0.012 + 0.02 * Math.max(0, -y)));
+          const bridge = Math.exp(-Math.pow(y + 0.09, 2) / 0.03);
+          const tip = Math.exp(-Math.pow(y + 0.21, 2) / 0.008);
+          z += (0.16 * bridge + 0.11 * tip) * nx;
+        }
+        if (y > -0.45 && y < 0.02 && z > 0.15) {
+          const cheek = Math.exp(-Math.pow(Math.abs(x) - 0.38, 2) / 0.04) * Math.exp(-Math.pow(y + 0.18, 2) / 0.045);
+          x += (x > 0 ? 0.055 : -0.055) * cheek;
+          z += 0.038 * cheek;
+        }
+        if (y < -0.45) {
+          const taper = Math.max(0.52, 1.0 + 0.38 * (y + 0.45));
+          x *= taper;
+          if (z > 0.2) {
+            const chin = Math.exp(-(x * x) / 0.06) * Math.exp(-Math.pow(y + 0.72, 2) / 0.025);
+            z += 0.05 * chin;
+          }
+        }
+        pos.setXYZ(i, x * 0.14, y * 0.14, z * 0.14);
+      }
+      headGeo.computeVertexNormals();
+      return headGeo;
+    }
+
+    // Full-Body Articulated Rig Hierarchy
+    const fighterRoot = new THREE.Group();
+    fighterRoot.position.set(-0.25, 0, 0);
+    fighterRoot.rotation.y = Math.PI / 2.2; // Facing the heavy bag
+    scene.add(fighterRoot);
+
+    const pelvis = new THREE.Group();
+    pelvis.position.set(0, 0.96, 0);
+    fighterRoot.add(pelvis);
+
+    const spine = new THREE.Group();
+    spine.position.set(0, 0.16, 0);
+    pelvis.add(spine);
+
+    const chest = new THREE.Group();
+    chest.position.set(0, 0.24, 0);
+    spine.add(chest);
+
+    const neck = new THREE.Group();
+    neck.position.set(0, 0.25, 0);
+    chest.add(neck);
+
+    const headGroup = new THREE.Group();
+    headGroup.position.set(0, 0.12, 0);
+    neck.add(headGroup);
+
+    // Torso & Gi / Combat Rashguard Geometry
+    addPart(new THREE.SphereGeometry(0.18, 32, 24), mats.pants, pelvis, [0, 0, 0], [1.15, 0.85, 0.85]);
+    addPart(new THREE.CylinderGeometry(0.185, 0.185, 0.06, 32), mats.glove, pelvis, [0, 0.08, 0], [1.05, 1, 0.82]); // Black belt
+    addPart(new THREE.CylinderGeometry(0.20, 0.17, 0.28, 32), mats.rashguard, spine, [0, 0.10, 0], [1.05, 1, 0.78]);
+    addPart(new THREE.SphereGeometry(0.24, 32, 24), mats.rashguard, chest, [0, 0.09, 0], [1.12, 1.05, 0.76]);
+    addPart(new THREE.CylinderGeometry(0.22, 0.21, 0.04, 32), mats.wraps, chest, [0, 0.14, 0.01], [1.1, 1, 0.76]); // Red chest stripe
+    addPart(new THREE.CylinderGeometry(0.072, 0.082, 0.14, 24), mats.skin, neck, [0, 0.05, -0.01]);
+
+    // Sculpted Head + Eyes + Wavy Hair + Right Ear AirPod
+    addPart(createSculptedHeadGeo(), mats.skin, headGroup, [0, 0.05, 0]);
+    for (const side of [-1, 1]) {
+      addPart(new THREE.SphereGeometry(0.016, 16, 16), mats.sclera, headGroup, [side * 0.039, 0.058, 0.109]);
+      addPart(new THREE.SphereGeometry(0.009, 12, 12), mats.iris, headGroup, [side * 0.039, 0.058, 0.122], [1, 1, 0.4]);
+      addPart(new THREE.SphereGeometry(0.03, 16, 16), mats.skin, headGroup, [side * 0.118, 0.042, -0.008], [0.32, 1.15, 0.62]);
+    }
+    // Right-ear AirPod (-X)
+    addPart(new THREE.SphereGeometry(0.011, 12, 12), mats.airpod, headGroup, [-0.126, 0.036, 0.004]);
+    addPart(new THREE.CylinderGeometry(0.0035, 0.003, 0.026, 12), mats.airpod, headGroup, [-0.130, 0.022, 0.012], [1,1,1], [0.45, 0, -0.22]);
+
+    // Wavy Salt-and-Pepper Hair
+    const hairClusters = [
+      [-0.108, 0.088, -0.016, 0.042, 0.078, 0.09],
+      [0.108, 0.088, -0.016, 0.042, 0.078, 0.09],
+      [-0.116, 0.042, -0.036, 0.036, 0.068, 0.075],
+      [0.116, 0.042, -0.036, 0.036, 0.068, 0.075],
+      [0.0, 0.065, -0.105, 0.108, 0.10, 0.062],
+      [0.0, 0.172, -0.03, 0.095, 0.036, 0.09],
+      [-0.022, 0.18, 0.048, 0.036, 0.02, 0.045],
+      [0.02, 0.178, 0.05, 0.03, 0.018, 0.042]
+    ];
+    hairClusters.forEach(([hx, hy, hz, sx, sy, sz]) => {
+      addPart(new THREE.IcosahedronGeometry(1.0, 3), mats.hair, headGroup, [hx, hy, hz], [sx, sy, sz]);
+    });
+
+    // Arms & Legs Rigging
+    const joints = {};
+    for (const [side, label] of [[-1, 'R'], [1, 'L']]) {
+      const sh = new THREE.Group();
+      sh.position.set(side * 0.25, 0.18, 0);
+      chest.add(sh);
+
+      const el = new THREE.Group();
+      el.position.set(0, -0.27, 0);
+      sh.add(el);
+
+      const wr = new THREE.Group();
+      wr.position.set(0, -0.25, 0);
+      el.add(wr);
+
+      addPart(new THREE.SphereGeometry(0.078, 24, 24), mats.skin, sh, [0, -0.01, 0], [1, 1.1, 1]);
+      addPart(new THREE.CylinderGeometry(0.062, 0.054, 0.26, 24), mats.skin, sh, [0, -0.14, 0]);
+      addPart(new THREE.SphereGeometry(0.054, 20, 20), mats.skin, el);
+      addPart(new THREE.CylinderGeometry(0.052, 0.044, 0.24, 24), mats.skin, el, [0, -0.12, 0]);
+      addPart(new THREE.CylinderGeometry(0.048, 0.048, 0.055, 20), mats.wraps, wr, [0, 0.02, 0]);
+      addPart(new THREE.SphereGeometry(0.068, 24, 24), mats.glove, wr, [0, -0.035, 0.01], [0.95, 1.15, 1.1]);
+
+      joints['sh_' + label] = sh;
+      joints['el_' + label] = el;
+      joints['wr_' + label] = wr;
+
+      // Legs
+      const hip = new THREE.Group();
+      hip.position.set(side * 0.115, -0.04, 0);
+      pelvis.add(hip);
+
+      const knee = new THREE.Group();
+      knee.position.set(0, -0.42, 0);
+      hip.add(knee);
+
+      const ankle = new THREE.Group();
+      ankle.position.set(0, -0.42, 0);
+      knee.add(ankle);
+
+      addPart(new THREE.CylinderGeometry(0.095, 0.078, 0.42, 24), mats.pants, hip, [0, -0.21, 0]);
+      addPart(new THREE.SphereGeometry(0.076, 20, 20), mats.pants, knee);
+      addPart(new THREE.CylinderGeometry(0.072, 0.055, 0.40, 24), mats.glove, knee, [0, -0.20, 0]); // Padded shin guards
+      addPart(new THREE.BoxGeometry(0.09, 0.065, 0.21), mats.skin, ankle, [0, -0.04, 0.05]);
+
+      joints['hip_' + label] = hip;
+      joints['knee_' + label] = knee;
+      joints['ankle_' + label] = ankle;
+    }
+
+    // State & Animation Engine
+    let currentAnim = 'stance';
+    let camMode = 'orbit';
+    let wireMode = false;
+    let bagVelocity = 0;
+    let bagAngle = 0;
+    let shockAlpha = 0;
+    const keys = {};
+
+    window.setAnim = (name) => {
+      currentAnim = name;
+      document.querySelectorAll('.grid-btns button:not(.secondary)').forEach(b => b.classList.remove('active'));
+      const btn = document.getElementById('anim-' + name);
+      if (btn) btn.classList.add('active');
+    };
+
+    window.setCamMode = (mode) => {
+      camMode = mode;
+      document.getElementById('cam-orbit').classList.toggle('active', mode === 'orbit');
+      document.getElementById('cam-action').classList.toggle('active', mode === 'action');
+    };
+
+    window.toggleWireframe = () => {
+      wireMode = !wireMode;
+      document.getElementById('toggle-wire').classList.toggle('active', wireMode);
+      allMeshes.forEach(m => {
+        m.material = wireMode ? mats.wire : m.userData.baseMat;
+      });
+    };
+
+    window.exportFighterOBJ = () => {
+      const exporter = new OBJExporter();
+      const result = exporter.parse(fighterRoot);
+      const blob = new Blob([result], { type: 'text/plain' });
+      const a = document.createElement('a');
+      a.href = URL.createObjectURL(blob);
+      a.download = 'fullbody_fighter_avatar.obj';
+      a.click();
+    };
+
+    function triggerBagHit(power = 0.42, label = 'COMBO HIT!') {
+      bagVelocity = Math.max(bagVelocity, power);
+      shockAlpha = 1.0;
+      const banner = document.getElementById('combo-banner');
+      banner.textContent = label;
+      banner.classList.add('show');
+      clearTimeout(window._bannerTimer);
+      window._bannerTimer = setTimeout(() => banner.classList.remove('show'), 520);
+    }
+
+    window.addEventListener('keydown', (e) => {
+      keys[e.code] = true;
+      if (e.key >= '1' && e.key <= '6') {
+        const map = ['stance', 'jabcross', 'kick', 'uppercut', 'flurry', 'victory'];
+        window.setAnim(map[parseInt(e.key) - 1]);
+      }
+      if (e.code === 'Space') {
+        window.setAnim('jabcross');
+        triggerBagHit(0.55, 'POWER STRIKE!');
+      }
+    });
+    window.addEventListener('keyup', (e) => { keys[e.code] = false; });
+
+    function resetPose() {
+      pelvis.rotation.set(0, -0.32, 0);
+      spine.rotation.set(0.12, 0, 0);
+      chest.rotation.set(0.14, -0.15, 0);
+      headGroup.rotation.set(-0.18, 0.38, 0);
+
+      joints.sh_L.rotation.set(0.95, 0.25, -0.22);
+      joints.el_L.rotation.set(-1.85, 0, 0);
+      joints.sh_R.rotation.set(0.78, -0.25, 0.25);
+      joints.el_R.rotation.set(-2.05, 0, 0);
+
+      joints.hip_L.rotation.set(-0.32, 0.12, 0.08);
+      joints.knee_L.rotation.set(0.52, 0, 0);
+      joints.hip_R.rotation.set(0.28, -0.12, -0.08);
+      joints.knee_R.rotation.set(0.46, 0, 0);
+    }
+
+    const clock = new THREE.Clock();
+    let t = 0;
+
+    function animate() {
+      requestAnimationFrame(animate);
+      const dt = Math.min(clock.getDelta(), 0.05);
+      const speed = parseFloat(document.getElementById('speed-slider').value);
+      t += dt * speed * 4.5;
+
+      // WASD Footwork on the Octagon Mat
+      const moveSpeed = 2.0 * dt;
+      if (keys['KeyW'] || keys['ArrowUp']) fighterRoot.position.z -= moveSpeed;
+      if (keys['KeyS'] || keys['ArrowDown']) fighterRoot.position.z += moveSpeed;
+      if (keys['KeyA'] || keys['ArrowLeft']) fighterRoot.position.x -= moveSpeed;
+      if (keys['KeyD'] || keys['ArrowRight']) fighterRoot.position.x += moveSpeed;
+
+      resetPose();
+      const bounce = Math.sin(t * 2.0) * 0.035;
+      pelvis.position.y = 0.94 + bounce;
+
+      if (currentAnim === 'stance') {
+        chest.rotation.y = -0.15 + Math.sin(t) * 0.08;
+        joints.sh_L.rotation.x = 0.95 + Math.sin(t * 2) * 0.08;
+        joints.sh_R.rotation.x = 0.78 + Math.cos(t * 2) * 0.08;
+      } else if (currentAnim === 'jabcross') {
+        const phase = t % (Math.PI * 2);
+        const jab = Math.max(0, Math.sin(phase));
+        const cross = Math.max(0, Math.sin(phase - 1.35));
+
+        chest.rotation.y = -0.15 + jab * 0.35 - cross * 0.68;
+        joints.sh_L.rotation.x = 0.95 + jab * 0.65;
+        joints.el_L.rotation.x = -1.85 + jab * 1.65;
+
+        joints.sh_R.rotation.x = 0.78 + cross * 0.82;
+        joints.el_R.rotation.x = -2.05 + cross * 1.85;
+
+        if (cross > 0.94 && bagVelocity < 0.15) triggerBagHit(0.38, 'JAB-CROSS COMBO!');
+      } else if (currentAnim === 'kick') {
+        const kickWave = Math.max(0, Math.sin(t * 1.1));
+        pelvis.rotation.y = -0.32 - kickWave * 0.85;
+        pelvis.rotation.z = kickWave * 0.38;
+        spine.rotation.x = 0.12 - kickWave * 0.32;
+
+        joints.hip_R.rotation.x = 0.28 - kickWave * 1.95;
+        joints.hip_R.rotation.z = -0.08 - kickWave * 0.55;
+        joints.knee_R.rotation.x = 0.46 - kickWave * 0.40;
+
+        if (kickWave > 0.95 && bagVelocity < 0.2) triggerBagHit(0.55, 'ROUNDHOUSE KICK!');
+      } else if (currentAnim === 'uppercut') {
+        const up = Math.max(0, Math.sin(t * 1.3));
+        pelvis.position.y = 0.90 + up * 0.10;
+        chest.rotation.x = 0.18 - up * 0.35;
+        chest.rotation.y = -0.15 - up * 0.65;
+        joints.sh_R.rotation.x = 0.45 + up * 1.35;
+        joints.el_R.rotation.x = -1.95 + up * 0.65;
+        if (up > 0.95 && bagVelocity < 0.2) triggerBagHit(0.48, 'POWER UPPERCUT!');
+      } else if (currentAnim === 'flurry') {
+        const lPunch = Math.max(0, Math.sin(t * 3.2));
+        const rPunch = Math.max(0, Math.sin(t * 3.2 + Math.PI));
+        chest.rotation.y = (lPunch - rPunch) * 0.45;
+        joints.sh_L.rotation.x = 0.95 + lPunch * 0.68;
+        joints.el_L.rotation.x = -1.85 + lPunch * 1.65;
+        joints.sh_R.rotation.x = 0.78 + rPunch * 0.75;
+        joints.el_R.rotation.x = -2.05 + rPunch * 1.75;
+        if ((lPunch > 0.95 || rPunch > 0.95) && bagVelocity < 0.18) triggerBagHit(0.28, 'SPEED FLURRY!');
+      } else if (currentAnim === 'victory') {
+        pelvis.rotation.y = Math.sin(t * 0.5) * 0.35;
+        headGroup.rotation.set(-0.1, 0, 0);
+        joints.sh_L.rotation.set(2.65, 0, -0.45);
+        joints.el_L.rotation.set(-0.65, 0, 0);
+        joints.sh_R.rotation.set(2.65, 0, 0.45);
+        joints.el_R.rotation.set(-0.65, 0, 0);
+      }
+
+      // Heavy Bag Spring Physics
+      bagAngle += bagVelocity;
+      bagVelocity -= bagAngle * 0.08;
+      bagVelocity *= 0.92;
+      bagPivot.rotation.z = -bagAngle;
+      bagPivot.rotation.x = Math.sin(t * 2) * bagAngle * 0.25;
+
+      // Shockwave Ring Decay
+      if (shockAlpha > 0.01) {
+        shockAlpha *= 0.88;
+        shockRing.material.opacity = shockAlpha;
+        const s = 1.0 + (1.0 - shockAlpha) * 2.2;
+        shockRing.scale.set(s, s, s);
+      } else {
+        shockRing.material.opacity = 0;
+      }
+
+      if (camMode === 'action') {
+        const camX = fighterRoot.position.x - 1.9 + Math.sin(t * 0.25) * 0.35;
+        const camZ = fighterRoot.position.z + 2.6 + Math.cos(t * 0.25) * 0.35;
+        camera.position.lerp(new THREE.Vector3(camX, 1.65, camZ), 0.05);
+        controls.target.lerp(new THREE.Vector3(0.35, 1.35, -0.1), 0.08);
+      }
+
+      controls.update();
+      renderer.render(scene, camera);
+    }
+    animate();
+
+    window.addEventListener('resize', () => {
+      camera.aspect = window.innerWidth / window.innerHeight;
+      camera.updateProjectionMatrix();
+      renderer.setSize(window.innerWidth, window.innerHeight);
+    });
+  </script>
+</body>
+</html>
