@@ -147,7 +147,11 @@ function arenaApi() {
     name: 'dojo-arena-api',
     configureServer(server) {
       // Every 5 minutes, weigh in any entry that wrote READY.json for the current call (judge_pass.mjs).
-      setInterval(() => spawnDetached('judge_pass.mjs', ['--pending']), 5 * 60 * 1000);
+      // The Bell rings again on the same beat so failed or interrupted agents retry (it enforces its own caps).
+      setInterval(() => {
+        spawnDetached('judge_pass.mjs', ['--pending']);
+        spawnDetached('bell.mjs');
+      }, 5 * 60 * 1000);
       server.middlewares.use(async (req, res, next) => {
         const url = new URL(req.url, 'http://localhost');
         try {

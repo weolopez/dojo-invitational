@@ -13,6 +13,7 @@ import { execFileSync, spawn, spawnSync } from 'node:child_process';
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
+import { cleanEnv } from './bell.mjs';
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 const ROOT = path.resolve(HERE, '..');
@@ -80,7 +81,7 @@ function judge(id) {
     weighIn('approve', id, `Self-submitted: passes every automated check. Realism awaits the owner's score. Entrant's note: ${(ready?.summary ?? '').slice(0, 200)}`);
   } else {
     const r = spawnSync('claude', ['-p', judgePrompt(id, ready, rendered), '--dangerously-skip-permissions'],
-      { cwd: ROOT, encoding: 'utf8', timeout: 20 * 60 * 1000 });
+      { cwd: ROOT, encoding: 'utf8', timeout: 20 * 60 * 1000, env: cleanEnv() });
     log(id, 'judge run exit', r.status, (r.stdout ?? '').trim().split('\n').slice(-2).join(' | '));
   }
   const git = (...a) => execFileSync('git', a, { cwd: ROOT, encoding: 'utf8' }).trim();

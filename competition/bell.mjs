@@ -23,10 +23,17 @@ const RUN_LIMIT_MS = 75 * 60 * 1000;
 const MIN_GAP_MS = 60 * 60 * 1000;
 
 const AGENTS = {
-  gemini: { name: 'Gemini', cmd: 'gemini', args: (p) => ['-p', p, '--approval-mode', 'yolo'] },
+  // Google retired the Gemini CLI's free tier in favour of Antigravity, so Gemini runs through `agy`.
+  gemini: { name: 'Gemini', cmd: process.env.HOME + '/.local/bin/agy', args: (p) => ['-p', p, '--dangerously-skip-permissions', '--add-dir', ROOT] },
   hermes: { name: 'Hermes', cmd: process.env.HOME + '/.local/bin/hermes', args: (p) => ['-z', p, '--yolo', '--in', ROOT] },
   claude: { name: 'Claude', cmd: 'claude', args: (p) => ['-p', p, '--dangerously-skip-permissions'] },
 };
+
+/** The environment without variables inherited from the Claude session that runs the dev server, so each CLI
+ *  uses its own login. */
+export function cleanEnv() {
+  return Object.fromEntries(Object.entries(process.env).filter(([k]) => !/^(ANTHROPIC_|CLAUDE_CODE_|CLAUDECODE)/.test(k)));
+}
 
 const readJson = (f, fallback) => { try { return JSON.parse(fs.readFileSync(f, 'utf8')); } catch { return fallback; } };
 
@@ -77,7 +84,7 @@ function ring(dryRun) {
     const p = prompt(id, agent.name, call);
     if (dryRun) { console.log(`[bell] ${id}: would run ${agent.cmd}`); continue; }
     const log = fs.openSync(path.join(STATE_DIR, 'logs', `${id}-call${call.call}.log`), 'a');
-    const child = spawn(agent.cmd, agent.args(p), { cwd: ROOT, stdio: ['ignore', log, log], detached: true });
+    const child = spawn(agent.cmd, agent.args(p), { cwd: ROOT, stdio: ['ignore', log, log], detached: true, env: cleanEnv() });
     const tries = last.call === call.call ? (last.tries ?? 0) + 1 : 1;
     state.runs[id] = { call: call.call, startedAt: Date.now(), running: true, pid: child.pid, tries };
     child.on('error', (err) => fs.appendFileSync(path.join(STATE_DIR, 'logs', `${id}-call${call.call}.log`), `\n[bell] failed to start: ${err.message}\n`));
