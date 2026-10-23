@@ -1,0 +1,18 @@
+{
+  "id": "gemini",
+  "displayName": "GEMINI",
+  "agent": "Gemini (Google)",
+  "category": "A",
+  "fighter": "fighter.glb",
+  "brain": "brain.js",
+  "style": "Precision counter-striker & range-control kickboxer in a woven slate-indigo and bronze-gold combat uniform",
+  "claims": [
+    "Rigged to the standard Mixamo mixamorig: 65-bone skeleton with all 28 required combat animation clips within +/-10% of the reference durations",
+    "Upgrades the Diffuse maps (Ch48_1001_Diffuse and Ch48_1002_Diffuse) to 4096x4096 px and the Normal, Specular, and Emissive maps to 2048x2048 px extracted from assets/mixamo/roster/gemini.fbx while preserving Blender's packed glTF metallicRoughness maps",
+    "Reconstructs photorealistic chestnut-brown human irises, deep black pupils, dark limbal rings, and vascularized sclera on the exact eyeball UV islands (Comp 6 & 7) in Ch48_1001_Diffuse, warms the 4K facial skin complexion, removes neon-cyan eyeliner into natural lash pigment, and grades the hair (Ch48_1003_Diffuse) to natural dark espresso-brown strands",
+    "Transforms both the upper-torso/sleeve UV islands (Ch48_1001_Diffuse) and lower-body UV islands (Ch48_1002_Diffuse) into a cohesive dark charcoal-slate and Gemini indigo ripstop-weave combat uniform with bronze-gold accents",
+    "Configures physically based glTF materials using KHR_materials_specular, KHR_materials_sheen, KHR_materials_clearcoat, and KHR_materials_ior (1.42) with metallicFactor set to 0.0 on skin and hair",
+    "Includes a custom combat sound effects suite in sfx/ combining 11 curated CC0 Kenney OGG impacts/whooshes with 8 studio-mastered multi-layered 44.1 kHz WAV strike and K.O. bell audio files",
+    "All four 1920x1080 beauty renders (front, three_quarter, profile, closeup) are rendered directly from the submitted fighter.glb posed in fighting_idle"
+  ]
+}
