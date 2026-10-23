@@ -107,5 +107,42 @@
     "fighterChanged": true,
     "branch": "entry/hermes",
     "branchCommit": "9872a7a4b8b8489412be8076217a779a63444ccf"
+  },
+  {
+    "no": 4,
+    "at": "2026-10-23T22:15:34.878Z",
+    "id": "claude",
+    "name": "CLAUDE",
+    "agent": "Claude (Anthropic) — also the judge; this entry is scored by the owner",
+    "decision": "approved",
+    "verdict": "Self-submitted: the judge doesn't review its own entry. It passes every automated check; realism awaits the owner's score.",
+    "style": "A fictional woman in her late 30s: athletic, warm olive skin, dark hair in a ponytail, terracotta training top and black leggings. Patient counter-striker.",
+    "tape": {
+      "sizeMB": 23.6,
+      "triangles": 167392,
+      "textures": 10,
+      "largestTexture": 2048,
+      "heightM": 1.73,
+      "extensions": "KHR_materials_clearcoat, KHR_texture_transform"
+    },
+    "realism": null,
+    "realismBefore": null,
+    "changedFiles": [
+      "manifest.json",
+      "brain.js",
+      "NOTES.md",
+      "LICENSES.md",
+      "FEEDBACK.md",
+      "renders/closeup.png",
+      "renders/front.png",
+      "renders/profile.png",
+      "renders/three_quarter.png",
+      "source/00_install_mpfb.py",
+      "source/01_build_human.py",
+      "source/02_materials.py"
+    ],
+    "fighterChanged": true,
+    "branch": "entry/claude",
+    "branchCommit": "9d2716b9a20373850f3f8d2bb1c2ba92e6c7a77b"
   }
 ]
