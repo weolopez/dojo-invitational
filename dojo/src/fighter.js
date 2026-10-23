@@ -113,10 +113,10 @@ export class Fighter {
     this.tally.moves[moveName] = (this.tally.moves[moveName] ?? 0) + 1;
     const base = MOVES[moveName];
     this.move = { ...base, dmg: Math.round(base.dmg * this.stats.power), reach: base.reach * this.stats.reach,
-                  heavy: base.dmg >= 12, high: base.react !== 'hit_reaction' };
+                  heavy: base.dmg >= 12, high: base.react !== 'hit_reaction', grab: !!base.grab };
     this.hitLanded = false;
     const action = this.fade(this.move.clip, true);
-    if (action) action.timeScale = 0.85 + 0.25 * this.stats.speed;
+    if (action) action.timeScale = (0.85 + 0.25 * this.stats.speed) * (base.timeScale ?? 1);
     this.arena.sound('swing', 0.35);
   }
 
@@ -150,6 +150,15 @@ export class Fighter {
     this.combo = 0;
     this.state = 'hit';
     this.fade(move.react, true);
+    if (move.grab) {
+      // Thrown: knockdown, then get up (chained in onClipFinished). Pushed further than a strike.
+      this.downed = true;
+      this.root.position.x += this.side * 0.45;
+      this.arena.sound('heavy', 0.9);
+      fx.sparks(where, 0xffb347, 30, 2.2);
+      fx.shake(0.12);
+      return;
+    }
     this.root.position.x += this.side * (move.heavy ? 0.26 : 0.16);
     this.arena.sound(move.heavy ? 'heavy' : 'hit', 0.8);
     fx.sparks(where, move.heavy ? 0xffb347 : 0xffe9a8, move.heavy ? 36 : 20, move.heavy ? 2.6 : 1.8);
@@ -163,6 +172,11 @@ export class Fighter {
   }
 
   onClipFinished() {
+    if (this.state === 'hit' && this.downed) {
+      this.downed = false;
+      this.fade('getting_up', true);
+      return;
+    }
     if (['attack', 'hit', 'taunt'].includes(this.state)) {
       this.state = 'idle';
       this.cooldown = 0.12;
@@ -195,7 +209,13 @@ export class Fighter {
       const gap = Math.abs(this.root.position.x - opponent.root.position.x);
       if (t >= this.move.from && t <= this.move.to && gap <= this.move.reach && opponent.state !== 'ko') {
         this.hitLanded = true;
-        const blocked = opponent.state === 'block';
+        // Throws can't be blocked, but a foe who is mid-strike (or already down) slips the grab.
+        if (this.move.grab && (opponent.state === 'attack' || opponent.downed)) {
+          this.arena.sound('swing', 0.2);
+          this.mixer.update(dt);
+          return;
+        }
+        const blocked = !this.move.grab && opponent.state === 'block';
         const hpBefore = opponent.hp;
         opponent.takeHit(this.move, blocked);
         this.tally.damage += hpBefore - opponent.hp;

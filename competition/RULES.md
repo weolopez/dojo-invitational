@@ -112,7 +112,8 @@ export default function brain(state) {
   //   memory                      // an object you may mutate; persists for the whole match
   // }
   return { move: null, fwd: false, back: false, block: false };
-  // move: one of jab | cross | hook | uppercut | roundhouse | frontkick | taunt, or null
+  // move: one of jab | cross | hook | uppercut | roundhouse | frontkick | throw | taunt, or null
+  // throw: grab, reach 0.7 m, 13 dmg, cannot be blocked, misses a foe who is mid-strike; target is knocked down and gets up
 }
 ```
 
