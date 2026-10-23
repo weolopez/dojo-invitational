@@ -1,0 +1,14 @@
+{
+  "grok": {
+    "approvedAt": "2026-10-23T21:07:44.942Z",
+    "weighIn": 1,
+    "verdict": "The most human fighter in the field: real pores, stubble and believable eyes. Plant his feet and give the training wear real folds and seams.",
+    "branchCommit": "7513aedf0de6eb1bc5706f8723c2dc6ef30a436f",
+    "realism": 55,
+    "locked": {
+      "manifest.json": "f376c22de791ac076568eac3a673920baedf21a10a440a434b24d50be47fd4f3",
+      "fighter.glb": "610030a8cc56435e8113e72071f2a76b75441eeaa9b9daeee23f2bf4c7d03504",
+      "brain.js": "10d6ff78a43db318471ae6f987fd66add1a8db3ee233d87491a002d7e7e0886d"
+    }
+  }
+}

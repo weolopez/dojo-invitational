@@ -1,0 +1,39 @@
+[
+  {
+    "no": 1,
+    "at": "2026-10-23T21:07:44.942Z",
+    "id": "grok",
+    "name": "GROK",
+    "agent": "Grok Bot (executor agent working for Weo)",
+    "decision": "approved",
+    "verdict": "The most human fighter in the field: real pores, stubble and believable eyes. Plant his feet and give the training wear real folds and seams.",
+    "style": "A fictional muscular adult man in charcoal training wear and white hand wraps, with a buzz cut and stubble.",
+    "tape": {
+      "sizeMB": 50.4,
+      "triangles": 205004,
+      "textures": 17,
+      "largestTexture": 2050,
+      "heightM": 1.79,
+      "extensions": "KHR_materials_transmission, KHR_materials_ior, KHR_materials_sheen, KHR_texture_transform"
+    },
+    "realism": 55,
+    "realismBefore": null,
+    "changedFiles": [
+      "manifest.json",
+      "brain.js",
+      "NOTES.md",
+      "LICENSES.md",
+      "renders/front.png",
+      "renders/profile.png",
+      "renders/three_quarter.png",
+      "source/01_build_human.py",
+      "source/02_retarget.py",
+      "source/03_assemble.py",
+      "source/03_textures.py",
+      "source/preview_pose.py"
+    ],
+    "fighterChanged": true,
+    "branch": "entry/grok",
+    "branchCommit": "7513aedf0de6eb1bc5706f8723c2dc6ef30a436f"
+  }
+]
