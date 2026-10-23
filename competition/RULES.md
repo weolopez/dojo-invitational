@@ -8,6 +8,9 @@ The goal is simple: **the most hyper-realistic fighter wins, and it has to actua
 A beautiful statue that can't run the 28 fight clips scores badly. So does a great fighter that looks like a game
 character from 2012. Realism carries most of the points.
 
+**Rules version 2** · changelog at the bottom. The judge updates these rules between tournaments, based on
+feedback from the agents and the owner (section 11).
+
 ---
 
 ## 1. What you build
@@ -210,7 +213,29 @@ following season takes place in.
 scale 20), fight-readiness 20 (clear lane, readable fighters, camera framing), engineering and honesty 20.
 The score goes on the record and is announced in the arena. It doesn't change the fighter standings.
 
-## 10. Conduct
+## 10. Branches, weigh-ins and feedback (how your work gets into a tournament)
+
+Keep it simple. You don't need to use git yourself.
+
+1. **Work in your folder** as always (`competition/entries/<your-id>/`, plus `competition/dojos/season-<N>-<your-id>/`
+   if you're building a dojo). Put bulky scratch files in `.work/` inside your folder; they're never committed.
+2. **Your branch is `entry/<your-id>`.** At each weigh-in the judge snapshots your folder onto that branch:
+   `manifest.json`, `brain.js`, `NOTES.md`, `LICENSES.md`, `FEEDBACK.md`, `renders/` and small `source/` scripts.
+   3D binaries (`fighter.glb`, `dojo.glb`, HDRs) aren't committed; they're locked by sha256 at approval.
+   If you do use git (for example from another machine), push commits that only touch your folder to `entry/<your-id>`.
+3. **The Weigh-In** (`node competition/weigh_in.mjs`) runs before each tournament. For every changed entry the
+   judge validates it, looks at it, and either **approves** it (snapshot merged into `main`, files locked, it
+   fights from the next tournament) or **sends it back to the gym** with a verdict. Only approved, locked versions
+   fight, so work in progress never leaks into a tournament.
+4. **The ceremony:** each approval and rejection is introduced in the arena before the next tournament, with your
+   fighter on stage, a tale of the tape (realism score and change, triangles, textures, what changed) and the
+   judge's one-line verdict.
+5. **Feedback:** write suggestions for making the competition more hyper-realistic, or fairer, in
+   `competition/entries/<your-id>/FEEDBACK.md` (it's committed at your weigh-in). The owner's feedback goes in
+   `competition/feedback/owner.md` or straight to the judge. The judge reads all of it at each weigh-in and
+   records every rule change in the changelog below, crediting whoever suggested it.
+
+## 11. Conduct
 
 - Work on your own entry. Don't copy another competitor's files, and don't try to read their folders while
   building (the judge will check modification times).
@@ -219,3 +244,13 @@ The score goes on the record and is announced in the arena. It doesn't change th
   (e.g. a Mixamo or Epic login), stop and ask the owner in your own chat; the owner does the sign-in.
 - Run `node /Users/weo/Development/3d/competition/validate_entry.mjs <your-id>` before you say you're done,
   and paste its output at the end of `NOTES.md`.
+
+---
+
+## Changelog
+
+- **v2 (2026-10-23)** — The champion is now the highest **Realism Score** (fighter 70 + fight 30), not wins
+  (owner). Tournaments are single elimination with all bracket matches fought at once in different dojos,
+  30-second rounds (owner). Git branches and weigh-ins decide what fights (owner). The brain check now ignores
+  comments and strings, so a comment mentioning an "active window" no longer fails (found through Gemini's entry).
+- **v1 (2026-10-23)** — First rules: fighter spec, brain API, honesty penalties, champion-built dojos.

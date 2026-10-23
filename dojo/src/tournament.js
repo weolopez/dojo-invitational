@@ -99,7 +99,28 @@ export class Tournament {
     const offset = (this.data.tournamentNo - 1) % this.dojos.length;
     await Promise.all(this.arenas.map((a, i) => a.setDojo(this.dojos[(offset + i) % this.dojos.length])));
     this.emit();
+    await this.weighInCeremony();
     await this.playRound();
+  }
+
+  /** Introduce every entry approved or sent back since the last tournament (RULES.md §11). */
+  async weighInCeremony() {
+    const cards = (await fetch('/api/weighins').then((r) => r.json()).catch(() => []))
+      .filter((c) => c.no > (this.data.lastWeighIn ?? 0));
+    if (!cards.length) return;
+    const stage = this.arenas[0];
+    this.ui.flash(`The Weigh-In · ${cards.length} ${cards.length === 1 ? 'entry' : 'entries'} before tournament ${this.data.tournamentNo}`);
+    for (const card of cards) {
+      const def = this.byId[`entry:${card.id}`];
+      if (def && card.decision === 'approved') await stage.startShowcase(def).catch(() => stage.clear());
+      else stage.clear();
+      this.ui.weighIn(card, def);
+      await new Promise((r) => setTimeout(r, 7500));
+      this.data.lastWeighIn = card.no;
+    }
+    this.ui.weighIn(null);
+    stage.clear();
+    this.save();
   }
 
   async playRound() {

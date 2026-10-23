@@ -1,5 +1,6 @@
 import { defineConfig } from 'vite';
 import { execFile } from 'node:child_process';
+import crypto from 'node:crypto';
 import fs from 'node:fs';
 import path from 'node:path';
 
@@ -11,6 +12,10 @@ const SERVED_FILES = new Set(['fighter.glb', 'brain.js', 'manifest.json']);
 const DOJOS = path.join(COMPETITION, 'dojos');
 const CHAMPIONS_FILE = path.join(COMPETITION, 'champions.json');
 const SCORES_FILE = path.join(COMPETITION, 'scores.json');
+const APPROVED_FILE = path.join(COMPETITION, 'approved.json');
+const APPROVED_DIR = path.join(COMPETITION, '.approved');
+const WEIGHINS_FILE = path.join(COMPETITION, 'weighins.json');
+const sha256 = (f) => { try { return crypto.createHash('sha256').update(fs.readFileSync(f)).digest('hex'); } catch { return null; } };
 const COMMISSION_TEMPLATE = path.join(COMPETITION, 'prompts', 'dojo_commission_template.md');
 const BUILDERS = new Set(['gemini', 'grok', 'hermes', 'muse', 'aaron']);
 const DOJO_DIR = /^season-(\d+)-([a-z0-9_-]+)$/;
@@ -105,24 +110,28 @@ function arenaApi() {
       server.middlewares.use(async (req, res, next) => {
         const url = new URL(req.url, 'http://localhost');
         try {
+          // Only entries approved at a weigh-in fight, and only the locked (approved) copy of their files.
           if (url.pathname === '/api/entries' && req.method === 'GET') {
-            const ids = fs.existsSync(ENTRIES)
-              ? fs.readdirSync(ENTRIES).filter((d) => !d.startsWith('_') && fs.existsSync(path.join(ENTRIES, d, 'manifest.json')))
-              : [];
+            const approved = fs.existsSync(APPROVED_FILE) ? JSON.parse(fs.readFileSync(APPROVED_FILE, 'utf8')) : {};
             const entries = [];
-            for (const id of ids) {
-              if (!fs.existsSync(path.join(ENTRIES, id, 'fighter.glb'))) continue;
-              if (!(await validate(id))) continue;
-              const manifest = JSON.parse(fs.readFileSync(path.join(ENTRIES, id, 'manifest.json'), 'utf8'));
+            for (const [id, a] of Object.entries(approved)) {
+              const dir = path.join(APPROVED_DIR, id);
+              const intact = [...SERVED_FILES].every((f) => sha256(path.join(dir, f)) === a.locked?.[f]);
+              if (!intact) continue;
+              const manifest = JSON.parse(fs.readFileSync(path.join(dir, 'manifest.json'), 'utf8'));
               if (manifest.category !== 'A') continue;
-              entries.push({ id, name: manifest.displayName ?? id, agent: manifest.agent ?? id, style: manifest.style ?? '' });
+              entries.push({ id, name: manifest.displayName ?? id, agent: manifest.agent ?? id, style: manifest.style ?? '',
+                weighIn: a.weighIn });
             }
             return json(res, entries);
+          }
+          if (url.pathname === '/api/weighins' && req.method === 'GET') {
+            return json(res, fs.existsSync(WEIGHINS_FILE) ? JSON.parse(fs.readFileSync(WEIGHINS_FILE, 'utf8')) : []);
           }
           const fileMatch = url.pathname.match(/^\/entries\/([a-z0-9_-]+)\/([a-z._]+)$/i);
           if (fileMatch && req.method === 'GET') {
             const [, id, file] = fileMatch;
-            const full = path.join(ENTRIES, id, file);
+            const full = path.join(APPROVED_DIR, id, file);
             if (!SERVED_FILES.has(file) || id.startsWith('_') || !fs.existsSync(full)) return json(res, { error: 'not found' }, 404);
             res.setHeader('Content-Type', file.endsWith('.glb') ? 'model/gltf-binary' : file.endsWith('.js') ? 'text/plain' : 'application/json');
             return fs.createReadStream(full).pipe(res);

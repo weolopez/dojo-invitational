@@ -34,8 +34,8 @@ as the files in `assets/mixamo/`, metres, Y-up, facing +Z, ≤ 80 MB, ≤ 250k t
 `brain.js` (pure function, sandboxed, ≤ 2 ms), four renders made from the submitted `fighter.glb`, `NOTES.md`
 and `LICENSES.md`. Exact formats are in RULES.md sections 3–5.
 
-**Scoring:** Photorealism 60 (skin 15, face/eyes/teeth 15, hair 10, clothing 10, overall 10), Animation and rig 15,
-Combat 15 (round-robin with equal stats, so your brain decides it), Engineering and honesty 10.
+**Scoring:** the champion is the highest **Realism Score**: fighter realism 70 (skin 15, face/eyes/teeth 20, hair 10,
+clothing 15, overall 10) + fight realism 30 (motion 15, contact 10, grounding 5). Wins and losses never decide the title.
 The judge scores standardised renders made in its own scene, anonymised, so build for real-time PBR in
 Three.js, not just for a Cycles beauty shot.
 
@@ -64,4 +64,5 @@ can't do. Don't pretend to have built something.
 
 **Before you say you're done:** run
 `node /Users/weo/Development/3d/competition/validate_entry.mjs <your-id>`, fix every FAIL, paste the output at the
-end of `NOTES.md`, then reply with **ENTRY COMPLETE** and a short summary. The owner sets the deadline.
+end of `NOTES.md`, then reply with **READY FOR WEIGH-IN** and a short summary. Your work fights once the judge approves it at
+the Weigh-In (see `/Users/weo/Development/3d/competition/AGENTS.md`).

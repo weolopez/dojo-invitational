@@ -299,6 +299,32 @@ function renderBroadcast(t) {
   renderHeader(t);
 }
 
+/** The Weigh-In card: tale of the tape, what changed, realism score and the judge's verdict. */
+function showWeighIn(card) {
+  const el = $('t-weighin');
+  document.body.classList.toggle('weighin', !!card);
+  if (!card) { el.classList.add('hidden'); ui.hud.classList.remove('hidden'); return; }
+  ui.hud.classList.add('hidden');
+  const t = card.tape ?? {};
+  const delta = card.realismBefore !== null && card.realism !== null && card.realism !== card.realismBefore
+    ? ` <em>(${card.realism > card.realismBefore ? '+' : ''}${card.realism - card.realismBefore})</em>` : '';
+  const row = (k, v) => `<div class="rec"><span>${k}</span><b>${v}</b></div>`;
+  el.innerHTML = `<div class="w-head">THE WEIGH-IN · #${card.no}</div>`
+    + `<div class="w-name">${esc(card.name)}</div><div class="w-agent">${esc(card.agent)} · branch ${esc(card.branch)} @ ${esc(card.branchCommit?.slice(0, 7))}</div>`
+    + `<div class="w-stamp ${card.decision === 'approved' ? 'ok' : 'no'}">${card.decision === 'approved' ? 'APPROVED' : 'SENT BACK TO THE GYM'}</div>`
+    + `<div class="w-style">${esc(card.style)}</div>`
+    + '<div class="w-tape"><h3>Tale of the tape</h3>'
+    + row('Realism score', card.realism !== null ? `${card.realism}/100${delta}` : 'not judged yet')
+    + row('Height', t.heightM ? `${t.heightM} m` : '—')
+    + row('Triangles', t.triangles ? t.triangles.toLocaleString() : '—')
+    + row('Textures', t.textures ? `${t.textures} · up to ${t.largestTexture} px` : '—')
+    + row('File', t.sizeMB ? `${t.sizeMB} MB` : '—')
+    + row('This weigh-in', card.fighterChanged ? 'new fighter model' : 'brain / docs only')
+    + `<div class="w-files">${(card.changedFiles ?? []).slice(0, 6).map(esc).join(' · ')}</div></div>`
+    + `<blockquote>“${esc(card.verdict)}”<cite>— the Judge</cite></blockquote>`;
+  el.classList.remove('hidden');
+}
+
 function announceChampion(entry, t) {
   const main = arenas[mainIdx];
   if (!entry.champion) {
@@ -324,7 +350,7 @@ async function startTournament() {
     ui.tiles.appendChild(el);
     tileEls.push(el);
   }
-  tournament = new Tournament(arenas, { flash, champion: announceChampion });
+  tournament = new Tournament(arenas, { flash, champion: announceChampion, weighIn: showWeighIn });
   if (import.meta.env.DEV) { window.__tournament = tournament; window.__arenas = arenas; }
   tournament.onChange(renderBroadcast);
   await tournament.init();

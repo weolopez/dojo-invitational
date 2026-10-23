@@ -220,3 +220,26 @@ body.tournament #banner { font-size: clamp(48px, 7vw, 110px); }
 }
 #t-flash.show { animation: flash 3.2s ease-out; }
 @keyframes flash { 0% { opacity: 0; transform: scale(0.9); } 10% { opacity: 1; transform: scale(1); } 80% { opacity: 1; } 100% { opacity: 0; } }
+
+/* ---------- The Weigh-In card ---------- */
+#t-weighin {
+  position: absolute; top: 4vh; left: 2vw; width: min(440px, 28vw);
+  background: rgba(10, 10, 12, 0.88); border: 1px solid var(--line); border-radius: 14px; padding: 16px 18px;
+  box-shadow: 0 18px 50px rgba(0, 0, 0, 0.6);
+}
+.w-head { font-size: 12px; letter-spacing: 3px; color: var(--muted); }
+.w-name { font-family: "Bangers", sans-serif; font-size: 54px; letter-spacing: 2px; line-height: 1; margin-top: 6px; color: #f6d36b; }
+.w-agent { color: var(--muted); font-size: 11px; margin-top: 4px; }
+.w-stamp {
+  display: inline-block; margin: 12px 0 6px; padding: 4px 12px; border: 3px solid; border-radius: 6px; transform: rotate(-3deg);
+  font-family: "Bangers", sans-serif; font-size: 26px; letter-spacing: 2px;
+}
+.w-stamp.ok { color: #4ade80; border-color: #4ade80; }
+.w-stamp.no { color: #f87171; border-color: #f87171; }
+.w-style { color: var(--text); font-size: 13px; margin-bottom: 10px; }
+.w-tape h3 { font-weight: 400; font-size: 11px; letter-spacing: 2px; color: var(--muted); text-transform: uppercase; margin-bottom: 2px; }
+.w-tape em { color: #4ade80; font-style: normal; }
+.w-files { color: var(--muted); font-size: 10px; margin-top: 6px; line-height: 1.5; }
+#t-weighin blockquote { margin-top: 12px; font-size: 15px; line-height: 1.45; color: var(--text); }
+#t-weighin cite { display: block; margin-top: 4px; color: #f6d36b; font-style: normal; font-size: 12px; }
+body.weighin #t-header { display: none; }

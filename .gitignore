@@ -36,3 +36,8 @@ competition/dojos/*/.work/
 competition/.approved/
 competition/tournament_state.json
 competition/results.jsonl
+
+# Entries and champion dojos enter git only through the Weigh-In (competition/weigh_in.mjs force-adds its allowlist).
+competition/entries/*
+!competition/entries/_example/
+competition/dojos/season-*/

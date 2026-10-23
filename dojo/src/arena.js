@@ -61,7 +61,21 @@ export class Arena {
     this.timers.push({ at: this.clock + seconds, fn, token: this.token });
   }
 
+  /** Weigh-in showcase: one fighter posing at centre stage with a slow orbiting camera. */
+  async startShowcase(def) {
+    const gltf = await loadFighterAsset(def.id, def.url);
+    this.clear();
+    const f = new Fighter(this, def, gltf, -1);
+    f.root.position.set(0, 0, 0);
+    f.root.rotation.y = 0;
+    f.fade('taunt', false);
+    this.showcase = f;
+    this.showcaseAngle = -0.6;
+  }
+
   clear() {
+    this.showcase?.dispose();
+    this.showcase = null;
     this.fighters.forEach((f) => f.dispose());
     this.fighters = [];
     this.active = false;
@@ -135,6 +149,13 @@ export class Arena {
     this.timers = this.timers.filter((t) => t.at > this.clock);
     for (const t of due) if (t.token === this.token) t.fn();
 
+    if (this.showcase) {
+      this.showcase.mixer.update(realDt);
+      this.showcaseAngle += realDt * 0.25;
+      this.camera.position.set(Math.sin(this.showcaseAngle) * 3.1, 1.45, Math.cos(this.showcaseAngle) * 3.1);
+      this.camera.lookAt(0, 1.15, 0);
+      return;
+    }
     if (!this.active) {
       this.effects.update(realDt);
       this.idleAngle += realDt * 0.12;
