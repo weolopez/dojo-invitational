@@ -12,5 +12,19 @@
       "name": "GROK"
     },
     "record": "55/100 realism"
+  },
+  {
+    "at": "2026-10-23T21:32:12.358Z",
+    "league": "Dojo Invitational",
+    "season": 2,
+    "champion": {
+      "id": "entry:grok",
+      "name": "GROK"
+    },
+    "builder": {
+      "id": "grok",
+      "name": "GROK"
+    },
+    "record": "55/100 realism"
   }
 ]

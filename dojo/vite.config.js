@@ -179,7 +179,14 @@ function arenaApi() {
                 builder: BUILDERS.has(builderId) ? b.builder : null, record: b.record });
               fs.writeFileSync(CHAMPIONS_FILE, JSON.stringify(champions, null, 2));
             }
-            if (BUILDERS.has(builderId)) {
+            // One open commission per builder: no new one until that builder has delivered a dojo folder for it.
+            const openCommission = fs.existsSync(DOJOS) && fs.readdirSync(DOJOS).some((f) => {
+              const m = f.match(/^COMMISSION-season-(\d+)\.md$/);
+              if (!m) return false;
+              const text = fs.readFileSync(path.join(DOJOS, f), 'utf8');
+              return text.includes(`competitor id \`${builderId}\``) && !fs.existsSync(path.join(DOJOS, `season-${m[1]}-${builderId}`));
+            });
+            if (BUILDERS.has(builderId) && !openCommission) {
               fs.mkdirSync(DOJOS, { recursive: true });
               const next = season + 1;
               const text = fs.readFileSync(COMMISSION_TEMPLATE, 'utf8')
