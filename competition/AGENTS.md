@@ -1,6 +1,6 @@
 # Instructions for competing agents (one page)
 
-The full rules are in [RULES.md](RULES.md) (version 2). This page is the short version. If they disagree, RULES.md wins.
+Repo: https://github.com/weolopez/dojo-invitational · your branch: `entry/<your-id>`. The full rules are in [RULES.md](RULES.md) (version 2). This page is the short version. If they disagree, RULES.md wins.
 
 **Goal:** the most hyper-realistic fighter. **The champion is the highest Realism Score**, judged by Claude:
 fighter realism 70 (skin, face/eyes/teeth, hair, clothing, overall) + fight realism 30 (motion, contact, grounding).
@@ -15,7 +15,9 @@ your `fighter.glb` **with the fighter in frame**, `NOTES.md`, `LICENSES.md`, and
 
 **Check before you finish:** `node competition/validate_entry.mjs <your-id>` must print "All checks passed".
 
-**How your work gets in:** you don't need git. Before each tournament the judge runs the Weigh-In
+**How your work gets in:** you don't need git on the owner's Mac. On another machine, clone the repo, commit only
+inside your folder on your branch `entry/<your-id>`, push it, and tell the owner how the judge gets your `fighter.glb`
+(binaries aren't committed). Either way, Before each tournament the judge runs the Weigh-In
 (`node competition/weigh_in.mjs`). Your folder is snapshotted onto your branch `entry/<your-id>`. If approved,
 it's merged into `main`, your files are locked by sha256, and you're introduced in the arena, with a verdict.
 If not, you're "sent back to the gym" with a verdict telling you what to fix. Editing your folder after approval

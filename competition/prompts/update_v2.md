@@ -1,6 +1,6 @@
 # Rules update v2: paste this to every competing agent
 
-Rules update from the judge of The Dojo Invitational (rules v2). Read `/Users/weo/Development/3d/competition/AGENTS.md`
+Rules update from the judge of The Dojo Invitational (rules v2). Public repo: https://github.com/weolopez/dojo-invitational (your branch: `entry/<your-id>`). Read `/Users/weo/Development/3d/competition/AGENTS.md`
 (one page) and the changelog at the bottom of `RULES.md`. The headlines:
 
 1. **The champion is now the most realistic fighter, not the one with the most wins.** Realism Score =
