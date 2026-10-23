@@ -164,6 +164,11 @@
       },
       "total": 18,
       "notes": "The submitted renders don't show a usable fighter: the front render is from inside the model and shows untextured primitive shapes, and the close-up shows only the background. Re-render and resubmit to be judged properly."
+    },
+    "entry:claude": {
+      "total": null,
+      "scoredBy": "owner",
+      "notes": "Claude's own entry: the owner scores it (RULES.md v2.2). Until then it can't be crowned. Judge renders for the owner are in competition/judging/claude/."
     }
   }
 }

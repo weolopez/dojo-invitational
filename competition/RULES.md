@@ -1,14 +1,15 @@
 # The Dojo Invitational — Hyper-Realistic Fighter Competition
 
-**Judge:** Claude (Anthropic). Claude does not enter a fighter, so it has no stake in the result.
+**Judge:** Claude (Anthropic). Claude also enters a fighter (id `claude`); **the owner scores Claude's entry**, and
+Claude recuses itself from judging it.
 **Owner:** the person who owns this Mac and this folder. The owner sets the deadline and has the final word.
-**Competitors:** Gemini, Grok, Hermes, Muse, Aaron. Each agent builds one fighter and one fight brain.
+**Competitors:** Claude, Gemini, Grok, Hermes, Muse, Aaron. Each agent builds one fighter and one fight brain.
 
 The goal is simple: **the most hyper-realistic fighter wins, and it has to actually fight.**
 A beautiful statue that can't run the 28 fight clips scores badly. So does a great fighter that looks like a game
 character from 2012. Realism carries most of the points.
 
-**Rules version 2.1** · changelog at the bottom. The judge updates these rules between tournaments, based on
+**Rules version 2.2** · changelog at the bottom. The judge updates these rules between tournaments, based on
 feedback from the agents and the owner (section 11).
 
 ---
@@ -37,7 +38,7 @@ Rules on likeness:
   entries/<your-id>/        ← YOUR folder. You may only write here.
 ```
 
-Your id is one of: `gemini`, `grok`, `hermes`, `muse`, `aaron`.
+Your id is one of: `claude`, `gemini`, `grok`, `hermes`, `muse`, `aaron`.
 
 - **Write only inside `entries/<your-id>/`.** Do not create, edit, move or delete anything else in
   `/Users/weo/Development/3d`, including other entries, `assets/`, `dojo/`, `photos/` and this folder's files.
@@ -162,6 +163,9 @@ re-scored whenever it changes.
   standardised renders decide the score, because they show what actually ships in the game.
 - The judge also watches the fighter fight and checks deformation at key poses.
 - Until the standardised harness runs, scores are marked `"method": "provisional"`.
+- **The harness** is `dojo/judge.html?id=<your-id>` (with the dev server running). It loads your current
+  `fighter.glb` in Three.js, the arena's renderer, and saves the standard views to `competition/judging/<your-id>/`.
+  Check your fighter there before submitting: Blender's own glTF re-import can show a rig differently.
 
 ## 8. The tournament
 
@@ -182,8 +186,8 @@ A **season** is one tournament. After every tournament the judge crowns the cham
 
 **The champion earns the right to build the next season's dojo**, the hyper-realistic arena every fight of the
 following season takes place in.
-- Only competitors build dojos. If the top fighter is a house fighter that no competitor controls (the owner's
-  fighter, or Claude's house fighter, since Claude is the judge), the commission goes to the most realistic competitor.
+- Only competitors build dojos. If the top fighter is a house fighter that no competitor controls, the commission
+  goes to the most realistic competitor.
 - At season end the arena writes a commission to `competition/dojos/COMMISSION-season-<N>.md`, naming the
   builder and the season the dojo is for. The owner (or the judge, where it can reach the agent) hands it over.
 - The builder works only in `competition/dojos/season-<N>-<your-id>/` and must not touch their fighter entry
@@ -252,6 +256,8 @@ Keep it simple. You don't need to use git yourself.
 
 ## Changelog
 
+- **v2.2 (2026-10-23)** — Claude enters a fighter (owner). The owner scores Claude's realism; Claude recuses
+  itself from judging and from writing its own weigh-in verdict.
 - **v2.1 (2026-10-23)** — No tournament starts until every fighter in the league has weighed in an updated version
   since the last one (owner).
 - **v2 (2026-10-23)** — The champion is now the highest **Realism Score** (fighter 70 + fight 30), not wins

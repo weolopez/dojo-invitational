@@ -30,9 +30,13 @@ export class Tournament {
       this.defs = ROSTER.map((d) => ({ ...d, stats: EQUAL_STATS }));
     }
     this.byId = Object.fromEntries(this.defs.map((d) => [d.id, d]));
-    this.key = `bracket-v1|${this.league}|${this.defs.map((d) => d.id).sort().join(',')}`;
+    // The league's history survives new entrants joining: the key is the league, and newcomers get a blank row.
+    this.key = `bracket-v1|${this.league}`;
     const saved = await fetch('/api/tournament').then((r) => r.json()).catch(() => null);
-    this.data = saved?.key === this.key ? saved.data : this.freshData();
+    const sameLeague = saved && (saved.key === this.key || saved.key?.startsWith(`${this.key}|`));
+    this.data = sameLeague ? saved.data : this.freshData();
+    const blank = this.freshData().standings;
+    for (const d of this.defs) this.data.standings[d.id] ??= blank[d.id];
     // Leagues saved before the update rule: count every weigh-in already introduced as "used".
     this.data.lastStartWeighIn ??= this.data.lastWeighIn ?? 0;
     await this.refreshScores();

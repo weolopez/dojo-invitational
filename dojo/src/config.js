@@ -22,8 +22,8 @@ export const ROSTER = [
 export const EQUAL_STATS = { power: 1, speed: 1, reach: 1, hp: 100 };
 export const ENTRY_COLORS = ['#e8734a', '#4f86f7', '#c9ced6', '#e0b23c', '#c55df0', '#3fbf6f', '#ff5d8f', '#36c5d6'];
 
-// Competitors that build dojos (competition/RULES.md §9). The owner's fighter and Claude (the judge) don't.
-export const DOJO_BUILDERS = ['gemini', 'grok', 'hermes', 'muse', 'aaron'];
+// Competitors that build dojos (competition/RULES.md §9). The owner's house fighter doesn't.
+export const DOJO_BUILDERS = ['claude', 'gemini', 'grok', 'hermes', 'muse', 'aaron'];
 
 // Moves: clip, damage, reach (m), active window as fraction of the clip, reaction played on the target.
 export const MOVES = {

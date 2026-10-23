@@ -17,7 +17,7 @@ import { fileURLToPath } from 'node:url';
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 const ROOT = path.resolve(HERE, '..');
-const COMPETITORS = ['gemini', 'grok', 'hermes', 'muse', 'aaron'];
+const COMPETITORS = ['claude', 'gemini', 'grok', 'hermes', 'muse', 'aaron'];
 const APPROVED_FILE = path.join(HERE, 'approved.json');
 const WEIGHINS_FILE = path.join(HERE, 'weighins.json');
 const SCORES_FILE = path.join(HERE, 'scores.json');

@@ -17,7 +17,7 @@ const APPROVED_DIR = path.join(COMPETITION, '.approved');
 const WEIGHINS_FILE = path.join(COMPETITION, 'weighins.json');
 const sha256 = (f) => { try { return crypto.createHash('sha256').update(fs.readFileSync(f)).digest('hex'); } catch { return null; } };
 const COMMISSION_TEMPLATE = path.join(COMPETITION, 'prompts', 'dojo_commission_template.md');
-const BUILDERS = new Set(['gemini', 'grok', 'hermes', 'muse', 'aaron']);
+const BUILDERS = new Set(['claude', 'gemini', 'grok', 'hermes', 'muse', 'aaron']);
 const DOJO_DIR = /^season-(\d+)-([a-z0-9_-]+)$/;
 
 const dojoChecks = new Map();
@@ -151,6 +151,25 @@ function arenaApi() {
           }
           if (url.pathname === '/api/dojos' && req.method === 'GET') {
             return json(res, await allDojos());
+          }
+          // Judging harness (judge.html): read any entry's current fighter.glb, and save standardised renders.
+          const judgeFile = url.pathname.match(/^\/judge-file\/([a-z0-9_-]+)\/fighter\.glb$/);
+          if (judgeFile && req.method === 'GET') {
+            const full = path.join(ENTRIES, judgeFile[1], 'fighter.glb');
+            if (!fs.existsSync(full)) return json(res, { error: 'not found' }, 404);
+            res.setHeader('Content-Type', 'model/gltf-binary');
+            return fs.createReadStream(full).pipe(res);
+          }
+          if (url.pathname === '/api/judge-render' && req.method === 'POST') {
+            const id = url.searchParams.get('id') ?? '';
+            const view = url.searchParams.get('view') ?? '';
+            if (!/^[a-z0-9_-]+$/.test(id) || !/^[a-z_]+$/.test(view)) return json(res, { error: 'bad id or view' }, 400);
+            const chunks = [];
+            for await (const c of req) chunks.push(c);
+            const dir = path.join(COMPETITION, 'judging', id);
+            fs.mkdirSync(dir, { recursive: true });
+            fs.writeFileSync(path.join(dir, `${view}.png`), Buffer.concat(chunks));
+            return json(res, { ok: true });
           }
           if (url.pathname === '/api/scores' && req.method === 'GET') {
             return json(res, fs.existsSync(SCORES_FILE) ? JSON.parse(fs.readFileSync(SCORES_FILE, 'utf8')) : null);
