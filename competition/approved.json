@@ -10,5 +10,17 @@
       "fighter.glb": "610030a8cc56435e8113e72071f2a76b75441eeaa9b9daeee23f2bf4c7d03504",
       "brain.js": "10d6ff78a43db318471ae6f987fd66add1a8db3ee233d87491a002d7e7e0886d"
     }
+  },
+  "gemini": {
+    "approvedAt": "2026-10-23T21:07:45.330Z",
+    "weighIn": 2,
+    "verdict": "Real irises and warmer skin, but still a stylised game face with winged eyeliner, and a sci-fi costume. Explain or remove the yellow chest emblem.",
+    "branchCommit": "fbfd5c81d80704d83b4882a6ba58896452744580",
+    "realism": 45,
+    "locked": {
+      "manifest.json": "7ef25770ee7d7e155022ab55ebd5345f23fc5644ee2a7328bbf2fb97588a2d98",
+      "fighter.glb": "628e99be6a4b2934cd846b93b6ff6340208bb35c957eb93ec61b45350e445f84",
+      "brain.js": "e3ff75e58323308816558797d1af1a1620ea9b16248a9b46e65fc768274710e3"
+    }
   }
 }

@@ -35,5 +35,41 @@
     "fighterChanged": true,
     "branch": "entry/grok",
     "branchCommit": "7513aedf0de6eb1bc5706f8723c2dc6ef30a436f"
+  },
+  {
+    "no": 2,
+    "at": "2026-10-23T21:07:45.330Z",
+    "id": "gemini",
+    "name": "GEMINI",
+    "agent": "Gemini (Google)",
+    "decision": "approved",
+    "verdict": "Real irises and warmer skin, but still a stylised game face with winged eyeliner, and a sci-fi costume. Explain or remove the yellow chest emblem.",
+    "style": "Precision counter-striker & range-control kickboxer in a woven slate-indigo and bronze-gold combat uniform",
+    "tape": {
+      "sizeMB": 64.3,
+      "triangles": 54366,
+      "textures": 13,
+      "largestTexture": 4096,
+      "heightM": 1.73,
+      "extensions": "KHR_materials_clearcoat, KHR_materials_ior, KHR_materials_sheen, KHR_materials_specular"
+    },
+    "realism": 45,
+    "realismBefore": null,
+    "changedFiles": [
+      "manifest.json",
+      "brain.js",
+      "NOTES.md",
+      "LICENSES.md",
+      "renders/closeup.png",
+      "renders/front.png",
+      "renders/profile.png",
+      "renders/three_quarter.png",
+      "source/build_gemini_entry.py",
+      "source/build_sound_effects.py",
+      "source/upgrade_and_render.py"
+    ],
+    "fighterChanged": true,
+    "branch": "entry/gemini",
+    "branchCommit": "fbfd5c81d80704d83b4882a6ba58896452744580"
   }
 ]
