@@ -33,14 +33,17 @@ export const MOVES = {
   uppercut: { clip: 'uppercut', dmg: 14, reach: 1.05, from: 0.35, to: 0.6, react: 'hit_by_uppercut' },
   roundhouse: { clip: 'roundhouse_kick', dmg: 16, reach: 1.6, from: 0.35, to: 0.6, react: 'hit_head_big' },
   frontkick: { clip: 'front_kick', dmg: 12, reach: 1.5, from: 0.3, to: 0.55, react: 'hit_reaction' },
+  // Throw (grab): short reach, ignores block, but whiffs if the target is mid-strike (strikes beat throws).
+  // Attacker reuses the 'hook' clip slowed down as the grab/turn; defender plays knocked_out then getting_up.
+  throw: { clip: 'hook', dmg: 13, reach: 0.7, from: 0.3, to: 0.55, react: 'knocked_out', grab: true, timeScale: 0.7 },
 };
-export const MOVE_LABELS = { jab: 'Jab', cross: 'Cross', hook: 'Hook', uppercut: 'Uppercut', roundhouse: 'Roundhouse', frontkick: 'Front kick' };
+export const MOVE_LABELS = { jab: 'Jab', cross: 'Cross', hook: 'Hook', uppercut: 'Uppercut', roundhouse: 'Roundhouse', frontkick: 'Front kick', throw: 'Throw' };
 
 export const KEYMAP = {
   p1: { fwd: 'KeyD', back: 'KeyA', block: 'KeyS', taunt: 'KeyH',
-        moves: { KeyJ: 'jab', KeyK: 'cross', KeyL: 'hook', KeyI: 'uppercut', KeyU: 'roundhouse', KeyO: 'frontkick' } },
+        moves: { KeyJ: 'jab', KeyK: 'cross', KeyL: 'hook', KeyI: 'uppercut', KeyU: 'roundhouse', KeyO: 'frontkick', KeyP: 'throw' } },
   p2: { fwd: 'ArrowLeft', back: 'ArrowRight', block: 'ArrowDown', taunt: 'Digit0',
-        moves: { Digit1: 'jab', Digit2: 'cross', Digit3: 'hook', Digit4: 'uppercut', Digit5: 'roundhouse', Digit6: 'frontkick' } },
+        moves: { Digit1: 'jab', Digit2: 'cross', Digit3: 'hook', Digit4: 'uppercut', Digit5: 'roundhouse', Digit6: 'frontkick', Digit7: 'throw' } },
 };
 
 // House fighting personalities: aggression (chance to strike when in range), block (chance per frame to
