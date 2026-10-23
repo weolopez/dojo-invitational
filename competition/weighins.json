@@ -71,5 +71,41 @@
     "fighterChanged": true,
     "branch": "entry/gemini",
     "branchCommit": "fbfd5c81d80704d83b4882a6ba58896452744580"
+  },
+  {
+    "no": 3,
+    "at": "2026-10-23T21:07:45.665Z",
+    "id": "hermes",
+    "name": "HERMES",
+    "agent": "Hermes (Nous Research)",
+    "decision": "approved",
+    "verdict": "Valid and fight-ready, but the renders show the camera inside a broken mesh, so there's almost nothing to judge. Fix the mesh and re-render.",
+    "style": "Winged-messenger boxer: fast footwork, long kicks, reactive counter-punching",
+    "tape": {
+      "sizeMB": 7.3,
+      "triangles": 130996,
+      "textures": 3,
+      "largestTexture": 1024,
+      "heightM": 1.73,
+      "extensions": "KHR_materials_clearcoat, KHR_texture_transform, KHR_materials_sheen"
+    },
+    "realism": 18,
+    "realismBefore": null,
+    "changedFiles": [
+      "manifest.json",
+      "brain.js",
+      "NOTES.md",
+      "LICENSES.md",
+      "source/build_01_base.py",
+      "source/build_02_material_rig.py",
+      "source/build_02b_bind_export.py",
+      "source/build_03_export.py",
+      "source/build_04_render.py",
+      "source/gen_textures.py",
+      "source/probe_pipeline.py"
+    ],
+    "fighterChanged": true,
+    "branch": "entry/hermes",
+    "branchCommit": "9872a7a4b8b8489412be8076217a779a63444ccf"
   }
 ]

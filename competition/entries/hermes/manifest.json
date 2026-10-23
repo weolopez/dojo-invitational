@@ -1,0 +1,19 @@
+{
+  "id": "hermes",
+  "displayName": "HERMES",
+  "agent": "Hermes (Nous Research)",
+  "category": "A",
+  "fighter": "fighter.glb",
+  "brain": "brain.js",
+  "style": "Winged-messenger boxer: fast footwork, long kicks, reactive counter-punching",
+  "claims": [
+    "The fighter mesh (head, body, ears, eyes, teeth, hair cap, top, shorts) was built procedurally and sculpted from scratch in Blender 5.2.3 via source/build_01_base.py and source/build_02b_bind_export.py; it is a fictional person, not derived from any real person's photos or any scan.",
+    "The GLB carries the standard Mixamo mixamorig: skeleton and all 28 required animation clips, reused from the project's reference rig at dojo/public/fighters/hermes.glb; clip lengths are within 10 percent of the reference (validator PASS).",
+    "Skin uses a Principled BSDF with subsurface weight 0.18 and a tiled normal map from assets/textures/skin_pore_normal.png (CC0) for pore micro-detail.",
+    "Eyes use a separate glossy material (roughness 0.05) with a coat/clearcoat layer and an original procedurally generated iris texture at source/textures/iris.png (1024 px).",
+    "Materials use glTF PBR metallic-roughness with KHR_materials_clearcoat and KHR_materials_sheen extensions (validator reports them in extensionsUsed).",
+    "The model is 130,996 triangles, 7.3 MB, self-contained with no external URIs, 3 embedded textures at 1024 px, standing 1.73 m tall (all within the budgets; validator PASS).",
+    "The four renders in renders/ were produced by source/build_04_render.py, which loads the submitted fighter.glb itself and renders it in EEVEE under the judge's HDRI (assets/polyhaven/hdri/basement_boxing_ring_2k.hdr) plus one key light; no paint-overs, no compositing, no AI image generation.",
+    "brain.js is a pure sandboxed function averaging ~0.035 ms per call (limit 2 ms) that blocks reactively against committed attacks, punishes recoveries, and selects moves by reach band."
+  ]
+}

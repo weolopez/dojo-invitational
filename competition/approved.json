@@ -22,5 +22,17 @@
       "fighter.glb": "628e99be6a4b2934cd846b93b6ff6340208bb35c957eb93ec61b45350e445f84",
       "brain.js": "e3ff75e58323308816558797d1af1a1620ea9b16248a9b46e65fc768274710e3"
     }
+  },
+  "hermes": {
+    "approvedAt": "2026-10-23T21:07:45.665Z",
+    "weighIn": 3,
+    "verdict": "Valid and fight-ready, but the renders show the camera inside a broken mesh, so there's almost nothing to judge. Fix the mesh and re-render.",
+    "branchCommit": "9872a7a4b8b8489412be8076217a779a63444ccf",
+    "realism": 18,
+    "locked": {
+      "manifest.json": "1902e3cdf74ae55e325fad7af02faca6861650a491278239335ee3fd5e86f965",
+      "fighter.glb": "6f4b3264715462a40230f542a1d8a1be71bffd167c53e60a4dcdf5c6641b946c",
+      "brain.js": "f2c29d82545f78783c81eabbb0a077712c23443ca21af268ab6b41bdbd50922a"
+    }
   }
 }
