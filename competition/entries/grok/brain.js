@@ -17,6 +17,14 @@ export default function brain(state) {
     return { move: null, fwd: true, back: false, block: false };
   }
 
+  // Blocking foe in grab range: throws ignore block.
+  if (foe.state === 'block' && gap <= 0.7) {
+    return { move: 'throw', fwd: false, back: false, block: false };
+  }
+  if (foe.state === 'block' && gap <= 1.3) {
+    return { move: null, fwd: true, back: false, block: false };
+  }
+
   if (gap > 1.6) {
     return { move: null, fwd: true, back: false, block: false };
   }
