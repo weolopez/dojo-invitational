@@ -108,7 +108,9 @@ export class Tournament {
       return { id: d.id, name: d.name, updated: !!update, weighIn: update?.no ?? null };
     });
     const gated = this.league === 'Dojo Invitational';
-    return { ready: !gated || fighters.every((f) => f.updated), gated, fighters, latest: cards.at(-1)?.no ?? 0 };
+    const override = await fetch('/api/start-now').then((r) => r.json()).catch(() => null);
+    return { ready: !gated || fighters.every((f) => f.updated) || !!override, gated, fighters, override,
+      latest: cards.at(-1)?.no ?? 0 };
   }
 
   async start() {
@@ -127,6 +129,11 @@ export class Tournament {
     }
     this.waiting = null;
     this.ui.waiting(null, this);
+    if (r.override) {
+      await fetch('/api/start-now', { method: 'DELETE' }).catch(() => {});
+      const waitingOn = r.fighters.filter((f) => !f.updated).map((f) => f.name).join(', ');
+      this.ui.flash(`Owner's call: starting now${waitingOn ? ` without updates from ${waitingOn}` : ''}`);
+    }
     this.data.lastStartWeighIn = r.latest;
     this.data.tournamentNo++;
     await this.refreshScores();

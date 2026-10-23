@@ -41,3 +41,4 @@ competition/results.jsonl
 competition/entries/*
 !competition/entries/_example/
 competition/dojos/season-*/
+competition/start_now.json

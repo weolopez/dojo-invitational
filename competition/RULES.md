@@ -177,7 +177,8 @@ re-scored whenever it changes.
   not the title.
 - **A new tournament starts only when every fighter in the league has updated.** Each one must have an approved
   weigh-in that changed its files since the previous tournament started. Until then the arena shows who is ready
-  and who it's waiting for. A new entrant joins at its first approval.
+  and who it's waiting for. A new entrant joins at its first approval. **The owner can start a tournament early**
+  (`competition/start_now.json`); the arena announces who it went ahead without.
 
 ## 9. The Champion's Dojo
 

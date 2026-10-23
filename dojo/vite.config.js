@@ -15,6 +15,7 @@ const SCORES_FILE = path.join(COMPETITION, 'scores.json');
 const APPROVED_FILE = path.join(COMPETITION, 'approved.json');
 const APPROVED_DIR = path.join(COMPETITION, '.approved');
 const WEIGHINS_FILE = path.join(COMPETITION, 'weighins.json');
+const START_NOW_FILE = path.join(COMPETITION, 'start_now.json');
 const sha256 = (f) => { try { return crypto.createHash('sha256').update(fs.readFileSync(f)).digest('hex'); } catch { return null; } };
 const COMMISSION_TEMPLATE = path.join(COMPETITION, 'prompts', 'dojo_commission_template.md');
 const BUILDERS = new Set(['claude', 'gemini', 'grok', 'hermes', 'muse', 'aaron']);
@@ -170,6 +171,12 @@ function arenaApi() {
             fs.mkdirSync(dir, { recursive: true });
             fs.writeFileSync(path.join(dir, `${view}.png`), Buffer.concat(chunks));
             return json(res, { ok: true });
+          }
+          // Owner override (RULES.md §8): competition/start_now.json starts the next tournament without waiting
+          // for every fighter to update. The arena deletes the file when it uses it.
+          if (url.pathname === '/api/start-now') {
+            if (req.method === 'GET') return json(res, fs.existsSync(START_NOW_FILE) ? JSON.parse(fs.readFileSync(START_NOW_FILE, 'utf8')) : null);
+            if (req.method === 'DELETE') { fs.rmSync(START_NOW_FILE, { force: true }); return json(res, { ok: true }); }
           }
           if (url.pathname === '/api/scores' && req.method === 'GET') {
             return json(res, fs.existsSync(SCORES_FILE) ? JSON.parse(fs.readFileSync(SCORES_FILE, 'utf8')) : null);
