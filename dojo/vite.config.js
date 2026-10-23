@@ -1,5 +1,5 @@
 import { defineConfig } from 'vite';
-import { execFile } from 'node:child_process';
+import { execFile, spawn } from 'node:child_process';
 import crypto from 'node:crypto';
 import fs from 'node:fs';
 import path from 'node:path';
@@ -40,6 +40,44 @@ function validDojo(folder) {
       resolve(!err);
     });
   });
+}
+
+/** The call for updates after tournament `season`: competition/calls/current.json plus one note per competitor. */
+function writeCalls(season, championId) {
+  const dir = path.join(COMPETITION, 'calls');
+  fs.mkdirSync(dir, { recursive: true });
+  const scores = fs.existsSync(SCORES_FILE) ? JSON.parse(fs.readFileSync(SCORES_FILE, 'utf8')).scores ?? {} : {};
+  const approved = fs.existsSync(APPROVED_FILE) ? JSON.parse(fs.readFileSync(APPROVED_FILE, 'utf8')) : {};
+  const prev = fs.existsSync(path.join(dir, 'current.json')) ? JSON.parse(fs.readFileSync(path.join(dir, 'current.json'), 'utf8')) : null;
+  const call = { call: (prev?.call ?? 0) + 1, tournament: season, at: new Date().toISOString(), champion: championId };
+  const best = championId ? scores[championId]?.total : null;
+  for (const id of BUILDERS) {
+    const s = scores[`entry:${id}`];
+    const lines = [
+      `# Call for updates #${call.call} — after tournament ${season}`,
+      '',
+      s?.total != null ? `Your realism score: **${s.total}/100**${best != null ? ` (champion: ${best}/100)` : ''}.`
+        : s?.scoredBy === 'owner' ? 'Your realism score is set by the owner and is still pending.' : 'You have no realism score yet.',
+      '',
+      s?.notes ? `**What holds you back (judge's notes):** ${s.notes}` : '',
+      approved[id]?.verdict ? `**Last weigh-in verdict:** ${approved[id].verdict}` : '',
+      '',
+      'Improve your fighter, validate it, and write `READY.json` in your entry folder (see AGENTS.md).',
+      'The next tournament starts when every fighter has an approved update, or 6 hours after this call.',
+    ];
+    fs.writeFileSync(path.join(dir, `${id}.md`), `${lines.filter((l, i, a) => l !== '' || a[i - 1] !== '').join('\n')}\n`);
+  }
+  fs.writeFileSync(path.join(dir, 'current.json'), JSON.stringify(call, null, 2));
+}
+
+/** Run a competition script in the background, detached from the dev server. */
+function spawnDetached(script, args = []) {
+  const logDir = path.join(COMPETITION, '.bell', 'logs');
+  fs.mkdirSync(logDir, { recursive: true });
+  const log = fs.openSync(path.join(logDir, `${script.replace('.mjs', '')}.log`), 'a');
+  const child = spawn(process.execPath, [path.join(COMPETITION, script), ...args],
+    { cwd: path.resolve(COMPETITION, '..'), detached: true, stdio: ['ignore', log, log] });
+  child.unref();
 }
 
 /** Every champion-built dojo that passes the validator, newest first. */
@@ -108,6 +146,8 @@ function arenaApi() {
   return {
     name: 'dojo-arena-api',
     configureServer(server) {
+      // Every 5 minutes, weigh in any entry that wrote READY.json for the current call (judge_pass.mjs).
+      setInterval(() => spawnDetached('judge_pass.mjs', ['--pending']), 5 * 60 * 1000);
       server.middlewares.use(async (req, res, next) => {
         const url = new URL(req.url, 'http://localhost');
         try {
@@ -224,7 +264,21 @@ function arenaApi() {
                 .replaceAll('{{STANDINGS}}', String(b.standings ?? '').slice(0, 4000));
               fs.writeFileSync(path.join(DOJOS, `COMMISSION-season-${next}.md`), text);
             }
+            writeCalls(season, b.champion?.id ?? null);
+            spawnDetached('bell.mjs');
             return json(res, { ok: true });
+          }
+          if (url.pathname === '/api/ring-bell' && req.method === 'POST') {
+            // Ring by hand (e.g. the first call): uses the last recorded tournament and champion.
+            const champs = fs.existsSync(CHAMPIONS_FILE) ? JSON.parse(fs.readFileSync(CHAMPIONS_FILE, 'utf8')) : [];
+            const last = champs.at(-1);
+            writeCalls(last?.season ?? 0, last?.champion?.id ?? null);
+            spawnDetached('bell.mjs');
+            return json(res, JSON.parse(fs.readFileSync(path.join(COMPETITION, 'calls', 'current.json'), 'utf8')));
+          }
+          if (url.pathname === '/api/call' && req.method === 'GET') {
+            const f = path.join(COMPETITION, 'calls', 'current.json');
+            return json(res, fs.existsSync(f) ? JSON.parse(fs.readFileSync(f, 'utf8')) : null);
           }
           if (url.pathname === '/api/result' && req.method === 'POST') {
             const body = JSON.parse(await readBody(req));

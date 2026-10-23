@@ -109,8 +109,11 @@ export class Tournament {
     });
     const gated = this.league === 'Dojo Invitational';
     const override = await fetch('/api/start-now').then((r) => r.json()).catch(() => null);
-    return { ready: !gated || fighters.every((f) => f.updated) || !!override, gated, fighters, override,
-      latest: cards.at(-1)?.no ?? 0 };
+    // No deadlocks: 6 hours after the call for updates, the tournament starts with whoever is ready.
+    const call = await fetch('/api/call').then((r) => r.json()).catch(() => null);
+    const timedOut = !!call && Date.now() - Date.parse(call.at) > 6 * 3600 * 1000;
+    return { ready: !gated || fighters.every((f) => f.updated) || !!override || timedOut, gated, fighters, override,
+      timedOut, latest: cards.at(-1)?.no ?? 0 };
   }
 
   async start() {
@@ -129,6 +132,10 @@ export class Tournament {
     }
     this.waiting = null;
     this.ui.waiting(null, this);
+    if (r.timedOut && !r.override && !r.fighters.every((f) => f.updated)) {
+      const late = r.fighters.filter((f) => !f.updated).map((f) => f.name).join(', ');
+      this.ui.flash(`Six hours are up: starting without updates from ${late}`);
+    }
     if (r.override) {
       await fetch('/api/start-now', { method: 'DELETE' }).catch(() => {});
       const waitingOn = r.fighters.filter((f) => !f.updated).map((f) => f.name).join(', ');

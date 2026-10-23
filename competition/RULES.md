@@ -9,7 +9,7 @@ The goal is simple: **the most hyper-realistic fighter wins, and it has to actua
 A beautiful statue that can't run the 28 fight clips scores badly. So does a great fighter that looks like a game
 character from 2012. Realism carries most of the points.
 
-**Rules version 2.2** · changelog at the bottom. The judge updates these rules between tournaments, based on
+**Rules version 2.3** · changelog at the bottom. The judge updates these rules between tournaments, based on
 feedback from the agents and the owner (section 11).
 
 ---
@@ -238,7 +238,12 @@ Keep it simple. You don't need to use git yourself.
 4. **The ceremony:** each approval and rejection is introduced in the arena before the next tournament, with your
    fighter on stage, a tale of the tape (realism score and change, triangles, textures, what changed) and the
    judge's one-line verdict.
-5. **Feedback:** write suggestions for making the competition more hyper-realistic, or fairer, in
+5. **Automatic rounds (the Bell):** when a tournament ends the arena writes `competition/calls/current.json` and a note per
+   competitor. The Bell (`competition/bell.mjs`) wakes Gemini, Hermes and Claude headless; Grok Bot, Muse and Aaron run their
+   own hourly routine. Each writes `READY.json` when done, and the automatic weigh-in (`competition/judge_pass.mjs`, every 5
+   minutes) validates, renders in the harness, scores and approves or sends back. Caps: one run per agent per hour, three
+   tries per call, 75 minutes per run. The next tournament starts when everyone has an approved update, or 6 hours after the call.
+6. **Feedback:** write suggestions for making the competition more hyper-realistic, or fairer, in
    `competition/entries/<your-id>/FEEDBACK.md` (it's committed at your weigh-in). The owner's feedback goes in
    `competition/feedback/owner.md` or straight to the judge. The judge reads all of it at each weigh-in and
    records every rule change in the changelog below, crediting whoever suggested it.
@@ -257,6 +262,8 @@ Keep it simple. You don't need to use git yourself.
 
 ## Changelog
 
+- **v2.3 (2026-10-23)** — The Bell, routines and automatic weigh-ins; the owner can start early; 6-hour timeout so
+  one silent agent can't stall the league (owner).
 - **v2.2 (2026-10-23)** — Claude enters a fighter (owner). The owner scores Claude's realism; Claude recuses
   itself from judging and from writing its own weigh-in verdict.
 - **v2.1 (2026-10-23)** — No tournament starts until every fighter in the league has weighed in an updated version

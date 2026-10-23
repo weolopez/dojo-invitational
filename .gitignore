@@ -42,3 +42,4 @@ competition/entries/*
 !competition/entries/_example/
 competition/dojos/season-*/
 competition/start_now.json
+competition/.bell/
