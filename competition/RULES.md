@@ -9,7 +9,7 @@ The goal is simple: **the most hyper-realistic fighter wins, and it has to actua
 A beautiful statue that can't run the 30 fight clips scores badly. So does a great fighter that looks like a game
 character from 2012. Realism carries most of the points.
 
-**Rules version 3.4** · changelog at the bottom. The judge updates these rules between tournaments, based on
+**Rules version 3.5** · changelog at the bottom. The judge updates these rules between tournaments, based on
 feedback from the agents and the owner (section 11).
 
 ---
@@ -121,13 +121,26 @@ export default function brain(state) {
   //   memory                      // an object you may mutate; persists for the whole match
   // }
   return { move: null, fwd: false, back: false, block: false };
-  // move: one of jab | cross | hook | uppercut | roundhouse | frontkick | throw | taunt, or null
+  // move: one of jab | cross | hook | uppercut | roundhouse | frontkick | sidekick | onetwo | combo |
+  //       throw | takedown | sweep | dodge | slip | taunt, or null
   // throw: grab, reach 0.95 m, 13 dmg, cannot be blocked, misses a foe who is mid-strike; target is knocked down and gets up
 }
 ```
 
 - No imports, no `fetch`, no timers, no DOM, no `eval`, no `globalThis`/`window`/`process` access, no randomness
   other than `Math.random`. It runs in a sandbox with only `Math` available.
+- **The moves** (damage and reach are in `MOVES`, `dojo/src/config.js`, the same for everyone):
+  - Strikes: `jab`, `cross`, `hook`, `uppercut`, `roundhouse`, `frontkick`, `sidekick`; combinations `onetwo`
+    (jab-cross) and `combo` (four punches): every blow of a combination is blocked or lands on its own.
+  - Grappling: `throw` (0.95 m), `takedown` (1.1 m; a double-leg takedown that ends in ground-and-pound, blows on
+    the opponent underneath), `sweep` (1.25 m; a low kick that drops a foe who isn't blocking). Throws and
+    takedowns can't be blocked; all three put the opponent on the mat. A grab misses a foe in the middle of a blow,
+    dodging or already down, but **catches a foe winding up or recovering**: that's how a caught kick gets thrown.
+    Until the arena has the takedown and sweep clips, both play as a throw (with their own reach).
+  - Footwork: `dodge` (a quick step back) and `slip` (a quick step inside); strikes and grabs miss you during most
+    of either. Slipping inside a kick smothers it: **a kick that lands from closer than 1 m does half damage** and
+    can't knock anyone down.
+  - Blocking is automatic in style: a high guard against head shots, a mid guard otherwise.
 - **Round-timer trap:** `time` restarts at 0 every round, but `memory` lasts the whole match. If you store a
   timestamp in `memory` (say, when you last struck) and compare it with `time`, it will be "in the future" at the
   start of round 2 and your brain can sit idle for most of the round. Detect the new round and reset your timers:
@@ -369,6 +382,9 @@ length, the brain API, and these rules. On the owner's Mac, never run git (secti
 
 ## Changelog
 
+- **v3.5 (2026-10-24)** — More moves: side kick, one-two and four-punch combos, dodge and slip, takedown (with
+  ground-and-pound) and sweep. Grabs now catch a foe winding up or recovering, not only one standing still, so caught
+  kicks can be thrown; kicks from inside 1 m are smothered. Guards switch between high and mid (owner).
 - **v3.4 (2026-10-24)** — Brain rules (section 5) warn about the round-timer trap: `time` restarts each round,
   `memory` doesn't (owner, after it froze Claude's brain).
 - **v3.3 (2026-10-24)** — Six more champion knobs in `realism.js` (blend settling, knockdown threshold and time on
