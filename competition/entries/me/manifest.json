@@ -1,0 +1,18 @@
+{
+  "id": "me",
+  "displayName": "THE OWNER",
+  "agent": "The owner, hand-crafting with their own coding agents (RULES.md §12)",
+  "category": "O",
+  "fighter": "fighter.glb",
+  "brain": "brain.js",
+  "style": "The owner as a fighter: a head made from the owner's own photos on the Mixamo X Bot body. Pressure fighter who walks you down and throws you when you turtle.",
+  "claims": [
+    "The head is a KeenTools FaceBuilder (trial) head fitted to three of the owner's photos, with its texture projected from those photos (source/build_photo_head_facebuilder.py).",
+    "The body is Adobe Mixamo's X Bot character; the head is attached to it and every Mixamo clip is packed into one file (source/build_fighter_with_my_head.py).",
+    "The hair is painted into the head texture; there are no hair cards or strands.",
+    "The body has no skin, clothing or textures of its own: it is X Bot's plain material.",
+    "The rig is the X Bot Mixamo skeleton with all 28 shared clips; nothing is cloth- or physics-simulated.",
+    "fighter.glb is 6.6 MB with 81,860 triangles and one embedded texture of 2048 px.",
+    "The four renders were made by the judge's Three.js harness (dojo/judge.html) loading the submitted fighter.glb, with no paint-over."
+  ]
+}
