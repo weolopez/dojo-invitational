@@ -34,7 +34,7 @@ The deterministic brain blocks if the opponent attacks within 1.85 m, advances i
 **Local combat check:** `sim/sim.mjs` recorded 400/400 round wins against its simple random-aggressive baseline, with Grok starting on either side. This is an approximate local simulation, not the official arena; its baseline self-play favors player 1, so the result is not evidence of tournament performance.
 
 ## Known limitations (honest)
-- v6: see "v6 changes" below for what is still open (collar lip line, sternum patch, shorts hem, lent moves not tested).
+- v7: see "v7 changes" below. The collar-shoulder lip line is mostly gone, but a jagged lighter V edge still shows on the sternum where the collar yoke ends on the shirt. The shorts front still has body-following bulges, and the hair and skin are unchanged.
 - This is a parametric MakeHuman digital human, not a scan. Up close the face reads as a good CG human, not a photograph.
 - Hair is a short buzz cut made of shells; it has no volume beyond about 7 mm and its silhouette edge is smooth. There are no longer hair styles.
 - Stubble is painted into the albedo; it has no geometric depth, and the dots can read slightly coarse up close.
@@ -46,6 +46,39 @@ The deterministic brain blocks if the opponent attacks within 1.85 m, advances i
 
 ## Bonus: voice pack (unscored)
 `voice/` contains 10 short PG-13 lines generated with macOS `say -v Daniel`, about 456 KB total in AAC .m4a. `voice/lines.json` maps the events taunt, round_start, got_hit, ko_foe and victory to the files. **The arena does not play these files**; they are an unscored extra and no required file depends on them.
+
+## v7 changes (call #9) – judge notes
+Only two meshes changed: RashGuard (positions and normals) and Shorts (positions and normals). Topology, UVs, joints and weights are unchanged on both. All other meshes and all 17 images are md5-identical to v6, including the body/face, eyes, cornea, teeth, lashes, brows, hair shells and wraps. No animation was re-exported or edited. Materials are unchanged; the knit normal scale is still 0.38. The triangle count is unchanged at 243,870.
+- **Collar lip (fixed on the shoulders, partly at the sternum).** `source/fix_collar_v7.py` (run with BAND 3 cm, FLOOR 1.5 mm, blend 0) re-solves the collar yoke's height above the skin as a smooth envelope. Inside 3 cm of the place where the yoke climbs onto the shirt edge, the height is relaxed harmonically for 400 passes. It is floored at shirt height + 1.5 mm wherever the v5 shirt lies underneath, so the yoke ramps over the edge instead of stepping. The largest vertex move is 20.9 mm, and normals are recomputed. In the before/after closeups, the stepped line across both shoulders (front and back) is gone. **Still visible:** where the yoke ends on the chest, it shows a jagged, slightly lighter V edge below the neckline.
+- **Sternum patch: not fixed.** I tried blending the yoke normals toward the shirt normals, but it made a larger visible patch, so I discarded it. The lighter V under the neckline remains (see above).
+- **Shorts.** `source/fix_shorts_v7.py` (run with 80 iterations, 2 mm). The leg openings are closed by the turned hem, so the hem line is the fold. Per leg and per 3.75° sector, the fold height was measured: it varied by 21.6 mm on the left leg and 17.1 mm on the right. Each sector was shifted to the median fold height (0.7086 m and 0.7080 m), with a 6 cm falloff, so the hem now reads as a level line. The hem ring was then pinned and 80 Taubin passes smoothed the rest. Vertices are kept at least 2 mm off the body (or at their original offset if that was closer); 1,826 vertices were pushed out. The mean move is 0.81 mm and the max is 24.0 mm (at the hem). Small-scale lumps are reduced, but the large bulges on the front and crotch follow the body, so they remain. A 500-pass version made them sharper and was discarded.
+- **Hair: skipped.** No safe improvement fitted in this pass; the hair shells are unchanged.
+- **Skin SSS: skipped.** Same reason as before (r160); the skin is unchanged.
+- **Renders:** `renders/` holds new judge harness output (judge.html, Three.js r160, 1920×1080). Before/after detail closeups (shorts, collar, shoulders) are in the working folder grok_renders/v7/{before,after}. They are not part of the entry.
+
+## Validator output (`node validate_entry.mjs grok`, v7)
+```
+PASS  manifest.json has all fields
+PASS  file size 46.0 MB (limit 80 MB)
+PASS  extensions: KHR_materials_transmission, KHR_materials_ior, KHR_materials_sheen, KHR_texture_transform
+PASS  self-contained (no external URIs)
+PASS  17 textures (limit 40)
+PASS  largest texture 2050 px (limit 4096)
+PASS  243,870 triangles (limit 250,000)
+PASS  Mixamo skeleton (all required mixamorig: bones present)
+PASS  animations: 30/30
+PASS  clip lengths within ±10 % of reference
+PASS  bind-pose mesh height ≈ 1.79 m (expected 1.55–2.05 m; check scale if far off)
+PASS  brain.js runs in the sandbox, valid outputs, 0.159 ms average (limit 2 ms)
+PASS  renders/front.png 1920×1080 (long side ≥ 1920)
+PASS  renders/three_quarter.png 1920×1080 (long side ≥ 1920)
+PASS  renders/profile.png 1920×1080 (long side ≥ 1920)
+PASS  renders/closeup.png 1920×1080 (long side ≥ 1920)
+PASS  NOTES.md present and filled in
+PASS  LICENSES.md present and filled in
+
+All checks passed.
+```
 
 ## v6 changes (v3.7 rules, spring layer)
 The v5 glb was spliced with numpy (`source/glbio.py`), and nothing was re-exported from Blender. The face, eyes, eyebrows, lashes, teeth, tongue, all 6 hair shells and all 17 textures are byte-identical to v5 (checked with an md5 per mesh and per image). Only the body mesh, the rash guard mesh, one material value and the fighting_idle leg keys changed.
