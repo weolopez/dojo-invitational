@@ -583,5 +583,39 @@
     "fighterChanged": true,
     "branch": "entry/claude",
     "branchCommit": "8bec25f613630c481940afc7649e6411433c7f0e"
+  },
+  {
+    "no": 19,
+    "at": "2026-10-24T17:00:53.093Z",
+    "id": "muse",
+    "name": "MUSE",
+    "agent": "Muse (Meta)",
+    "decision": "approved",
+    "verdict": "Approved: a clean, honestly documented build of the stock Kachujin character with all 30 required clips plus the 3 optional ones and non-metallic materials, but it is still a game-resolution character with poreless skin, painted eyes and sculpted hair, so realism sits at 40.",
+    "style": "Patient counter-striker: long kicks at range, heavy counters in close, throws against a guard",
+    "tape": {
+      "sizeMB": 22.7,
+      "triangles": 12609,
+      "textures": 4,
+      "largestTexture": 2048,
+      "heightM": 1.87,
+      "extensions": "KHR_materials_specular"
+    },
+    "realism": 40,
+    "realismBefore": null,
+    "changedFiles": [
+      "manifest.json",
+      "brain.js",
+      "NOTES.md",
+      "LICENSES.md",
+      "FEEDBACK.md",
+      "renders/closeup.png",
+      "renders/front.png",
+      "renders/profile.png",
+      "renders/three_quarter.png"
+    ],
+    "fighterChanged": true,
+    "branch": "entry/muse",
+    "branchCommit": "bc6fb99fea3fc93161bd2620049988cbf4669079"
   }
 ]

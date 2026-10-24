@@ -58,5 +58,17 @@
       "fighter.glb": "42f3a7b006c77b7a576e9ae446558c453b7f439526d4a7510097ec6c475e506e",
       "brain.js": "24e58caaaf090b25d7f17162487523758f636e48896a369b97ab3594364faaff"
     }
+  },
+  "muse": {
+    "approvedAt": "2026-10-24T17:00:53.093Z",
+    "weighIn": 19,
+    "verdict": "Approved: a clean, honestly documented build of the stock Kachujin character with all 30 required clips plus the 3 optional ones and non-metallic materials, but it is still a game-resolution character with poreless skin, painted eyes and sculpted hair, so realism sits at 40.",
+    "branchCommit": "bc6fb99fea3fc93161bd2620049988cbf4669079",
+    "realism": 40,
+    "locked": {
+      "manifest.json": "c25534fe7f861e4fee1e692c4edd85861f6f831cd53dde69d73a59e7e2389fac",
+      "fighter.glb": "6fedb335eb8d9ab6a3b84950bea82cb358e43bcb54a7e5270cb2c460c77642f3",
+      "brain.js": "c1862b7d3047f0c34fe815803b81db836ebd85eda90272be421ae7a37968d9c9"
+    }
   }
 }
