@@ -28,6 +28,25 @@ touched. MPFB 2.0.18 (from extensions.blender.org, sha256-checked) and the MakeH
    removed) and exports `fighter.glb` with the 30 clips as NLA tracks.
 6. Renders: `dojo/judge.html?id=claude`, the standardised Three.js harness, from the submitted `fighter.glb`.
 
+## Update for call #4, second pass (owner's request)
+
+Done in the judge's session at the owner's request ("Update Claude fighter"); the realism score is still the owner's to give.
+
+- **Eyelashes:** MakeHuman `eyelashes01` (sparse, natural) instead of `eyelashes02` (a dramatic, made-up set whose black
+  spikes stood out against the face), with a higher alpha cutoff (0.5) so only the lashes' dense cores show.
+  `source/01_build_human.py`, `source/02_materials.py`.
+- **Hairline:** the hair cap's alpha cutoff lowered from 0.4 to 0.26, keeping more of the texture's fine strands at the
+  edge. It helps a little; the edge on the forehead is still a cutout line (see limitations).
+- **Fight brain:** found why it looked passive. `state.time` restarts at 0 every round while `memory` lasts the
+  whole match, so the "last strike" time from round 1 made it wait out most of rounds 2 and 3. It now resets its
+  timers each round. It also leads with strikes at its own range, strings combinations after a landed shot, hunts
+  knockdowns on a hurt opponent (hooks and kicks), throws a blocking or idle opponent, answers a throw with a jab, and
+  presses harder when behind late in a round. In 6 test matches against three house fighters (equal stats, the
+  arena's own engine): the old brain won 0 of 6 and threw 52 strikes; the new one won 6 of 6, threw 132, landed 90
+  and scored 10 knockdowns. (The timer fix alone won 6 of 6 with 102 strikes.)
+- Rebuilt with all four scripts; the renders are the judge harness's, from this `fighter.glb`. The previous build is
+  in `.work/call5_backup/`.
+
 ## Update for call #4 (after tournament 10)
 
 The call had no specific notes (the owner scores this entry). The real gap: rules v3.0 added two required clips,
@@ -116,8 +135,8 @@ copies of the judge harness's output (`dojo/judge.html?id=claude`, run in headle
   diffuse transmission, so the skin can look slightly flat under hard light.
 - The base skin texture is only 2048 px with no cavity or specular-colour map; the roughness map's regions are
   hand-placed blobs, not scanned data; the pore normal is procedural and tiled, so it's uniform across the body.
-- Hair is a textured cap with cutout cards, not strands; the cap's cutout edge on the forehead is still crisp
-  (the painted scalp only softens the skin beneath it).
+- Hair is a textured cap with cutout cards, not strands; the cap's cutout edge on the forehead is still a visible
+  line, softened only a little by the lower cutoff (call #4, second pass) and the painted scalp beneath it.
 - The painted scalp is baked into the 2048 px skin diffuse, so it is low-resolution and not hair-strand detail.
 - No hand wraps, although the concept had them; the CC0 pack has none.
 - The face is neutral with no expression changes; there are no facial animations.
@@ -140,7 +159,7 @@ PASS  Mixamo skeleton (all required mixamorig: bones present)
 PASS  animations: 30/30
 PASS  clip lengths within ±10 % of reference
 PASS  bind-pose mesh height ≈ 1.73 m (expected 1.55–2.05 m; check scale if far off)
-PASS  brain.js runs in the sandbox, valid outputs, 0.044 ms average (limit 2 ms)
+PASS  brain.js runs in the sandbox, valid outputs, 0.068 ms average (limit 2 ms)
 PASS  renders/front.png 1920×1080 (long side ≥ 1920)
 PASS  renders/three_quarter.png 1920×1080 (long side ≥ 1920)
 PASS  renders/profile.png 1920×1080 (long side ≥ 1920)
