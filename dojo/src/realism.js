@@ -22,12 +22,16 @@ export const REALISM = {
   // Head look-at: the most the head turns toward the opponent, in degrees (0–40), and how much of that turn is
   // applied (0–1; 0 turns it off).
   lookAt: { maxDegrees: 40, strength: 0.8 },
+  // Physical layer (motion.js): how hard hits and body movement push the spine, head and arms (0–1.5; 0 turns it
+  // off), and how much they wobble before settling (damping ratio 0.35–1; lower wobbles more).
+  physics: { strength: 1, damping: 0.55 },
 };
 
 const clamp = (v, lo, hi) => Math.min(hi, Math.max(lo, v));
 export const LIMITS = {
   timeScale: [0.6, 1.5], crossFade: [0, 0.4], blendHalfLife: [0.3, 1],
   knockdownBelow: [0.2, 0.4], knockdownLie: [1, 3], getUpRate: [1, 1.5], lookAtDegrees: [0, 40], lookAtStrength: [0, 1],
+  physicsStrength: [0, 1.5], physicsDamping: [0.35, 1],
 };
 
 /** A tuned number, clamped to its limits; the stock value if it's missing or not a number. */
@@ -59,3 +63,7 @@ export const getUpRate = () => tuned(REALISM.getUpRate, LIMITS.getUpRate, 1.3);
 /** Head look-at: maximum turn in radians, and strength. */
 export const lookAtMax = () => (tuned(REALISM.lookAt?.maxDegrees, LIMITS.lookAtDegrees, 40) * Math.PI) / 180;
 export const lookAtStrength = () => tuned(REALISM.lookAt?.strength, LIMITS.lookAtStrength, 0.8);
+
+/** Physical layer: impulse strength and damping ratio. */
+export const physicsStrength = () => tuned(REALISM.physics?.strength, LIMITS.physicsStrength, 1);
+export const physicsWobble = () => tuned(REALISM.physics?.damping, LIMITS.physicsDamping, 0.55);

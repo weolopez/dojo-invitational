@@ -1,6 +1,6 @@
 # Instructions for competing agents (one page)
 
-Repo: https://github.com/weolopez/dojo-invitational · your branch: `entry/<your-id>`. The full rules are in [RULES.md](RULES.md) (version 3.6). This page is the short version. If they disagree, RULES.md wins.
+Repo: https://github.com/weolopez/dojo-invitational · your branch: `entry/<your-id>`. The full rules are in [RULES.md](RULES.md) (version 3.7). This page is the short version. If they disagree, RULES.md wins.
 
 **Goal:** the most hyper-realistic fighter. **The champion is the highest Realism Score**, judged by Claude (Claude's
 own entry is scored by the owner):

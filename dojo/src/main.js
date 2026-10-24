@@ -529,9 +529,23 @@ function frame(dt) {
   if (playArena.active) updateHud(playArena, ['', pvp ? '' : ' (CPU)']);
 }
 
+// ?fps shows the frame rate in the corner, to tell a slow machine from choppy animation.
+const fpsEl = new URLSearchParams(location.search).has('fps')
+  ? Object.assign(document.body.appendChild(document.createElement('div')), {
+    style: 'position:fixed;left:8px;bottom:8px;z-index:50;font:600 13px system-ui;color:#4ade80;background:rgba(0,0,0,0.6);padding:3px 8px;border-radius:6px' })
+  : null;
+let fpsFrames = 0;
+let fpsSince = performance.now();
+
 function loop() {
   requestAnimationFrame(loop);
   frame(Math.min(clock.getDelta(), 1 / 20));
+  if (fpsEl && ++fpsFrames >= 30) {
+    const now = performance.now();
+    fpsEl.textContent = `${Math.round((fpsFrames * 1000) / (now - fpsSince))} fps`;
+    fpsFrames = 0;
+    fpsSince = now;
+  }
 }
 
 if (import.meta.env.DEV) {

@@ -3,7 +3,13 @@ import * as THREE from 'three';
 import { clipRate, crossFadeFor, getUpRate, hasClipRate, knockdownBelow, knockdownLie } from './realism.js';
 import * as SkeletonUtils from 'three/addons/utils/SkeletonUtils.js';
 import { JAM, KICKS, KNOCKDOWN, MOVES } from './config.js';
-import { Inertializer, LookAt } from './motion.js';
+import { Inertializer, LookAt, PhysicalLayer } from './motion.js';
+
+// Body physics: a shove is a velocity that friction slows down (it glides the given distance), and walking speeds up
+// and slows down over a few frames, instead of the body jumping from one frame to the next.
+const FRICTION = 8; // 1/s
+const WALK_RESPONSE = 12; // 1/s: how quickly walking reaches its speed
+const TWISTING = ['hook', 'roundhouse', 'spinkick'];
 
 // Clips that travel along the floor: switching into or out of them keeps the body where it lies.
 const GROUND = new Set(['knocked_out', 'knockdown_front', 'thrown', 'getting_up', 'getup_back', 'getup_front', 'sweep_fall', 'takedown_victim']);
@@ -78,6 +84,7 @@ export class Fighter {
       this.hipsFront = new THREE.Vector3(0, 0, 1).applyQuaternion(this.bones.hips.getWorldQuaternion(new THREE.Quaternion()).invert());
     }
     this.inertia = new Inertializer(this.model);
+    this.physical = new PhysicalLayer(this.model);
     this.lookAt = new LookAt(this.model);
     this.reset();
   }
@@ -108,6 +115,9 @@ export class Fighter {
     this.root.rotation.y = this.side < 0 ? Math.PI / 2 : -Math.PI / 2;
     this.mixer.stopAllAction();
     this.inertia?.forget();
+    this.physical?.forget();
+    this.vel = 0;
+    this.walkV = 0;
     this.current = null;
     this.playLoop('fighting_idle');
   }
@@ -179,6 +189,13 @@ export class Fighter {
     this.fade('taunt', true);
   }
 
+  /** Push the fighter back (away from the opponent) so they glide `dist` metres. */
+  shove(dist) {
+    const dv = this.side * dist * FRICTION;
+    this.vel += dv;
+    this.physical.lurch(dv);
+  }
+
   /** In the striking part of an attack: from the first blow's window to the last one's. Grabs miss you here. */
   striking() {
     if (this.state !== 'attack' || !this.move?.hits?.length || !this.current) return false;
@@ -240,7 +257,8 @@ export class Fighter {
     if (blocked) {
       this.arena.sound('block', 0.6);
       fx.sparks(where, 0x9fd8ff, 14, 1.4);
-      this.root.position.x += this.side * 0.08;
+      this.physical.hit(new THREE.Vector3(this.side, 0, 0), move.dmg * 0.35, false);
+      this.shove(0.08);
       return;
     }
     this.combo = 0;
@@ -253,7 +271,7 @@ export class Fighter {
       // Thrown, taken down or swept: on the mat, then get up (see animate). Pushed further than a strike.
       this.downed = true;
       this.lastHitBy = move.name;
-      this.root.position.x += this.side * (move.sync ? 0.2 : 0.45);
+      this.shove(move.sync ? 0.2 : 0.45);
       this.arena.sound('heavy', 0.9);
       fx.sparks(where, 0xffb347, 30, 2.2);
       fx.shake(0.12);
@@ -272,7 +290,9 @@ export class Fighter {
       fx.hitStop(0.09);
       return;
     }
-    this.root.position.x += this.side * (move.heavy ? 0.26 : 0.16);
+    // The blow moves the body: head snaps or torso folds the way it came, then the clip's reaction takes over.
+    this.physical.hit(new THREE.Vector3(this.side, 0, 0), move.dmg, move.high, TWISTING.includes(move.name) ? (Math.random() < 0.5 ? -1 : 1) : 0);
+    this.shove(move.heavy ? 0.26 : 0.16);
     this.arena.sound(move.heavy ? 'heavy' : 'hit', 0.8);
     fx.sparks(where, move.heavy ? 0xffb347 : 0xffe9a8, move.heavy ? 36 : 20, move.heavy ? 2.6 : 1.8);
     fx.shake(move.heavy ? 0.09 : 0.035);
@@ -305,16 +325,22 @@ export class Fighter {
   /** input: {fwd, back, block} booleans. */
   update(dt, input, opponent) {
     this.cooldown = Math.max(0, this.cooldown - dt);
+    // Walking eases in and out; shoves glide to a stop.
+    const facing = -this.side;
+    const walking = !this.busy && !input.block && (input.fwd || input.back);
+    const target = walking ? (input.fwd ? facing * 1.7 : -facing * 1.3) * this.stats.speed : 0;
+    const before = this.walkV;
+    this.walkV += (target - this.walkV) * Math.min(1, dt * WALK_RESPONSE);
+    this.physical.lurch((this.walkV - before) * 0.5);
+    this.root.position.x += (this.walkV + this.vel) * dt;
+    this.vel *= Math.exp(-FRICTION * dt);
     if (!this.busy) {
-      const facing = -this.side; // +1 when facing +x
       if (input.block) {
         // Guard up for punches and kicks to the head, mid guard for body shots and before anything is thrown.
         this.state = 'block';
         const high = opponent?.state === 'attack' && opponent.move?.high;
         this.playLoop(high && this.actions.block_high ? 'block_high' : 'block');
       } else if (input.fwd || input.back) {
-        const dir = input.fwd ? facing : -facing;
-        this.root.position.x += dir * (input.fwd ? 1.7 : 1.3) * this.stats.speed * dt;
         this.state = input.fwd ? 'walk_f' : 'walk_b';
         this.playLoop(input.fwd ? 'walk_forward' : 'walk_backward');
       } else {
@@ -367,6 +393,8 @@ export class Fighter {
             // A takedown ends on top of the opponent: the two may tangle closer than the usual minimum gap.
             if (this.move.ground) this.clinch = true;
           }
+          // A little recoil for the attacker when the blow connects.
+          this.physical.impulse(new THREE.Vector3().crossVectors(new THREE.Vector3(0, 1, 0), new THREE.Vector3(this.side, 0, 0)), -1.2 * Math.min(1.5, blow.dmg / 8), 'hit', ['Spine2', 'Neck', 'Head', 'LeftArm', 'RightArm']);
           if (blocked) {
             opponent.tally.blocks++;
           } else {
@@ -428,6 +456,7 @@ export class Fighter {
     this.mixer.update(dt);
     this.inertia.apply(dt, this.root);
     this.inertia.record(this.root);
+    this.physical.apply(dt); // after recording, like look-at: it's reapplied every frame, never blended away
     const looking = ['idle', 'walk_f', 'walk_b', 'block', 'attack'].includes(this.state) && !this.downed;
     this.lookAt.apply(dt, looking, opponent?.bones.head?.getWorldPosition(new THREE.Vector3()), this.root);
   }
