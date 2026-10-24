@@ -21,6 +21,7 @@ ENTRY = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 WORK = os.path.join(ENTRY, ".work")
 TEX = os.path.join(WORK, "textures")
 DATA = os.path.join(WORK, "mpfb_user", "data")
+HAIR_CUTOFF = 0.26
 
 
 def pixels(img):
@@ -301,6 +302,64 @@ def blur(a, r, passes=3):
     return a
 
 
+def hairline_strands(rgb, cap, seen, colour, band=24, seed=11):
+    """Call #8: a real hairline isn't a line. Past the hair cap's cutout edge, fine short hairs thin out over about
+    1 cm (24 texels here) of forehead and temple. They are painted into the skin as thin strokes pointing into the
+    cap, denser and darker near the edge, plus a faint shadow tint, so the cap's hard cutout edge sits in a soft
+    gradient instead of on bare skin."""
+    rng = np.random.default_rng(seed)
+    h, w = cap.shape
+    # Distance (texels, 4-neighbour steps) outward from the visible cap, over the skin texels near the hair only.
+    dist = np.full((h, w), np.inf, np.float32)
+    dist[cap] = 0
+    cur = cap.copy()
+    for k in range(1, band + 1):
+        grown = cur.copy()
+        grown[1:] |= cur[:-1]
+        grown[:-1] |= cur[1:]
+        grown[:, 1:] |= cur[:, :-1]
+        grown[:, :-1] |= cur[:, 1:]
+        grown &= seen | cap
+        dist[grown & ~cur] = k
+        cur = grown
+    # Direction into the cap: the gradient of the blurred cap mask.
+    soft = blur(cap.astype(np.float32), 4)
+    gy, gx = np.gradient(soft)
+    norm = np.hypot(gx, gy)
+    ys, xs = np.nonzero((dist > 0) & (dist <= band) & (norm > 1e-4))
+    d = dist[ys, xs] / band
+    keep = rng.random(len(ys)) < 0.2 * (1 - d) ** 1.1
+    ys, xs, d = ys[keep], xs[keep], d[keep]
+    ang = np.arctan2(gy[ys, xs], gx[ys, xs]) + rng.normal(0, 0.22, len(ys))
+    length = d * band + rng.uniform(0.5, 2.0, len(ys))
+    strength = rng.uniform(0.3, 0.6, len(ys)) * (1 - d) ** 0.5
+    # Each stroke runs from its root on the skin to just inside the cap, splatted bilinearly every half texel; it is
+    # faint at the root and fades again where it meets the cap, so the ends don't pile up into a line at the edge.
+    acc = np.zeros((h, w), np.float32)
+    steps = np.arange(0, band + 2.5, 0.5, dtype=np.float32)
+    for t0 in steps:
+        on = t0 <= length
+        if not on.any():
+            break
+        fx = xs[on] + np.cos(ang[on]) * t0
+        fy = ys[on] + np.sin(ang[on]) * t0
+        u = t0 / length[on]
+        wgt = strength[on] * np.sin(np.pi * np.clip(0.15 + 0.85 * u, 0, 1)) ** 0.7 * 0.5
+        x0, y0 = np.floor(fx).astype(int), np.floor(fy).astype(int)
+        ax, ay = fx - x0, fy - y0
+        for ox, oy, ww in ((0, 0, (1 - ax) * (1 - ay)), (1, 0, ax * (1 - ay)), (0, 1, (1 - ax) * ay), (1, 1, ax * ay)):
+            xi, yi = np.clip(x0 + ox, 0, w - 1), np.clip(y0 + oy, 0, h - 1)
+            np.add.at(acc, (yi, xi), wgt * ww)
+    acc = (1 - np.exp(-1.6 * acc)) * 0.8 * ~cap
+    shadow = np.where(np.isfinite(dist) & ~cap, np.clip(1 - dist / (band * 0.6), 0, 1) ** 1.5 * 0.3, 0)
+    # Skin under the visible cap shows only through its cutout gaps at the edge; there it should read as scalp.
+    shadow = np.where(cap, 0.6, shadow)
+    for wgt, col in ((shadow, colour * 1.1), (acc, colour * 1.05)):
+        wgt = wgt[..., None]
+        rgb[:] = rgb * (1 - wgt) + col * wgt
+    print(f"[materials] hairline: {len(ys)} strands over {int(((dist > 0) & (dist <= band)).sum())} band texels")
+
+
 def paint_under_cards(skin_obj, skin_arr, hair_obj, brow_obj):
     """Project the hair cap and brow cards straight down onto the skin texture and darken the skin there.
     Every skin texel near the head is mapped to its 3D rest position; the nearest point on the card mesh gives the
@@ -314,6 +373,17 @@ def paint_under_cards(skin_obj, skin_arr, hair_obj, brow_obj):
     # The ponytail hangs onto the upper back; only the cap over the skull counts as scalp.
     nape = max(v.z for v in hair.verts) - 0.21
     cover = {"hair": np.zeros((h, w), np.float32), "brow": np.zeros((h, w), np.float32)}
+    # For the hairline strands (call #8): where the cap is visible (alpha past its cutout) and which texels were looked at.
+    cap = np.zeros((h, w), bool)
+    seen = np.zeros((h, w), bool)
+    # The ears sit right under the cap's edge; keep the scalp shading and strands off them (the widest head point).
+    top = max(verts[k].z for k in body)
+    ear = max((verts[k] for k in body if verts[k].z > top - 0.25), key=lambda v: abs(v.x))
+    ears = [Vector((sx * abs(ear.x), ear.y, ear.z)) for sx in (-1, 1)]
+
+    def on_ear(co):
+        return any(((co.x - e.x) / 0.02) ** 2 + ((co.y - e.y) / 0.035) ** 2 + ((co.z - e.z) / 0.045) ** 2 < 1
+                   for e in ears)
     reach = {"hair": 0.03, "brow": 0.015}
     full = {"hair": 0.010, "brow": 0.008}
     for t, tuv in zip(tris, uvs):
@@ -344,6 +414,10 @@ def paint_under_cards(skin_obj, skin_arr, hair_obj, brow_obj):
                     a, d = s.sample(co, reach[n])
                     if n == "hair":
                         a *= min(max((co.z - nape) / 0.02, 0.0), 1.0)
+                        if on_ear(co):
+                            continue
+                        seen[y, x] = True
+                        cap[y, x] |= a > HAIR_CUTOFF and d < full[n]
                     fade = 1.0 - min(max((d - full[n]) / (reach[n] - full[n]), 0.0), 1.0)
                     cover[n][y, x] = max(cover[n][y, x], a * fade)
     rgb = skin_arr[..., :3]
@@ -356,6 +430,7 @@ def paint_under_cards(skin_obj, skin_arr, hair_obj, brow_obj):
     for c, col, k in ((hair_c, hair.mean_colour() * 1.15, 0.85), (brow_c, brow.mean_colour() * 0.9, 0.35)):
         wgt = np.clip(c * k, 0, 1)[..., None]
         rgb[:] = rgb * (1 - wgt) + col * wgt
+    hairline_strands(rgb, cap, seen, hair.mean_colour())
     print(f"[materials] painted under cards: hair {int((cover['hair'] > 0.05).sum())} texels, "
           f"brows {int((cover['brow'] > 0.05).sum())} texels")
 
@@ -433,7 +508,7 @@ def main():
                     # A slightly lower cutoff keeps a few more of the brow texture's soft outer strands; on the hair it
                     # keeps the fine strands at the hairline, so the edge is less of a cut-out line (call #5). A higher
                     # cutoff on the lashes keeps only their dense cores: finer lashes.
-                    cutoff = 0.36 if "eyebrow" in n else 0.26 if "ponytail" in n else 0.5 if "eyelash" in n else 0.4
+                    cutoff = 0.36 if "eyebrow" in n else HAIR_CUTOFF if "ponytail" in n else 0.5 if "eyelash" in n else 0.4
                     set_alpha(slot.material, cutout=any(k in n for k in ("ponytail", "eyebrow", "eyelash", "high-poly")),
                               cutoff=cutoff)
     print("[materials]", ", ".join(done), "+ alpha modes")
