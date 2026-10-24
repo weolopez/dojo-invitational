@@ -36,14 +36,14 @@
     }
   },
   "claude": {
-    "approvedAt": "2026-10-23T22:15:34.878Z",
-    "weighIn": 4,
-    "verdict": "Self-submitted: the judge doesn't review its own entry. It passes every automated check; realism awaits the owner's score.",
-    "branchCommit": "9d2716b9a20373850f3f8d2bb1c2ba92e6c7a77b",
+    "approvedAt": "2026-10-24T11:29:18.703Z",
+    "weighIn": 7,
+    "verdict": "Self-submitted: passes every automated check. Realism awaits the owner's score. Entrant's note: Face/material realism pass (no motion, rig or brain changes): skin texture now shaded dark under the hair cap (projected from the cap's alpha, feathered at the hairline) so bare skin no longer shows a",
+    "branchCommit": "a6de180d757f9eeb7018f2e220d8d51405c7f492",
     "realism": null,
     "locked": {
-      "manifest.json": "224ed5143fe158db6a8a63accf84d7597cf8110e0b5dcbd363b1aa4b064980ac",
-      "fighter.glb": "487c84f54ac3adbb5b6fb368f452d076233697af03de91f923069abfdebfcf78",
+      "manifest.json": "0c36f5df9adfdf7bc695233093e37c92def9eb8a45d093b7b5d68e567823e2ca",
+      "fighter.glb": "d14d4afff091a9f0ce98132765de3cd72f33be3dfe75e17e0fa63faa5bba6373",
       "brain.js": "3a47335d12efed5b63278d513732adb4c0a04b2cbe7690d2a4af90ab4b512101"
     }
   }

@@ -25,7 +25,7 @@ HUMAN = {
     "skin_material_type": "MAKESKIN",
     "eyes": "high-poly.mhclo",
     "eyes_material_type": "MAKESKIN",
-    "eyebrows": "eyebrow006.mhclo",
+    "eyebrows": "eyebrow002.mhclo",
     "eyelashes": "eyelashes02.mhclo",
     "teeth": "teeth_base.mhclo",
     "tongue": "tongue01.mhclo",

@@ -8,14 +8,15 @@
   "style": "A fictional woman in her late 30s: athletic, warm olive skin, dark hair in a ponytail, terracotta training top and black leggings. Patient counter-striker.",
   "claims": [
     "The fighter is a fictional MakeHuman character built with MPFB 2.0.18 (source/01_build_human.py); no real person's photos, scans or likeness were used.",
-    "All character assets (body, skin texture, eyes, brows, lashes, teeth, tongue, ponytail hair, sportsuit) are from the MakeHuman CC0 system asset pack.",
+    "All character assets (body, skin texture, eyes, brows (eyebrow002), lashes, teeth, tongue, ponytail hair, sportsuit) are from the MakeHuman CC0 system asset pack.",
     "The skin diffuse is the CC0 'middleage caucasian female' texture graded toward a warmer, olive tone, plus a 1024 px tiling pore normal map generated procedurally in source/02_materials.py and repeated 18 times across the UVs (KHR_texture_transform).",
     "The skin has no subsurface scattering, transmission or volume extension; roughness is 0.48.",
-    "Eyes use the CC0 brown iris texture with a clearcoat layer for a wet look; the clear cornea shell uses an alpha cutoff.",
-    "Hair, eyebrows and eyelashes are alpha-cutout (glTF MASK) cards from MakeHuman, darkened in source/02_materials.py; there are no hair strands.",
+    "Eyes use the CC0 brown iris texture with its red cast shifted to a dark brown in source/02_materials.py, plus a clearcoat layer for a wet look; the clear cornea shell uses an alpha cutoff.",
+    "Hair, eyebrows and eyelashes are alpha-cutout (glTF MASK) cards from MakeHuman; the hair is darkened and the black CC0 brows recoloured dark brown in source/02_materials.py; there are no hair strands.",
+    "The skin texture under the hair cap and brows is darkened by projecting those cards onto the skin in their rest pose (paint_under_cards in source/02_materials.py), with a soft feather at the hairline; it is painted into the diffuse, not a separate layer.",
     "The training wear is the CC0 female_sportsuit01 recoloured (blue to terracotta, grey to charcoal) with its own normal map; it is weighted by MPFB, not cloth-simulated.",
     "The rig is MPFB's built-in Mixamo rig and weights, set to a T-pose rest; all 28 shared Mixamo clips were retargeted onto it by world-space rotation transfer (source/03_rig_and_retarget.py).",
     "The four renders were made by the judge's Three.js harness (dojo/judge.html) loading the submitted fighter.glb, with no paint-over.",
-    "fighter.glb is 23.6 MB with 167,392 triangles and 10 embedded textures up to 2048 px."
+    "fighter.glb is 22.8 MB with 167,392 triangles and 10 embedded textures up to 2048 px."
   ]
 }

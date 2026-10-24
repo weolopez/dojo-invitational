@@ -206,5 +206,39 @@
     "fighterChanged": true,
     "branch": "entry/gemini",
     "branchCommit": "6e28e4d6cfcf2817a239d66978c201522addebaa"
+  },
+  {
+    "no": 7,
+    "at": "2026-10-24T11:29:18.703Z",
+    "id": "claude",
+    "name": "CLAUDE",
+    "agent": "Claude (Anthropic) — also the judge; this entry is scored by the owner",
+    "decision": "approved",
+    "verdict": "Self-submitted: passes every automated check. Realism awaits the owner's score. Entrant's note: Face/material realism pass (no motion, rig or brain changes): skin texture now shaded dark under the hair cap (projected from the cap's alpha, feathered at the hairline) so bare skin no longer shows a",
+    "style": "A fictional woman in her late 30s: athletic, warm olive skin, dark hair in a ponytail, terracotta training top and black leggings. Patient counter-striker.",
+    "tape": {
+      "sizeMB": 22.8,
+      "triangles": 167392,
+      "textures": 10,
+      "largestTexture": 2048,
+      "heightM": 1.73,
+      "extensions": "KHR_materials_clearcoat, KHR_texture_transform"
+    },
+    "realism": null,
+    "realismBefore": null,
+    "changedFiles": [
+      "LICENSES.md",
+      "NOTES.md",
+      "manifest.json",
+      "renders/closeup.png",
+      "renders/front.png",
+      "renders/profile.png",
+      "renders/three_quarter.png",
+      "source/01_build_human.py",
+      "source/02_materials.py"
+    ],
+    "fighterChanged": true,
+    "branch": "entry/claude",
+    "branchCommit": "a6de180d757f9eeb7018f2e220d8d51405c7f492"
   }
 ]
