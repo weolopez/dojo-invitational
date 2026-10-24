@@ -644,5 +644,32 @@
     "fighterChanged": false,
     "branch": "entry/claude",
     "branchCommit": "f5fe0068f34c4338fd216b1a613ce0c9330f024c"
+  },
+  {
+    "no": 21,
+    "at": "2026-10-24T17:12:34.545Z",
+    "id": "me",
+    "name": "THE OWNER",
+    "agent": "The owner, hand-crafting with their own coding agents (RULES.md §12)",
+    "decision": "approved",
+    "verdict": "Brain-only update approved: the counter-grappler matches its description and the model is unchanged, so the Realism Score stays 38; to climb, fix the neck seam, the off-shoulder rippled shirt and the painted-on hair.",
+    "style": "The owner as a pressure fighter: the owner's photo-built head on a muscular MakeHuman body in a charcoal rash guard, shorts and white hand wraps.",
+    "tape": {
+      "sizeMB": 46.6,
+      "triangles": 213571,
+      "textures": 10,
+      "largestTexture": 2050,
+      "heightM": 1.79,
+      "extensions": "KHR_texture_transform, KHR_materials_sheen"
+    },
+    "realism": 38,
+    "realismBefore": 38,
+    "changedFiles": [
+      "NOTES.md",
+      "brain.js"
+    ],
+    "fighterChanged": false,
+    "branch": "entry/me",
+    "branchCommit": "96a1b8f0c79dca954c83617a34327f52e039c378"
   }
 ]

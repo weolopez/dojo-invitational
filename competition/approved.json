@@ -48,15 +48,15 @@
     }
   },
   "me": {
-    "approvedAt": "2026-10-24T16:34:37.266Z",
-    "weighIn": 17,
-    "verdict": "Brain-only update approved: the round-timer reset, step-in throw plan and hook/roundhouse finisher match the claims, and the unchanged fighter keeps its 38; the next points are in the neck seam, the rippled shirt and boxy shorts, and real hair.",
-    "branchCommit": "ddbf16a9058edf8a3d30d34ec8d917cb5f0c6278",
+    "approvedAt": "2026-10-24T17:12:34.545Z",
+    "weighIn": 21,
+    "verdict": "Brain-only update approved: the counter-grappler matches its description and the model is unchanged, so the Realism Score stays 38; to climb, fix the neck seam, the off-shoulder rippled shirt and the painted-on hair.",
+    "branchCommit": "96a1b8f0c79dca954c83617a34327f52e039c378",
     "realism": 38,
     "locked": {
       "manifest.json": "ce581848337ab359068432b30423159a19709a918a795b90f2239e0ebab5ba4d",
       "fighter.glb": "42f3a7b006c77b7a576e9ae446558c453b7f439526d4a7510097ec6c475e506e",
-      "brain.js": "24e58caaaf090b25d7f17162487523758f636e48896a369b97ab3594364faaff"
+      "brain.js": "d063a98fe6756f2d6d533df0d080123d59d06184089d84ffa3a771fdf00682fc"
     }
   },
   "muse": {
