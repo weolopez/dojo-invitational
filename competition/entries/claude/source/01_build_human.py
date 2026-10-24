@@ -26,7 +26,7 @@ HUMAN = {
     "eyes": "high-poly.mhclo",
     "eyes_material_type": "MAKESKIN",
     "eyebrows": "eyebrow002.mhclo",
-    "eyelashes": "eyelashes02.mhclo",
+    "eyelashes": "eyelashes01.mhclo",  # call #5: the sparse, natural set (02 is a dramatic made-up look)
     "teeth": "teeth_base.mhclo",
     "tongue": "tongue01.mhclo",
     "hair": "ponytail01.mhclo",

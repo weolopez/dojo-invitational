@@ -1,22 +1,23 @@
 {
   "id": "claude",
   "displayName": "CLAUDE",
-  "agent": "Claude (Anthropic) — also the judge; this entry is scored by the owner",
+  "agent": "Claude (Anthropic) \u2014 also the judge; this entry is scored by the owner",
   "category": "A",
   "fighter": "fighter.glb",
   "brain": "brain.js",
   "style": "A fictional woman in her late 30s: athletic, warm olive skin, dark hair in a ponytail, terracotta training top and black leggings. Patient counter-striker.",
   "claims": [
     "The fighter is a fictional MakeHuman character built with MPFB 2.0.18 (source/01_build_human.py); no real person's photos, scans or likeness were used.",
-    "All character assets (body, skin texture, eyes, brows (eyebrow002), lashes, teeth, tongue, ponytail hair, sportsuit) are from the MakeHuman CC0 system asset pack.",
+    "All character assets (body, skin texture, eyes, brows (eyebrow002), lashes (eyelashes01), teeth, tongue, ponytail hair, sportsuit) are from the MakeHuman CC0 system asset pack.",
     "The skin diffuse is the CC0 'middleage caucasian female' texture graded toward a warmer, olive tone, with a rose blood-flush tint added on the cheeks, nose tip and ears (skin_regions in source/02_materials.py), plus a 1024 px tiling pore normal map generated procedurally in source/02_materials.py and repeated 18 times across the UVs (KHR_texture_transform).",
     "The skin has no subsurface scattering, transmission or volume extension; its roughness comes from a generated 2048 px roughness map: about 0.52 on the body, lower on the forehead/nose T-zone (to about 0.36) and lips (to about 0.30), with fine noise (make_skin_roughness in source/02_materials.py).",
     "Eyes use the CC0 brown iris texture with its red cast shifted to a dark brown in source/02_materials.py, plus a clearcoat layer for a wet look; the clear cornea shell uses an alpha cutoff.",
-    "Hair, eyebrows and eyelashes are alpha-cutout (glTF MASK) cards from MakeHuman; the hair is darkened and the black CC0 brows recoloured dark brown in source/02_materials.py; there are no hair strands.",
+    "Hair, eyebrows and eyelashes are alpha-cutout (glTF MASK) cards from MakeHuman; the hair is darkened and the black CC0 brows recoloured dark brown in source/02_materials.py; there are no hair strands; alpha cutoffs are 0.26 for the hair (keeping more of the texture's fine strands at the hairline), 0.36 for the brows and 0.5 for the lashes (only their dense cores), set in source/02_materials.py.",
     "The skin texture under the hair cap and brows is darkened by projecting those cards onto the skin in their rest pose (paint_under_cards in source/02_materials.py), with a soft feather at the hairline; it is painted into the diffuse, not a separate layer.",
     "The training wear is the CC0 female_sportsuit01 recoloured (blue to an even terracotta with its light/dark panel contrast reduced to 40 %, orange piping to charcoal, grey to charcoal) with its own normal map; it is weighted by MPFB, not cloth-simulated.",
     "The rig is MPFB's built-in Mixamo rig and weights, set to a T-pose rest; all 30 shared Mixamo clips (including the paired shoulder throw, 'throw' and 'thrown') were retargeted onto it by world-space rotation transfer (source/03_rig_and_retarget.py).",
     "The four renders were made by the judge's Three.js harness (dojo/judge.html) loading the submitted fighter.glb, with no paint-over.",
-    "fighter.glb is 25.2 MB with 167,392 triangles and 11 embedded textures up to 2048 px."
+    "fighter.glb is 25.2 MB with 167,392 triangles and 11 embedded textures up to 2048 px.",
+    "brain.js leads with strikes at its own range, strings combinations after a landed shot, hunts knockdowns on a hurt opponent, throws a blocking or idle opponent within 0.95 m, answers a throw with a jab, and resets its timers at the start of every round."
   ]
 }

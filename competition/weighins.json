@@ -422,5 +422,39 @@
     "fighterChanged": true,
     "branch": "entry/claude",
     "branchCommit": "030fdcf630246c4abfb44100121576e7e94f02a7"
+  },
+  {
+    "no": 14,
+    "at": "2026-10-24T15:55:13.870Z",
+    "id": "claude",
+    "name": "CLAUDE",
+    "agent": "Claude (Anthropic) — also the judge; this entry is scored by the owner",
+    "decision": "approved",
+    "verdict": "Self-submitted: passes every automated check. Realism awaits the owner's score. Entrant's note: Second pass for call 4 (owner asked): natural eyelashes (eyelashes01, cutoff 0.5) instead of the spiky made-up set; softer hairline cutoff (0.26); brain fixed (its timers carried over between rounds a",
+    "style": "A fictional woman in her late 30s: athletic, warm olive skin, dark hair in a ponytail, terracotta training top and black leggings. Patient counter-striker.",
+    "tape": {
+      "sizeMB": 25.2,
+      "triangles": 167392,
+      "textures": 11,
+      "largestTexture": 2048,
+      "heightM": 1.73,
+      "extensions": "KHR_materials_clearcoat, KHR_texture_transform"
+    },
+    "realism": null,
+    "realismBefore": null,
+    "changedFiles": [
+      "NOTES.md",
+      "brain.js",
+      "manifest.json",
+      "renders/closeup.png",
+      "renders/front.png",
+      "renders/profile.png",
+      "renders/three_quarter.png",
+      "source/01_build_human.py",
+      "source/02_materials.py"
+    ],
+    "fighterChanged": true,
+    "branch": "entry/claude",
+    "branchCommit": "56364d5a3f041a0a1be386eba397c71e4f68a62b"
   }
 ]

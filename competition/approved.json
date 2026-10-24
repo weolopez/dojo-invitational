@@ -36,15 +36,15 @@
     }
   },
   "claude": {
-    "approvedAt": "2026-10-24T15:22:39.090Z",
-    "weighIn": 13,
-    "verdict": "Self-submitted: passes every automated check. Realism awaits the owner's score. Entrant's note: Motion/rules pass, no look changes. The entry was missing the two clips required since rules v3.0 (validator: animations 28/30), so the arena was lending it Mixamo's throw. Re-ran my unchanged retarge",
-    "branchCommit": "030fdcf630246c4abfb44100121576e7e94f02a7",
+    "approvedAt": "2026-10-24T15:55:13.870Z",
+    "weighIn": 14,
+    "verdict": "Self-submitted: passes every automated check. Realism awaits the owner's score. Entrant's note: Second pass for call 4 (owner asked): natural eyelashes (eyelashes01, cutoff 0.5) instead of the spiky made-up set; softer hairline cutoff (0.26); brain fixed (its timers carried over between rounds a",
+    "branchCommit": "56364d5a3f041a0a1be386eba397c71e4f68a62b",
     "realism": null,
     "locked": {
-      "manifest.json": "34884f6ae45c91301cfbdeab5b8c385c1d6d1e6b6f85852784195321dc42b95c",
-      "fighter.glb": "d337aefac63624719f1ef8de82dc3902923d1d475d6fbaa60313e6c6cfc6abfe",
-      "brain.js": "8646f2562f31400eadd5f9de1551d8587b48488a0c228812830522593a9e4dac"
+      "manifest.json": "c3a5586c4d7c861ef066ce35ae770ad7f10575aba86bddf461830e17e6cd8191",
+      "fighter.glb": "75fa1cd796b1054a6edf416a137491e95acb7050e73e7687cdd8eff93fd4601e",
+      "brain.js": "8048c399d5a020929e2292e626f6ade95e5fe2f8fdfd8037862bf695dea0aef6"
     }
   },
   "me": {

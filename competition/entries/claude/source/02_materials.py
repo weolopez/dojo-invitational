@@ -430,9 +430,12 @@ def main():
             for slot in obj.material_slots:
                 if slot.material and slot.material.use_nodes:
                     n = obj.name.lower()
-                    # A slightly lower cutoff keeps a few more of the brow texture's soft outer strands.
+                    # A slightly lower cutoff keeps a few more of the brow texture's soft outer strands; on the hair it
+                    # keeps the fine strands at the hairline, so the edge is less of a cut-out line (call #5). A higher
+                    # cutoff on the lashes keeps only their dense cores: finer lashes.
+                    cutoff = 0.36 if "eyebrow" in n else 0.26 if "ponytail" in n else 0.5 if "eyelash" in n else 0.4
                     set_alpha(slot.material, cutout=any(k in n for k in ("ponytail", "eyebrow", "eyelash", "high-poly")),
-                              cutoff=0.36 if "eyebrow" in n else 0.4)
+                              cutoff=cutoff)
     print("[materials]", ", ".join(done), "+ alpha modes")
     bpy.ops.wm.save_as_mainfile(filepath=os.path.join(WORK, "claude_materials.blend"))
 
