@@ -1,11 +1,16 @@
 // Fight AIs: the house CPU (with personalities) and competition entry brains (competition/RULES.md §5).
 import { MOVES, PERSONALITIES } from './config.js';
 
+// How often a house fighter decides to step inside and throw (per decision, when the foe isn't attacking). Throws
+// only reach 0.95 m, closer than fighters normally stand, so without stepping in on purpose nobody ever throws.
+const GRAB = 0.12;
+
 export class CpuBrain {
   constructor(personality = PERSONALITIES.default) {
     this.p = personality;
     this.think = 0;
     this.plan = { fwd: false, back: false, block: false };
+    this.closingFor = 0; // seconds left of stepping in to throw
   }
 
   input(dt, me, foe) {
@@ -14,11 +19,21 @@ export class CpuBrain {
     const gap = Math.abs(me.root.position.x - foe.root.position.x);
     if (foe.state === 'block' && gap < 0.95 && Math.random() < 0.5) { this.plan = { fwd: false, back: false, block: false }; me.attack('throw'); return this.plan; }
     if (foe.state === 'attack' && gap < 1.7 && Math.random() < p.block) this.plan = { fwd: false, back: false, block: true };
+    // Stepping in to throw: walk forward until in grab range, then throw; give up if the foe attacks or after 1 s.
+    if (this.closingFor > 0) {
+      this.closingFor -= dt;
+      if (foe.state === 'attack' || foe.state === 'ko' || foe.downed) this.closingFor = 0;
+      else if (gap <= 0.95) { this.closingFor = 0; this.plan = { fwd: false, back: false, block: false }; me.attack('throw'); return this.plan; }
+      else { this.plan = { fwd: true, back: false, block: false }; return this.plan; }
+    }
     if (this.think > 0) return this.plan;
     this.think = p.think * (0.6 + Math.random() * 0.8);
     this.plan = { fwd: false, back: false, block: false };
     if (foe.state === 'ko' || me.state === 'ko') return this.plan;
-    if (gap > 1.45) this.plan.fwd = true;
+    if (gap > 0.95 && gap < 1.45 && foe.state !== 'attack' && Math.random() < (p.grab ?? GRAB)) {
+      this.closingFor = 1;
+      this.plan.fwd = true;
+    } else if (gap > 1.45) this.plan.fwd = true;
     else if (gap < 0.95 && Math.random() < 0.4) this.plan.back = true;
     else if (Math.random() < p.aggression) {
       let pick;
