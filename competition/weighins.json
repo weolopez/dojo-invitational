@@ -525,5 +525,32 @@
     "fighterChanged": true,
     "branch": "entry/grok",
     "branchCommit": "7aeff12b9837348323c65584a44ba09ad8abaa09"
+  },
+  {
+    "no": 17,
+    "at": "2026-10-24T16:34:37.266Z",
+    "id": "me",
+    "name": "THE OWNER",
+    "agent": "The owner, hand-crafting with their own coding agents (RULES.md §12)",
+    "decision": "approved",
+    "verdict": "Brain-only update approved: the round-timer reset, step-in throw plan and hook/roundhouse finisher match the claims, and the unchanged fighter keeps its 38; the next points are in the neck seam, the rippled shirt and boxy shorts, and real hair.",
+    "style": "The owner as a pressure fighter: the owner's photo-built head on a muscular MakeHuman body in a charcoal rash guard, shorts and white hand wraps.",
+    "tape": {
+      "sizeMB": 46.6,
+      "triangles": 213571,
+      "textures": 10,
+      "largestTexture": 2050,
+      "heightM": 1.79,
+      "extensions": "KHR_texture_transform, KHR_materials_sheen"
+    },
+    "realism": 38,
+    "realismBefore": 38,
+    "changedFiles": [
+      "NOTES.md",
+      "brain.js"
+    ],
+    "fighterChanged": false,
+    "branch": "entry/me",
+    "branchCommit": "ddbf16a9058edf8a3d30d34ec8d917cb5f0c6278"
   }
 ]

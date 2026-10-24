@@ -48,15 +48,15 @@
     }
   },
   "me": {
-    "approvedAt": "2026-10-24T15:59:50.232Z",
-    "weighIn": 15,
-    "verdict": "Approved at 38 (up from 37): the clothing rebuild closes the waist gap and cleans up the hems, and the three knockdown/get-up clips are present; next, fix the ragged neck seam, the ripple bands on the shirt and the garments tearing in big poses like the roundhouse.",
-    "branchCommit": "a79e65b981b5f5368804c74fb0d5a4dcc3de6683",
+    "approvedAt": "2026-10-24T16:34:37.266Z",
+    "weighIn": 17,
+    "verdict": "Brain-only update approved: the round-timer reset, step-in throw plan and hook/roundhouse finisher match the claims, and the unchanged fighter keeps its 38; the next points are in the neck seam, the rippled shirt and boxy shorts, and real hair.",
+    "branchCommit": "ddbf16a9058edf8a3d30d34ec8d917cb5f0c6278",
     "realism": 38,
     "locked": {
       "manifest.json": "ce581848337ab359068432b30423159a19709a918a795b90f2239e0ebab5ba4d",
       "fighter.glb": "42f3a7b006c77b7a576e9ae446558c453b7f439526d4a7510097ec6c475e506e",
-      "brain.js": "b513d3b87d8727a19a915812c228094356cdee362f53d6e5d5dcadc72be4b443"
+      "brain.js": "24e58caaaf090b25d7f17162487523758f636e48896a369b97ab3594364faaff"
     }
   }
 }

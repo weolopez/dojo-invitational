@@ -110,3 +110,39 @@ All checks passed.
   IK, spring bones).
 - **Renders:** `renders/` holds new judge-harness captures at 1920×1080 (bind pose, plus idle_full and
   action_roundhouse).
+
+## Brain: step in and throw (Oct 24, 2026, call 4)
+Written by the owner's AI agent (Me Fighter); not hand-tuned or tested in fights, only run through the validator.
+- **Round reset:** all memory timers (last strike, hit-spell, throw plan, plan-check) and per-round flags reset when
+  `round` changes or `time` goes backwards, fixing the round-timer trap.
+- **Step in and throw:** when the foe is 0.95–1.4 m away and not attacking, about twice a second the brain rolls to
+  commit (base 22%, +13% if the foe is blocking or idle, +15% if behind on health after 18 s of a 30 s round). Once
+  committed it walks forward and throws inside 0.95 m. The plan is dropped if the foe starts attacking (block if in
+  reach), the foe is down, or after 1 s. A non-attacking foe already inside 0.95 m is thrown directly.
+- **Finisher:** at or below 30% foe health (once per round), hook in hook reach, roundhouse out to 1.6 m (replaces
+  the previous uppercut/hook finisher).
+- **Unchanged:** blocking strikes in reach, walking in, occasional front kick, jab-cross-power combos in close.
+
+### Validator output (final)
+```
+PASS  manifest.json has all fields
+PASS  file size 46.6 MB (limit 80 MB)
+PASS  extensions: KHR_texture_transform, KHR_materials_sheen
+PASS  self-contained (no external URIs)
+PASS  10 textures (limit 40)
+PASS  largest texture 2050 px (limit 4096)
+PASS  213,571 triangles (limit 250,000)
+PASS  Mixamo skeleton (all required mixamorig: bones present)
+PASS  animations: 30/30
+PASS  clip lengths within ±10 % of reference
+PASS  bind-pose mesh height ≈ 1.79 m (expected 1.55–2.05 m; check scale if far off)
+PASS  brain.js runs in the sandbox, valid outputs, 0.071 ms average (limit 2 ms)
+PASS  renders/front.png 1920×1080 (long side ≥ 1920)
+PASS  renders/three_quarter.png 1920×1080 (long side ≥ 1920)
+PASS  renders/profile.png 1920×1080 (long side ≥ 1920)
+PASS  renders/closeup.png 1920×1080 (long side ≥ 1920)
+PASS  NOTES.md present and filled in
+PASS  LICENSES.md present and filled in
+
+All checks passed.
+```
