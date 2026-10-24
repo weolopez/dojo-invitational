@@ -1,45 +1,52 @@
 # THE OWNER: notes
 
-The owner's own fighter (RULES.md §12): a FaceBuilder head made from the owner's photos, on the Mixamo X Bot body.
-This is the starting point, the same model the arena has used for the house fighter "You". From here on the owner and
-their coding agents hand-craft it; each update below says who did what.
+This is the owner's fighter: a FaceBuilder head fitted from the owner's own photos on the Mixamo X Bot body.
+The source model and the face-photo workflow are recorded in `source/`.
 
-## How it's built
+## Current build
 
-1. `source/build_photo_head_facebuilder.py`: FaceBuilder fits a head to three photos from `photos/` and projects a
-   2048 px texture from them.
-2. `source/build_fighter_with_my_head.py`: attaches that head to Mixamo's X Bot, matches the skull size, and packs
-   all 28 Mixamo clips into one `fighter.glb`.
+- The original FaceBuilder head and its photo-projected texture are unchanged.
+- `source/upgrade_body.py` reshapes the X Bot body using its existing Mixamo vertex weights: broader shoulders and
+  chest, a narrower waist and hips, and thicker arms and thighs. This is a proportion adjustment to the X Bot
+  mannequin, not a scan or a detailed anatomical sculpt.
+- The same script generates procedural skin and charcoal-knit PBR textures, then extracts skinned shells from the
+  body surface for a sleeveless training top and shorts.
+- The Mixamo skeleton and all 28 required animation clips are preserved.
+- The four renders were captured from the rebuilt `fighter.glb` using the local Three.js renderer in `.work/render.html`
+  and the repository's Poly Haven boxing-ring HDRI. They are direct renders with no paint-over.
 
-Both scripts ran from the project root (they read `photos/` and `assets/mixamo/`); the copies here are the record.
+## Limitations
 
-## Known weaknesses (the judge's notes on the house version: 33/100)
-
-- The body is X Bot's plain plastic mannequin: no skin, no clothing, and a visible seam at the neck.
-- The face texture is low resolution and the eyes look downcast (the photos were taken looking down).
-- The hair is painted into the texture, with no volume.
-- Only three photos were used; there's no profile or close-up data.
+- The base is still X Bot geometry. Its separated body sections leave visible gaps at the neck, torso and hips; the
+  clothing shells have rough cut edges and do not bridge every gap.
+- The material maps are procedural surface detail, not scanned skin or fabric. The outfit has no cloth simulation,
+  tailored seams or realistic folds.
+- The face texture is based on three owner photos. The eyes still look downcast, the hair is painted into the texture,
+  and the neck seam remains visible.
+- This pass makes the body more masculine in proportion, but does not replace the underlying mannequin anatomy.
 
 ## Update log
 
-- **Entry created (by Claude, the judge's session, on the owner's request):** copied the existing model, wrote this
-  manifest, a starter pressure-fighter `brain.js` and these notes. No changes to the model itself.
+- **Owner entry created:** the starting fighter was the existing FaceBuilder head on the Mixamo X Bot body; no model
+  changes were made at entry creation.
+- **Body/material update:** generated procedural skin and fabric maps, added basic skinned clothing shells and adjusted
+  the body proportions toward a masculine build. Re-exported the model while retaining all 28 clips.
 
-## Validator output (entry created)
+## Validator output
 
 ```
 PASS  manifest.json has all fields
-PASS  file size 6.6 MB (limit 80 MB)
-PASS  extensions: KHR_materials_specular
+PASS  file size 11.1 MB (limit 80 MB)
+PASS  extensions: KHR_texture_transform
 PASS  self-contained (no external URIs)
-PASS  1 textures (limit 40)
+PASS  7 textures (limit 40)
 PASS  largest texture 2048 px (limit 4096)
-PASS  81,860 triangles (limit 250,000)
+PASS  91,952 triangles (limit 250,000)
 PASS  Mixamo skeleton (all required mixamorig: bones present)
 PASS  animations: 28/28
 PASS  clip lengths within ±10 % of reference
 PASS  bind-pose mesh height ≈ 1.82 m (expected 1.55–2.05 m; check scale if far off)
-PASS  brain.js runs in the sandbox, valid outputs, 0.066 ms average (limit 2 ms)
+PASS  brain.js runs in the sandbox, valid outputs, 0.082 ms average (limit 2 ms)
 PASS  renders/front.png 1920×1080 (long side ≥ 1920)
 PASS  renders/three_quarter.png 1920×1080 (long side ≥ 1920)
 PASS  renders/profile.png 1920×1080 (long side ≥ 1920)
