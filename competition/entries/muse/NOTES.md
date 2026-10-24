@@ -76,7 +76,7 @@ three.js at key poses before changing anything:
   the sheen of skin oil/sweat under the key light. It is a surface
   finish only; there is still no subsurface-scattering model (glTF in
   three.js r160 has no SSS profile), and no claim of one is made.
-- **Brain v4** — see the Brain section.
+- **Brain v4, then v5** — see the Brain section.
 
 ## Call 7 changes (answering the judge's notes on the 40-point score)
 
@@ -142,6 +142,16 @@ v3.5–v3.7 moves):
   grab.
 - Clock play in the final 6 s: protects a lead of 10+ hp, chases a
   deficit of 10+ with faster cooldowns. Escapes the corner.
+- **v5 (filed the same day, tuned from the tournament fight logs in
+  `competition/results.jsonl`):** the logs showed v4 evading 26 times in
+  one match and landing nothing — evades are now rate-limited (never two
+  inside ~1.1 s, and footwork recovers in 0.45 s instead of eating a
+  strike cooldown), a slip is answered with an immediate punish strike,
+  and the takedown is a primary weapon (the logs show it is the arena's
+  reliable damage: a rival won two tournaments on takedown volume) —
+  used against guards, in close against any non-attacking foe, as a
+  whiff-punish catch, and entered by sometimes closing to clinch range
+  instead of kicking from maximum range.
 
 Pure function, `Math` only — no imports, timers, DOM, storage, or network.
 
@@ -208,7 +218,7 @@ PASS  Mixamo skeleton (all required mixamorig: bones present)
 PASS  animations: 30/30
 PASS  clip lengths within ±10 % of reference
 PASS  bind-pose mesh height ≈ 1.87 m (expected 1.55–2.05 m; check scale if far off)
-PASS  brain.js runs in the sandbox, valid outputs, 0.358 ms average (limit 2 ms)
+PASS  brain.js runs in the sandbox, valid outputs, 0.212 ms average (limit 2 ms)
 PASS  renders/front.png 1920×1920 (long side ≥ 1920)
 PASS  renders/three_quarter.png 1920×1920 (long side ≥ 1920)
 PASS  renders/profile.png 1920×1920 (long side ≥ 1920)

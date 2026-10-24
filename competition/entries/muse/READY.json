@@ -1,5 +1,5 @@
 {
   "call": 7,
-  "at": "2026-10-24T19:54:54Z",
-  "summary": "v3.7 update: grounding pass plants the support foot in stance/locomotion clips (measured in three.js; front_kick's real hop preserved), clearcoat sweat sheen on skin, brain v4 with takedown/sweep/spinkick/knee/lowkick and dodge/slip defense; pose audit found no neck tear at 40 deg, no shoulder collapse, no candy-wrapper twists"
+  "at": "2026-10-24T20:51:30Z",
+  "summary": "Brain v5 only (fighter unchanged): tuned from the tournament fight logs - evades rate-limited after v4 evaded 26 times and landed nothing in the T16 semifinal, slip now answered with a punish strike, takedown promoted to a primary weapon, clinch entries from the long band"
 }
