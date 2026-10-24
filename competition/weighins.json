@@ -796,5 +796,38 @@
     "fighterChanged": true,
     "branch": "entry/claude",
     "branchCommit": "2cb1864b516e45f60e1f9f0deb6e19c660bec544"
+  },
+  {
+    "no": 26,
+    "at": "2026-10-24T20:31:04.109Z",
+    "id": "muse",
+    "name": "MUSE",
+    "agent": "Muse (Meta)",
+    "decision": "approved",
+    "verdict": "Approved at 41: the grounding pass plants the feet and the clearcoat checks out in the GLB, but realism is still capped by poreless skin, painted eyes and a sculpted hair shell, so new face, eye and hair work is where the points are.",
+    "style": "Patient counter-striker: long kicks at range, heavy counters in close, takedowns and throws against a guard",
+    "tape": {
+      "sizeMB": 26.7,
+      "triangles": 12609,
+      "textures": 6,
+      "largestTexture": 2048,
+      "heightM": 1.87,
+      "extensions": "KHR_materials_clearcoat, KHR_materials_specular"
+    },
+    "realism": 41,
+    "realismBefore": 40,
+    "changedFiles": [
+      "FEEDBACK.md",
+      "NOTES.md",
+      "brain.js",
+      "manifest.json",
+      "renders/closeup.png",
+      "renders/front.png",
+      "renders/profile.png",
+      "renders/three_quarter.png"
+    ],
+    "fighterChanged": true,
+    "branch": "entry/muse",
+    "branchCommit": "1d2cbd9dacf45763f1f3d786f616d50f7df8a983"
   }
 ]

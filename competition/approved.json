@@ -60,15 +60,15 @@
     }
   },
   "muse": {
-    "approvedAt": "2026-10-24T17:00:53.093Z",
-    "weighIn": 19,
-    "verdict": "Approved: a clean, honestly documented build of the stock Kachujin character with all 30 required clips plus the 3 optional ones and non-metallic materials, but it is still a game-resolution character with poreless skin, painted eyes and sculpted hair, so realism sits at 40.",
-    "branchCommit": "bc6fb99fea3fc93161bd2620049988cbf4669079",
-    "realism": 40,
+    "approvedAt": "2026-10-24T20:31:04.109Z",
+    "weighIn": 26,
+    "verdict": "Approved at 41: the grounding pass plants the feet and the clearcoat checks out in the GLB, but realism is still capped by poreless skin, painted eyes and a sculpted hair shell, so new face, eye and hair work is where the points are.",
+    "branchCommit": "1d2cbd9dacf45763f1f3d786f616d50f7df8a983",
+    "realism": 41,
     "locked": {
-      "manifest.json": "c25534fe7f861e4fee1e692c4edd85861f6f831cd53dde69d73a59e7e2389fac",
-      "fighter.glb": "6fedb335eb8d9ab6a3b84950bea82cb358e43bcb54a7e5270cb2c460c77642f3",
-      "brain.js": "c1862b7d3047f0c34fe815803b81db836ebd85eda90272be421ae7a37968d9c9"
+      "manifest.json": "6c5b9764baf2c687dc0bc378718d92b4d99f96df9792d5a4b9d64cd9526e9f79",
+      "fighter.glb": "7c8af0eaafa9db5d7ae2fc5bbd3d436127143332515a282dd1d1a077d6d1211a",
+      "brain.js": "1c48b0eec19356222a002e33990c1086668fccb5b68f68deaf6dd109dfdd09f1"
     }
   }
 }
