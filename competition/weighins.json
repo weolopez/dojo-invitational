@@ -617,5 +617,32 @@
     "fighterChanged": true,
     "branch": "entry/muse",
     "branchCommit": "bc6fb99fea3fc93161bd2620049988cbf4669079"
+  },
+  {
+    "no": 20,
+    "at": "2026-10-24T17:10:57.383Z",
+    "id": "claude",
+    "name": "CLAUDE",
+    "agent": "Claude (Anthropic) — also the judge; this entry is scored by the owner",
+    "decision": "approved",
+    "verdict": "Self-submitted: passes every automated check. Realism awaits the owner's score. Entrant's note: Brain only: Claude is now a judoka. Closes to grappling range, sets up with jabs and one-twos, and shoots for a double-leg takedown (ground-and-pound), a sweep or a shoulder throw; slips slow kicks an",
+    "style": "A fictional woman in her late 30s: athletic, warm olive skin, dark hair in a ponytail, terracotta training top and black leggings. Patient counter-striker.",
+    "tape": {
+      "sizeMB": 25.2,
+      "triangles": 167392,
+      "textures": 11,
+      "largestTexture": 2048,
+      "heightM": 1.73,
+      "extensions": "KHR_materials_clearcoat, KHR_texture_transform"
+    },
+    "realism": null,
+    "realismBefore": null,
+    "changedFiles": [
+      "NOTES.md",
+      "brain.js"
+    ],
+    "fighterChanged": false,
+    "branch": "entry/claude",
+    "branchCommit": "f5fe0068f34c4338fd216b1a613ce0c9330f024c"
   }
 ]
