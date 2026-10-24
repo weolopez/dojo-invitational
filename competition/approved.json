@@ -48,14 +48,14 @@
     }
   },
   "me": {
-    "approvedAt": "2026-10-24T12:07:18.046Z",
-    "weighIn": 9,
-    "verdict": "Valid, honest entry that matches its claims: a real photo face on a bare X Bot mannequin, 33/100 until it gets a body, skin, clothing and real hair.",
-    "branchCommit": "fe40814e562c1c1947751277b261cadb5f616193",
-    "realism": 33,
+    "approvedAt": "2026-10-24T12:30:06.521Z",
+    "weighIn": 11,
+    "verdict": "Approved at 35 (up from 33): the new training top and shorts give the clothing score something to work with, but the jagged shell edges, the open gaps at the waist and hips and the X Bot ball joints still make the body read as a mannequin under a real face.",
+    "branchCommit": "4666081d7b2ebbc87f941fdb006fb6cc50c0dbd9",
+    "realism": 35,
     "locked": {
-      "manifest.json": "195e7ce40d92ab203bfd766bbc989bb0dcc3d11f01d68ab4a135e553e1906d6b",
-      "fighter.glb": "871f7cc710a73ae9303ca32b18c72a13c47382cd5cf2399fd3b976fc55972d01",
+      "manifest.json": "559f947a60eb441837c7a1ac8e7795874858a6a4aaadf718e34f8f79254291d9",
+      "fighter.glb": "d74b7b633e05bc90ecf10548ae1ef27cc3bf828cef3c5029922c66ab26be1394",
       "brain.js": "3e7971984789c24b702be7ff3dc797d2884763810a7f9257feb6fe4ac5b55c30"
     }
   }

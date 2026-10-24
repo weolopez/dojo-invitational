@@ -327,5 +327,34 @@
     "fighterChanged": true,
     "branch": "entry/claude",
     "branchCommit": "d603dafcb868a44b68cfd2ea7939adea664c3a06"
+  },
+  {
+    "no": 11,
+    "at": "2026-10-24T12:30:06.521Z",
+    "id": "me",
+    "name": "THE OWNER",
+    "agent": "The owner, hand-crafting with their own coding agents (RULES.md §12)",
+    "decision": "approved",
+    "verdict": "Approved at 35 (up from 33): the new training top and shorts give the clothing score something to work with, but the jagged shell edges, the open gaps at the waist and hips and the X Bot ball joints still make the body read as a mannequin under a real face.",
+    "style": "The owner as a pressure fighter, with a masculine-proportioned Mixamo X Bot body and a head built from the owner's own photos.",
+    "tape": {
+      "sizeMB": 11.1,
+      "triangles": 91952,
+      "textures": 7,
+      "largestTexture": 2048,
+      "heightM": 1.82,
+      "extensions": "KHR_texture_transform"
+    },
+    "realism": 35,
+    "realismBefore": 33,
+    "changedFiles": [
+      "LICENSES.md",
+      "NOTES.md",
+      "manifest.json",
+      "source/upgrade_body.py"
+    ],
+    "fighterChanged": true,
+    "branch": "entry/me",
+    "branchCommit": "4666081d7b2ebbc87f941fdb006fb6cc50c0dbd9"
   }
 ]
