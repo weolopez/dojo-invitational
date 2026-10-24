@@ -28,6 +28,14 @@ touched. MPFB 2.0.18 (from extensions.blender.org, sha256-checked) and the MakeH
    removed) and exports `fighter.glb` with the 30 clips as NLA tracks.
 6. Renders: `dojo/judge.html?id=claude`, the standardised Three.js harness, from the submitted `fighter.glb`.
 
+## Update for call #5: Claude becomes a judoka (owner's request)
+
+- **Brain:** a grappler now. It closes to grappling range behind a mid guard and works for the shot: a double-leg
+  takedown (with ground-and-pound) from 1.1 m, a sweep from a little further out, a shoulder throw from close.
+  Jabs and one-twos only set the shot up. Against a slow kick it slips inside just before the blow and shoots as
+  the leg comes back. Until the arena has Mixamo's takedown and sweep clips, both play as the shoulder throw.
+- The model and clothing are as in the call #5 clothing fix below; nothing else changed.
+
 ## Update for call #5 (after tournament 11)
 
 The call had no specific notes (the owner scores this entry), so I went by the judge harness's
