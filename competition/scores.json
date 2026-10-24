@@ -177,7 +177,7 @@
         "skin": 7,
         "face": 8,
         "hair": 1,
-        "clothing": 4,
+        "clothing": 5,
         "overall": 2
       },
       "fight": {
@@ -185,8 +185,8 @@
         "contact": 4,
         "grounding": 3
       },
-      "total": 38,
-      "notes": "Unchanged model (fighter.glb hash matches the approved lock): the photo-textured face is still the most real in the field, but the eyes are downcast, the hair is painted on, the head-to-neck seam is ragged, and the off-shoulder shirt with ripple bands over boxy shorts that split at the hip in the roundhouse holds it back. The new counter-grappling brain (blocks, slips, takedowns, throws) matches its description but changes nothing the realism rubric sees.",
+      "total": 39,
+      "notes": "The tighter rash guard fits the torso better in the idle and the shoulder balloon is smaller, but the shiny pleated collar, the jagged head-to-neck edge under the jaw, the downcast eyes, the painted-on hair, boxy shorts that split at the hip in the roundhouse, and tiptoe stance feet still hold it back. Small correction for NOTES/manifest: in 07_fit_v37.py the 13 mm limit is the Shorts threshold (not run) and the hem rings are left in place, not pulled to 13 mm.",
       "method": "harness"
     },
     "entry:muse": {
