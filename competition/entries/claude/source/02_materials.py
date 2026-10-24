@@ -7,6 +7,8 @@
 - Scalp and brow shading: the hair cap and brow cards are projected onto the skin texture (paint_under_cards), so
   the skin under the hairline and brows is dark instead of bare skin showing through the cutout gaps.
 - Sportsuit: blue top recoloured to an even terracotta with charcoal piping, grey leggings to charcoal black.
+- Call #9: suit roughness map (matte top, smoother leggings), fabric sheen, a generated knit-stitch pattern blended
+  into the suit normal map at 4096 px; skin IOR 1.4 and a faint warm sheen.
 """
 import colorsys
 import os
@@ -202,6 +204,13 @@ def skin(obj, cards):
     nmap.inputs["Strength"].default_value = 0.6
     nt.links.new(tex.outputs["Color"], nmap.inputs["Color"])
     nt.links.new(nmap.outputs["Normal"], bsdf.inputs["Normal"])
+    # Call #9: skin's index of refraction is about 1.4 (glTF's default 1.5 gives a slightly too strong reflection,
+    # KHR_materials_ior), and a faint warm sheen stands in for the vellus hair's soft rim at grazing angles
+    # (KHR_materials_sheen). Neither is subsurface scattering.
+    bsdf.inputs["IOR"].default_value = 1.4
+    bsdf.inputs["Sheen Weight"].default_value = 1.0
+    bsdf.inputs["Sheen Roughness"].default_value = 0.65
+    bsdf.inputs["Sheen Tint"].default_value = (0.09, 0.06, 0.05, 1.0)
 
 
 def eyes(mat):
@@ -457,7 +466,72 @@ def sportsuit(mat):
     rgb[grey] = np.clip(rgb[grey] * 0.32, 0, 1)
     a[..., :3] = rgb
     node.image = save_copy(node.image, a, "claude_trainingwear_diffuse")
-    principled(mat).inputs["Roughness"].default_value = 0.78
+    bsdf = principled(mat)
+    nt = mat.node_tree
+    # Call #9: a roughness map. The top is a matte cotton-like knit; the leggings and the piping are a smoother
+    # elastane knit with a softer, broader highlight.
+    top = blue.astype(np.float32)
+    rough = np.where(top > 0.5, 0.84, 0.58).astype(np.float32)
+    rough = blur(rough, 2)
+    rng = np.random.default_rng(5)
+    rough = np.clip(rough + (blur(rng.random(rough.shape).astype(np.float32), 1) - 0.5) * 0.06, 0.4, 0.95)
+    rgba = np.stack([np.zeros_like(rough), rough, np.zeros_like(rough), np.ones_like(rough)], -1)
+    rimg = bpy.data.images.new("claude_trainingwear_roughness", rough.shape[1], rough.shape[0], alpha=False)
+    rimg.pixels.foreach_set(rgba.astype(np.float32).ravel())
+    rimg.filepath_raw = os.path.join(TEX, "claude_trainingwear_roughness.png")
+    rimg.file_format = "PNG"
+    rimg.save()
+    rimg.colorspace_settings.name = "Non-Color"
+    rnode = nt.nodes.new("ShaderNodeTexImage")
+    rnode.image = rimg
+    sep = nt.nodes.new("ShaderNodeSeparateColor")
+    nt.links.new(rnode.outputs["Color"], sep.inputs["Color"])
+    nt.links.new(sep.outputs["Green"], bsdf.inputs["Roughness"])
+    # Fabric sheen (KHR_materials_sheen): the soft grazing-angle glow of fibres standing off a knit.
+    bsdf.inputs["Sheen Weight"].default_value = 1.0
+    bsdf.inputs["Sheen Roughness"].default_value = 0.5
+    bsdf.inputs["Sheen Tint"].default_value = (0.13, 0.125, 0.12, 1.0)
+    # Knit stitch detail added to the CC0 garment normal map (folds and seams), at 4096 px.
+    nnode = next(n for n in image_nodes(mat) if "normal" in n.image.name.lower())
+    nnode.image = knit_normal(nnode.image)
+    print(f"[materials] trainingwear: roughness map (top {int((top > 0.5).sum())} texels), sheen, knit normal")
+
+
+def knit_normal(src, size=4096, seed=3):
+    """The CC0 suit normal map (1024 px, folds and seams) upscaled to `size` and combined (UDN blend) with a generated
+    jersey-knit stitch pattern: columns of V-shaped loops, 6 x 4 texels each (about 2.2 x 1.5 mm on this garment's
+    UV scale of about 1.5 m per UV unit), with random yarn thickness. Saved as JPEG to keep the file small."""
+    base = pixels(src)[..., :3]
+    k = size // base.shape[0]
+    base = np.kron(base, np.ones((k, k, 1), np.float32))
+    base = blur(base, max(1, k // 2), passes=2)
+    n1 = base * 2 - 1
+    y, x = np.mgrid[0:size, 0:size].astype(np.float32)
+    px, py = 6.0, 4.0
+    fu = (x / px) % 1.0
+    fv = (y / py) % 1.0
+    # Two slanted lobes per loop (the legs of the V), raised in the middle of each lobe.
+    left = np.exp(-((fu - 0.28 - 0.18 * (fv - 0.5)) ** 2) / 0.012)
+    right = np.exp(-((fu - 0.72 + 0.18 * (fv - 0.5)) ** 2) / 0.012)
+    h = (left + right) * (0.75 + 0.25 * np.cos((fv - 0.5) * np.pi))
+    rng = np.random.default_rng(seed)
+    yarn = blur(rng.random((size // 4 + 1, size // 6 + 1)).astype(np.float32), 1, passes=1)  # one value per loop
+    h *= 0.8 + 0.4 * np.repeat(np.repeat(yarn, 4, 0), 6, 1)[:size, :size]
+    h += 0.15 * (rng.random((size, size)).astype(np.float32) - 0.5)
+    dx = (np.roll(h, -1, 1) - np.roll(h, 1, 1)) * 0.5
+    dy = (np.roll(h, -1, 0) - np.roll(h, 1, 0)) * 0.5
+    strength = 0.55
+    n = np.stack([n1[..., 0] - dx * strength, n1[..., 1] - dy * strength, n1[..., 2]], -1)
+    n /= np.linalg.norm(n, axis=-1, keepdims=True)
+    rgba = np.concatenate([n * 0.5 + 0.5, np.ones((size, size, 1), np.float32)], -1).astype(np.float32)
+    img = bpy.data.images.new("claude_trainingwear_normal", size, size, alpha=False)
+    img.pixels.foreach_set(rgba.ravel())
+    img.filepath_raw = os.path.join(TEX, "claude_trainingwear_normal.jpg")
+    img.file_format = "JPEG"
+    bpy.context.scene.render.image_settings.quality = 92
+    img.save()
+    img.colorspace_settings.name = "Non-Color"
+    return img
 
 
 def set_alpha(mat, cutout, cutoff=0.4):

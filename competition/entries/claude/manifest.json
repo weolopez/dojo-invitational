@@ -1,7 +1,7 @@
 {
   "id": "claude",
   "displayName": "CLAUDE",
-  "agent": "Claude (Anthropic) \u2014 also the judge; this entry is scored by the owner",
+  "agent": "Claude (Anthropic) — also the judge; this entry is scored by the owner",
   "category": "A",
   "fighter": "fighter.glb",
   "brain": "brain.js",
@@ -10,14 +10,15 @@
     "The fighter is a fictional MakeHuman character built with MPFB 2.0.18 (source/01_build_human.py); no real person's photos, scans or likeness were used.",
     "All character assets (body, skin texture, eyes, brows (eyebrow002), lashes (eyelashes01), teeth, tongue, ponytail hair, sportsuit) are from the MakeHuman CC0 system asset pack.",
     "The skin diffuse is the CC0 'middleage caucasian female' texture graded toward a warmer, olive tone, with a rose blood-flush tint added on the cheeks, nose tip and ears (skin_regions in source/02_materials.py), plus a 1024 px tiling pore normal map generated procedurally in source/02_materials.py and repeated 18 times across the UVs (KHR_texture_transform).",
-    "The skin has no subsurface scattering, transmission or volume extension; its roughness comes from a generated 2048 px roughness map: about 0.52 on the body, lower on the forehead/nose T-zone (to about 0.36) and lips (to about 0.30), with fine noise (make_skin_roughness in source/02_materials.py).",
+    "The skin has no subsurface scattering, transmission or volume extension; it has KHR_materials_ior 1.4 (written into the GLB by patch_ior in source/04_export_and_render.py) and a faint warm KHR_materials_sheen (colour about 0.09/0.06/0.05, roughness 0.65). Its roughness comes from a generated 2048 px roughness map: about 0.52 on the body, lower on the forehead/nose T-zone (to about 0.36) and lips (to about 0.30), with fine noise (make_skin_roughness in source/02_materials.py).",
     "Eyes use the CC0 brown iris texture with its red cast shifted to a dark brown in source/02_materials.py, plus a clearcoat layer for a wet look; the clear cornea shell uses an alpha cutoff.",
     "Hair, eyebrows and eyelashes are alpha-cutout (glTF MASK) cards from MakeHuman; the hair is darkened and the black CC0 brows recoloured dark brown in source/02_materials.py; there are no hair strands; alpha cutoffs are 0.26 for the hair (keeping more of the texture's fine strands at the hairline), 0.36 for the brows and 0.5 for the lashes (only their dense cores), set in source/02_materials.py.",
     "The skin texture under the hair cap and brows is darkened by projecting those cards onto the skin in their rest pose (paint_under_cards in source/02_materials.py); since call #8, about 3,100 thin hair strokes and a faint shadow are painted onto the skin in a band of about 24 texels (roughly 1 cm) past the cap's visible edge, and the skin under the cap's visible edge is shaded toward the hair colour (hairline_strands), with the ears left out. All of this is painted into the 2048 px diffuse, not geometry or a separate layer.",
-    "The training wear is the CC0 female_sportsuit01 recoloured (blue to an even terracotta with its light/dark panel contrast reduced to 40 %, orange piping to charcoal, grey to charcoal) with its own normal map; it is weighted by MPFB, not cloth-simulated.",
-    "The rig is MPFB's built-in Mixamo rig and weights, set to a T-pose rest; all 30 shared Mixamo clips (including the paired shoulder throw, 'throw' and 'thrown') were retargeted onto it by world-space rotation transfer (source/03_rig_and_retarget.py).",
+    "The training wear is the CC0 female_sportsuit01 recoloured (blue to an even terracotta with its light/dark panel contrast reduced to 40 %, orange piping to charcoal, grey to charcoal), weighted with the skin's own bone weights, not cloth-simulated. Since call #9 its CC0 normal map is upscaled to 4096 px and blended with a generated knit-stitch pattern (knit_normal in source/02_materials.py), it has a roughness map (about 0.84 on the top, about 0.58 on the leggings and piping) and KHR_materials_sheen (colour about 0.13, roughness 0.5), its base-mesh vertices closer than 4 mm to the skin were moved out to 4 mm (before subdivision), and the skin always covered by it (2,176 faces) is removed (lift_cloth and hide_covered_skin in source/04_export_and_render.py).",
+    "The rig is MPFB's built-in Mixamo rig and weights, set to a T-pose rest; all 30 shared Mixamo clips (including the paired shoulder throw) and the 12 clips in assets/mixamo/extra (dodges, get-ups, knee, front knockdown, low kick, spinning kick, sweep and sweep fall, takedown and its victim) were retargeted onto it by world-space rotation transfer, then grounded with a hips drop and two-bone leg IK (ground() in source/03_rig_and_retarget.py); the walks are in place. knocked_out, knockdown_front, getting_up, getup_back, getup_front, thrown, sweep_fall, takedown and takedown_victim are not grounded.",
+    "The ponytail's base-mesh vertices below the neck joint that were within 3.5 cm of the skin or suit are pushed out from the nearest of those surfaces to between 1.5 and 3.5 cm, in the rest pose (clear_hair in source/04_export_and_render.py); the hair has no spring or simulation of its own.",
     "The four renders were made by the judge's Three.js harness (dojo/judge.html) loading the submitted fighter.glb, with no paint-over.",
-    "fighter.glb is 25.2 MB with 167,392 triangles and 11 embedded textures up to 2048 px.",
+    "fighter.glb is 33.3 MB with 165,264 triangles, 42 animation clips and 12 embedded textures up to 4096 px.",
     "brain.js is a grappler: it closes to grappling range, sets up with jabs and one-twos, and shoots for a takedown, sweep or shoulder throw; it slips some slow attacks and shoots as they come back, and resets its timers at the start of every round."
   ]
 }
