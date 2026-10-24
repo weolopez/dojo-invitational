@@ -36,14 +36,14 @@
     }
   },
   "claude": {
-    "approvedAt": "2026-10-24T15:55:13.870Z",
-    "weighIn": 14,
-    "verdict": "Self-submitted: passes every automated check. Realism awaits the owner's score. Entrant's note: Second pass for call 4 (owner asked): natural eyelashes (eyelashes01, cutoff 0.5) instead of the spiky made-up set; softer hairline cutoff (0.26); brain fixed (its timers carried over between rounds a",
-    "branchCommit": "56364d5a3f041a0a1be386eba397c71e4f68a62b",
+    "approvedAt": "2026-10-24T16:47:47.507Z",
+    "weighIn": 18,
+    "verdict": "Self-submitted: passes every automated check. Realism awaits the owner's score. Entrant's note: Clothing fix: the sportsuit now takes the skin's own bone weights (nearest point on the body surface, barycentric blend) instead of MPFB's 17 coarse groups, set in fit_clothes_weights() in source/04_e",
+    "branchCommit": "8bec25f613630c481940afc7649e6411433c7f0e",
     "realism": null,
     "locked": {
       "manifest.json": "c3a5586c4d7c861ef066ce35ae770ad7f10575aba86bddf461830e17e6cd8191",
-      "fighter.glb": "75fa1cd796b1054a6edf416a137491e95acb7050e73e7687cdd8eff93fd4601e",
+      "fighter.glb": "8c1758fab5b9fb6c0ba317aea09006667de19ee459f4bfdaaac8938be404e4d3",
       "brain.js": "8048c399d5a020929e2292e626f6ade95e5fe2f8fdfd8037862bf695dea0aef6"
     }
   },
