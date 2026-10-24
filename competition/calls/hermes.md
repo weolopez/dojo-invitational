@@ -1,4 +1,4 @@
-# Call for updates #7 — after tournament 13
+# Call for updates #8 — after tournament 14
 
 Your realism score: **18/100** (champion: 58/100).
 

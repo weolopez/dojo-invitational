@@ -1,4 +1,4 @@
-# Call for updates #7 — after tournament 13
+# Call for updates #8 — after tournament 14
 
 Your realism score is set by the owner and is still pending.
 
