@@ -1,14 +1,14 @@
 {
   "grok": {
-    "approvedAt": "2026-10-23T21:07:44.942Z",
-    "weighIn": 1,
-    "verdict": "The most human fighter in the field: real pores, stubble and believable eyes. Plant his feet and give the training wear real folds and seams.",
-    "branchCommit": "7513aedf0de6eb1bc5706f8723c2dc6ef30a436f",
-    "realism": 55,
+    "approvedAt": "2026-10-24T16:28:20.697Z",
+    "weighIn": 16,
+    "verdict": "Approved at 58 (up from 55): the throws and the optional fall and get-up clips are in and the feet now plant, but the rash guard shows ripple bands and a wide off-shoulder neckline, and the shorts are blotchy with ragged hems.",
+    "branchCommit": "7aeff12b9837348323c65584a44ba09ad8abaa09",
+    "realism": 58,
     "locked": {
-      "manifest.json": "f376c22de791ac076568eac3a673920baedf21a10a440a434b24d50be47fd4f3",
-      "fighter.glb": "610030a8cc56435e8113e72071f2a76b75441eeaa9b9daeee23f2bf4c7d03504",
-      "brain.js": "10d6ff78a43db318471ae6f987fd66add1a8db3ee233d87491a002d7e7e0886d"
+      "manifest.json": "a865eef5f30d79eb5d6e84a4625353316e8d0e3467715cece3b28182d68316f6",
+      "fighter.glb": "82f4dd1a2c530f171d954d0a8b8dd64584f4b599eb5111cd6c648b72fbee26ec",
+      "brain.js": "e07260e9ad66230a4127e0d993aeebe1d684b10bc75ffde501f03552814ae66d"
     }
   },
   "gemini": {
