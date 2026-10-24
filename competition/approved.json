@@ -48,14 +48,14 @@
     }
   },
   "me": {
-    "approvedAt": "2026-10-24T19:52:54.275Z",
-    "weighIn": 24,
-    "verdict": "Approved: the call-8 fit pass really tightens the rash guard and blends the lower-neck weights (clothing 4 to 5, total 39); next, fix the shiny pleated collar, the jagged neck edge under the jaw, the hip split in the shorts and the tiptoe stance feet, and correct the '13 mm at hems' wording.",
-    "branchCommit": "3ed6ad21f779e9adb16e9a20f6d58c0ee9431983",
-    "realism": 39,
+    "approvedAt": "2026-10-24T21:07:33.304Z",
+    "weighIn": 29,
+    "verdict": "Approved: the hidden shorts liner and re-derived shorts weights close the crotch see-through and hip split in the roundhouse (motion 9→10, total 40); next fix the shiny pleated collar, the jagged jaw-to-neck seam and the boxy shorts.",
+    "branchCommit": "23726b703e487c8abaad96e4d8b3d97372dd6502",
+    "realism": 40,
     "locked": {
-      "manifest.json": "036f3dc8ca5b5ed5dbdad03900c790065a1ca6bff8d28ed4ec9a7dd3036eb672",
-      "fighter.glb": "3d363259add8d3244987ffd544f6b39510fd3a430a20bd57ec614f13e15bb98f",
+      "manifest.json": "5e71c4a766e87ed6216359e8b02218987dde562cef514ee7947bcf811aa80e84",
+      "fighter.glb": "63f2105c3d590b814f3765d7e4a2fa9fb60249ccc3a4a2223d6f513850913e3b",
       "brain.js": "9614ce6b4c0748af296bf604a6ef0bc67eef7870219bc5f2477aa7bbef8ab6ac"
     }
   },
