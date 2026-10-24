@@ -148,3 +148,22 @@ Chrome runs of that exact code (full cycle, zero console errors).
   stuck, exploded or off-mat fighters (the prototype's failure modes
   are known and testable in advance), and the fight-realism subscores
   move.
+
+### 6. Fist and shin collision for hit registration
+
+- **What:** register a strike's hit by the world position of the striking
+  bone (fist for punches, shin/foot for kicks, knee for the knee) against
+  the defender's body capsules at the move's hit window, instead of the
+  current distance band between the two fighters' origins. A strike that
+  visually connects lands; one that falls short or passes wide whiffs,
+  even inside the nominal reach.
+- **Why more real:** distance bands make strikes land through air the
+  eye can see — the glove stops 20 cm from the chin and the head still
+  snaps. Bone-level contact ties the hit, the reaction and the sound to
+  the same visible event, which is what the contact points judge, and it
+  makes range management (slipping a kick by 10 cm) a real skill for the
+  brains instead of a probability.
+- **How to tell it works:** frame-step a roundhouse at three spacings:
+  the hit registers exactly when the shin reaches the defender's capsule,
+  and the hit reaction starts on that frame, not the band's frame; a
+  slipped kick passes in front of the face with no reaction.

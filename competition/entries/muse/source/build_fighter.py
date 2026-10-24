@@ -74,6 +74,8 @@ detail_img = bpy.data.images.load(f"{BASE}/tex/file12_detail.png")
 detail_img.colorspace_settings.name = 'Non-Color'
 mr_img = bpy.data.images.load(f"{BASE}/tex/file_mr.png")
 mr_img.colorspace_settings.name = 'Non-Color'
+coat_img = bpy.data.images.load(f"{BASE}/tex/file_coat.png")
+coat_img.colorspace_settings.name = 'Non-Color'
 for mat in bpy.data.materials:
     if not mat.use_nodes:
         continue
@@ -101,6 +103,15 @@ for mat in bpy.data.materials:
     bsdf.inputs['Roughness'].default_value = 1.0
     bsdf.inputs['Metallic'].default_value = 1.0
     print(f"MAT {mat.name}: metallic-roughness map linked")
+    # v3.7: light clearcoat "sweat sheen" on skin only -- the coat weight map
+    # is skin-masked (0.28 on skin, 0 elsewhere), coat roughness 0.35.
+    coat_tex = nt.nodes.new('ShaderNodeTexImage')
+    coat_tex.image = coat_img
+    coat_tex.location = (-500, -520)
+    if 'Coat Weight' in bsdf.inputs:
+        nt.links.new(coat_tex.outputs['Color'], bsdf.inputs['Coat Weight'])
+        bsdf.inputs['Coat Roughness'].default_value = 0.35
+        print(f"MAT {mat.name}: clearcoat sweat sheen linked")
 
 # ---- Call 7 eyeballs -----------------------------------------------------
 # The base character's eyes are painted on the head mesh. Add real eyeball
@@ -192,6 +203,82 @@ for clip in CLIPS:
     for a in new_actions[1:]:
         bpy.data.actions.remove(a)
 print("CLIPS KEPT:", kept)
+
+
+# ---- Grounding pass (v3.7) ----------------------------------------------
+# Pose-audit finding: in stance and locomotion clips the whole body floats
+# (both feet off the floor, up to ~15 cm in fighting_idle's bounce) -- a
+# retarget artifact of the shared clips on this character. For every clip
+# except aerial/floor ones, measure the lowest foot vertex per frame and
+# shift the Hips vertical curve down by the float (smoothed), so the
+# support foot plants. Clip lengths and all other curves are untouched.
+import mathutils as _mu
+SKIP_GROUND = {'jump', 'knocked_out', 'thrown', 'knockdown_front', 'getup_back', 'getup_front', 'getting_up'}
+LOOPING = {'fighting_idle', 'walk_forward', 'walk_backward'}
+body_mesh = next(o for o in bpy.context.scene.objects if o.type == 'MESH')
+FOOT_BONES = ('mixamorig:LeftFoot', 'mixamorig:LeftToeBase', 'mixamorig:RightFoot', 'mixamorig:RightToeBase')
+foot_verts = [v.index for v in body_mesh.data.vertices
+              if any(body_mesh.vertex_groups[g.group].name in FOOT_BONES and g.weight >= 0.5 for g in v.groups)]
+print('GROUNDING: foot verts', len(foot_verts))
+dg = bpy.context.evaluated_depsgraph_get()
+def min_foot_z():
+    ev = body_mesh.evaluated_get(dg)
+    mw = ev.matrix_world
+    return min((mw @ ev.data.vertices[i].co).z for i in foot_verts)
+hips_pb = arm.pose.bones['mixamorig:Hips']
+# calibrate: which Hips location channel is world-up, and its world gain
+scene = bpy.context.scene
+arm.animation_data.action = bpy.data.actions.get('fighting_idle')
+scene.frame_set(10); bpy.context.view_layer.update()
+base_z = min_foot_z(); gain = None; vchan = None
+for ch in range(3):
+    old = hips_pb.location[ch]
+    hips_pb.location[ch] = old + 5.0
+    bpy.context.view_layer.update()
+    dz = min_foot_z() - base_z
+    hips_pb.location[ch] = old
+    bpy.context.view_layer.update()
+    if abs(dz) > 0.01:
+        vchan, gain = ch, dz / 5.0
+print(f'GROUNDING: vertical channel={vchan} gain={gain:.4f} m/unit')
+def ground_action(act):
+    arm.animation_data.action = act
+    f0, f1 = int(act.frame_range[0]), int(act.frame_range[1])
+    floats = {}
+    for f in range(f0, f1 + 1):
+        scene.frame_set(f); bpy.context.view_layer.update()
+        z = min_foot_z()
+        # Cap stance-drift corrections at 6 cm and never correct a frame
+        # that is genuinely airborne (>10 cm: a hop or jump phase) -- the
+        # three.js sweep showed front_kick has a real 22 cm hop at t=0.4
+        # that must survive; only its 2-4 cm stance drift gets corrected.
+        floats[f] = 0.0 if z > 0.10 else (min(z, 0.06) if z > 0.004 else 0.0)
+    frames = sorted(floats)
+    sm = {}
+    for i, f in enumerate(frames):
+        vals = []
+        for k in (-2, -1, 0, 1, 2):
+            j = i + k
+            if act.name in LOOPING:
+                vals.append(floats[frames[j % len(frames)]])
+            elif 0 <= j < len(frames):
+                vals.append(floats[frames[j]])
+        sm[f] = sum(vals) / len(vals)
+    fc = next((c for c in act.fcurves if 'mixamorig:Hips' in c.data_path and c.data_path.endswith('location') and c.array_index == vchan), None)
+    if not fc:
+        print('GROUNDING: no hips curve for', act.name); return 0.0
+    for kp in fc.keyframe_points:
+        f = int(round(kp.co[0]))
+        if f in sm and sm[f] > 0:
+            kp.co[1] -= sm[f] / gain
+            kp.handle_left[1] = kp.co[1]; kp.handle_right[1] = kp.co[1]
+    fc.update()
+    return max(sm.values()) if sm else 0.0
+for clip in CLIPS:
+    if clip in SKIP_GROUND: continue
+    a = bpy.data.actions.get(clip)
+    if a: print(f'GROUNDING {clip}: max float corrected {ground_action(a):.3f} m')
+arm.animation_data.action = bpy.data.actions.get('fighting_idle')
 
 # Put every action on its own NLA track so the glTF exporter emits 33 animations
 arm.animation_data_create()

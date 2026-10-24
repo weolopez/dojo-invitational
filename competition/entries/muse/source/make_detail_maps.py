@@ -100,3 +100,9 @@ dif2 = dif2 * deep + (dif2 * np.array([1.06, 0.92, 0.80])) * (0.30 * eg_s[..., N
 Image.fromarray((np.clip(dif2, 0, 1) * 255).astype(np.uint8), "RGB").save(f"{TEX}/file11_detail.png")
 print("eye gloss + diffuse copy written, eye px:", int((eg > 0.3).sum()))
 
+
+# ---- coat weight map (v3.7): skin gets a light clearcoat "sweat sheen" (72/255
+# ~ 0.28), everything else zero. Vectorized from the same skin mask.
+coat = np.where(skin, 72, 0).astype(np.uint8)
+Image.fromarray(coat, "L").filter(ImageFilter.GaussianBlur(1.2)).save(f"{TEX}/file_coat.png")
+print("coat saved")
