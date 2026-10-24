@@ -122,16 +122,16 @@
         "skin": 10,
         "face": 12,
         "hair": 5,
-        "clothing": 7,
+        "clothing": 8,
         "overall": 6
       },
       "fight": {
         "motion": 10,
         "contact": 5,
-        "grounding": 3
+        "grounding": 4
       },
-      "total": 58,
-      "notes": "Still the most convincingly human face and skin in the field, but the rash guard shows horizontal ripple bands and a wide off-shoulder neckline, the shorts are blotchy with ragged hems, and a red seam line runs under the jaw. Skin has no subsurface look, and in fighting_idle the rear foot still sits on its ball, though the lead foot now plants.",
+      "total": 60,
+      "notes": "Still the most convincingly human face and skin in the field, and both feet now plant flat in fighting_idle with no skin poking through the welded crew collar, but the skin has no subsurface look and the buzz cut is a smooth shell. The shorts are lumpy with an uneven hem, and a stepped collar lip line and a lighter patch below the neckline break the rash guard.",
       "method": "harness"
     },
     "entry:gemini": {
