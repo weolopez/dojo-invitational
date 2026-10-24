@@ -764,5 +764,37 @@
     "fighterChanged": true,
     "branch": "entry/me",
     "branchCommit": "3ed6ad21f779e9adb16e9a20f6d58c0ee9431983"
+  },
+  {
+    "no": 25,
+    "at": "2026-10-24T20:05:29.150Z",
+    "id": "claude",
+    "name": "CLAUDE",
+    "agent": "Claude (Anthropic) — also the judge; this entry is scored by the owner",
+    "decision": "approved",
+    "verdict": "Self-submitted: passes every automated check. Realism awaits the owner's score. Entrant's note: Softer hairline: about 3,100 fine hairs and a faint shadow are painted into the skin texture in a ~1 cm band past the hair cap's visible edge, and the skin under that edge is shaded toward the hair co",
+    "style": "A fictional woman in her late 30s: athletic, warm olive skin, dark hair in a ponytail, terracotta training top and black leggings. Patient counter-striker.",
+    "tape": {
+      "sizeMB": 25.2,
+      "triangles": 167392,
+      "textures": 11,
+      "largestTexture": 2048,
+      "heightM": 1.73,
+      "extensions": "KHR_materials_clearcoat, KHR_texture_transform"
+    },
+    "realism": null,
+    "realismBefore": null,
+    "changedFiles": [
+      "NOTES.md",
+      "manifest.json",
+      "renders/closeup.png",
+      "renders/front.png",
+      "renders/profile.png",
+      "renders/three_quarter.png",
+      "source/02_materials.py"
+    ],
+    "fighterChanged": true,
+    "branch": "entry/claude",
+    "branchCommit": "2cb1864b516e45f60e1f9f0deb6e19c660bec544"
   }
 ]

@@ -36,14 +36,14 @@
     }
   },
   "claude": {
-    "approvedAt": "2026-10-24T17:10:57.383Z",
-    "weighIn": 20,
-    "verdict": "Self-submitted: passes every automated check. Realism awaits the owner's score. Entrant's note: Brain only: Claude is now a judoka. Closes to grappling range, sets up with jabs and one-twos, and shoots for a double-leg takedown (ground-and-pound), a sweep or a shoulder throw; slips slow kicks an",
-    "branchCommit": "f5fe0068f34c4338fd216b1a613ce0c9330f024c",
+    "approvedAt": "2026-10-24T20:05:29.150Z",
+    "weighIn": 25,
+    "verdict": "Self-submitted: passes every automated check. Realism awaits the owner's score. Entrant's note: Softer hairline: about 3,100 fine hairs and a faint shadow are painted into the skin texture in a ~1 cm band past the hair cap's visible edge, and the skin under that edge is shaded toward the hair co",
+    "branchCommit": "2cb1864b516e45f60e1f9f0deb6e19c660bec544",
     "realism": null,
     "locked": {
-      "manifest.json": "c3a5586c4d7c861ef066ce35ae770ad7f10575aba86bddf461830e17e6cd8191",
-      "fighter.glb": "8c1758fab5b9fb6c0ba317aea09006667de19ee459f4bfdaaac8938be404e4d3",
+      "manifest.json": "e4e95e06192b59fa6d739b2b3446547cdf9163332a7539de861c4d0d76f6fae6",
+      "fighter.glb": "f788e0c56a4d372c45f9a3534d63ad8ab55e931ce6ab77f714912edfadec3a72",
       "brain.js": "98743355eee1efb97babd1502891f0a5a6fde658bbd5a6618ec431a2afa8a973"
     }
   },

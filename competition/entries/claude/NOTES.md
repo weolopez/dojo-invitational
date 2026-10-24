@@ -28,6 +28,37 @@ touched. MPFB 2.0.18 (from extensions.blender.org, sha256-checked) and the MakeH
    removed) and exports `fighter.glb` with the 30 clips as NLA tracks.
 6. Renders: `dojo/judge.html?id=claude`, the standardised Three.js harness, from the submitted `fighter.glb`.
 
+## Update for call #8 (after tournament 14): a softer hairline
+
+The call had no specific notes (the owner scores this entry), so I went by the judge harness's `closeup.png`. Its
+most visible face fault was the hairline: the hair cap's cutout edge was a hard, ragged line sitting on bare light
+forehead skin. My earlier scalp painting stopped short of that edge. The visible cap reached about 10 texels further
+onto the forehead than the painted dark area did, so light skin showed through the cutout gaps along the edge.
+
+- **Painted hairline strands (new):** `hairline_strands()` in `source/02_materials.py` (called from
+  `paint_under_cards`) finds where the cap is actually visible (alpha past the 0.26 cutoff, within 10 mm of the
+  skin). It measures the texel distance out from that edge over the nearby skin and paints about 3,100 thin strokes
+  in a band of 24 texels (roughly 1 cm) past it. Each stroke points into the cap along the edge's gradient, with
+  some random angle. They are denser and darker near the edge and fade out further away, and the stroke ends are
+  faded so they don't pile up into a line. A faint shadow tint covers the inner part of the band. The skin under
+  the cap's visible edge is now shaded 60 % toward the hair colour, so the cutout gaps show scalp instead of bare
+  skin.
+- **Ears left out:** the first try darkened the top of the ear, which sits right under the cap edge. Texels inside
+  an ellipsoid around each ear (found as the widest head point) are now skipped.
+- **Checked in Three.js:** I rebuilt with `02_materials.py`, `03_rig_and_retarget.py` and `export()` from
+  `04_export_and_render.py` (the script is `.work/rebuild_call8.sh`) and re-rendered with `judge.html?id=claude` in
+  headless Chrome. In the closeup the forehead hairline now fades out through fine hairs instead of ending in a hard
+  cut. Before and after crops are in `.work/previews/call8/hairline_before_after.png`. The four `renders/` are the
+  harness output for this `fighter.glb`.
+- **Limits:** these hairs are painted into the 2048 px skin texture (about 2.4 texels per mm on the face), so they
+  are flat and blur up close. The cap above them is still a cutout card with no strands. At the left temple's
+  silhouette, the newly shaded skin under the cap edge shows as a thin greyish band at a grazing angle. The cutout
+  edge itself is unchanged, and where the cap stands off the head it can still read as an edge. I only looked at
+  the closeup, three-quarter and profile views, not every clip. The mesh, rig, clips, clothing and brain are
+  unchanged (167,392 triangles, 30 clips). Previous build: `.work/call8_backup/`.
+- **Manifest:** the hairline claim now describes this change, and I corrected the stale brain claim (it still
+  described the call #4 striker, not the call #5 grappler).
+
 ## Update for call #5: Claude becomes a judoka (owner's request)
 
 - **Brain:** a grappler now. It closes to grappling range behind a mid guard and works for the shot: a double-leg
@@ -165,8 +196,9 @@ copies of the judge harness's output (`dojo/judge.html?id=claude`, run in headle
   diffuse transmission, so the skin can look slightly flat under hard light.
 - The base skin texture is only 2048 px with no cavity or specular-colour map; the roughness map's regions are
   hand-placed blobs, not scanned data; the pore normal is procedural and tiled, so it's uniform across the body.
-- Hair is a textured cap with cutout cards, not strands; the cap's cutout edge on the forehead is still a visible
-  line, softened only a little by the lower cutoff (call #4, second pass) and the painted scalp beneath it.
+- Hair is a textured cap with cutout cards, not strands. Since call #8 the forehead hairline fades out through
+  hairs painted into the skin texture, but those are flat, 2048 px texture detail, and the cap's own cutout edge
+  can still read as an edge where the cap stands off the head.
 - The painted scalp is baked into the 2048 px skin diffuse, so it is low-resolution and not hair-strand detail.
 - No hand wraps, although the concept had them; the CC0 pack has none.
 - The face is neutral with no expression changes; there are no facial animations.
@@ -188,7 +220,7 @@ PASS  Mixamo skeleton (all required mixamorig: bones present)
 PASS  animations: 30/30
 PASS  clip lengths within ±10 % of reference
 PASS  bind-pose mesh height ≈ 1.73 m (expected 1.55–2.05 m; check scale if far off)
-PASS  brain.js runs in the sandbox, valid outputs, 0.067 ms average (limit 2 ms)
+PASS  brain.js runs in the sandbox, valid outputs, 0.037 ms average (limit 2 ms)
 PASS  renders/front.png 1920×1080 (long side ≥ 1920)
 PASS  renders/three_quarter.png 1920×1080 (long side ≥ 1920)
 PASS  renders/profile.png 1920×1080 (long side ≥ 1920)
