@@ -48,9 +48,9 @@
     }
   },
   "me": {
-    "approvedAt": "2026-10-24T12:04:27.150Z",
-    "weighIn": 8,
-    "verdict": "Approved at 33/100, all claims check out: the photo face is the only real face in the field, but next replace the pink X Bot mannequin body with real skin and clothing, fix the neck seam, and lift the downcast eyes.",
+    "approvedAt": "2026-10-24T12:07:18.046Z",
+    "weighIn": 9,
+    "verdict": "Valid, honest entry that matches its claims: a real photo face on a bare X Bot mannequin, 33/100 until it gets a body, skin, clothing and real hair.",
     "branchCommit": "fe40814e562c1c1947751277b261cadb5f616193",
     "realism": 33,
     "locked": {

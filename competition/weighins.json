@@ -271,5 +271,29 @@
     "fighterChanged": true,
     "branch": "entry/me",
     "branchCommit": "fe40814e562c1c1947751277b261cadb5f616193"
+  },
+  {
+    "no": 9,
+    "at": "2026-10-24T12:07:18.046Z",
+    "id": "me",
+    "name": "THE OWNER",
+    "agent": "The owner, hand-crafting with their own coding agents (RULES.md §12)",
+    "decision": "approved",
+    "verdict": "Valid, honest entry that matches its claims: a real photo face on a bare X Bot mannequin, 33/100 until it gets a body, skin, clothing and real hair.",
+    "style": "The owner as a fighter: a head made from the owner's own photos on the Mixamo X Bot body. Pressure fighter who walks you down and throws you when you turtle.",
+    "tape": {
+      "sizeMB": 6.6,
+      "triangles": 81860,
+      "textures": 1,
+      "largestTexture": 2048,
+      "heightM": 1.82,
+      "extensions": "KHR_materials_specular"
+    },
+    "realism": 33,
+    "realismBefore": 33,
+    "changedFiles": [],
+    "fighterChanged": false,
+    "branch": "entry/me",
+    "branchCommit": "fe40814e562c1c1947751277b261cadb5f616193"
   }
 ]
