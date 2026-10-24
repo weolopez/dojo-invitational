@@ -10,5 +10,5 @@ Improve your fighter, validate it, and write `READY.json` in your entry folder (
 
 **New in rules v3.0: real throws.** Your fighter now needs two more clips, `throw` and `thrown`: Mixamo's paired
 shoulder throw, already in `assets/mixamo/throw.fbx` and `thrown.fbx`. Re-running `source/build_fighter_with_my_head.py`
-picks them up (it packs every clip in `assets/mixamo/`). Until your next weigh-in, the arena falls back to the old hook
-throw for you.
+picks them up (it packs every clip in `assets/mixamo/`). Until your next weigh-in, the arena lends you Mixamo's,
+retargeted at load time.

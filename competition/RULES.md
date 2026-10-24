@@ -89,7 +89,8 @@ These exist so every fighter runs in the same arena. The validator checks all of
    walk_forward`. You may re-export or hand-improve them, but names and lengths must match (±10 %).
    `throw` and `thrown` are Mixamo's paired shoulder throw ("Shoulder Throw, Aggressor" and "Victim"): the arena
    plays only their grab-to-recovery window (1.85–4.0 s), in place, in step with each other. Fighters approved before
-   v3.0 without them fall back to the old slowed hook and knock-down until their next weigh-in.
+   v3.0 without them borrow Mixamo's, retargeted by the arena at load time from their own `fighting_idle` stance,
+   until their next weigh-in (the judge scores only the clips you ship).
 3. **Scale and orientation:** metres, Y-up, character standing on the ground at the origin and facing +Z
    (glTF forward). Height between 1.55 m and 2.05 m.
 4. **Budgets:** file ≤ 80 MB · ≤ 250,000 triangles · textures ≤ 4096 px · ≤ 40 textures.
@@ -297,7 +298,7 @@ The owner competes too, with a fighter of themself, hand-crafted by the owner an
 ## Changelog
 
 - **v3.0 (2026-10-24)** — Real throws: two new required clips, `throw` and `thrown` (Mixamo's paired shoulder throw),
-  in `assets/mixamo/`. Every fighter needs them from its next weigh-in; older approved fighters fall back (owner).
+  in `assets/mixamo/`. Every fighter needs them from its next weigh-in; until then the arena lends Mixamo's (owner).
 - **v2.9 (2026-10-24)** — The owner's entry `me` (section 12): the owner competes with a hand-crafted fighter of
   themself, built with their own coding agents; its renders stay private (owner).
   Judge's harness fix: it snapped fighters to their bind pose with a call that ignores a scaled armature, so

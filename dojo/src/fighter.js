@@ -3,44 +3,6 @@ import * as THREE from 'three';
 import * as SkeletonUtils from 'three/addons/utils/SkeletonUtils.js';
 import { MOVES } from './config.js';
 
-// The paired Mixamo shoulder throw runs 6 s, from a run-up to lying on the mat. The fight uses only the grab-to-
-// recovery window, in place (the arena moves fighters), with the victim turned to face the thrower as in the clip.
-const THROW_WINDOW = [1.85, 4.0];
-
-function pairedClip(clip, model, turn) {
-  const sub = THREE.AnimationUtils.subclip(clip, clip.name, Math.round(THROW_WINDOW[0] * 30), Math.round(THROW_WINDOW[1] * 30), 30);
-  let hips = null;
-  model.traverse((o) => { if (o.isBone && /Hips$/.test(o.name)) hips = o; });
-  if (!hips) return sub;
-  // Work in model space: the armature above the hips is usually rotated and scaled (Mixamo/Blender exports).
-  model.updateMatrixWorld(true);
-  const toModel = hips.parent.matrixWorld.clone();
-  const toLocal = toModel.clone().invert();
-  const rest = hips.position.clone().applyMatrix4(toModel);
-  const v = new THREE.Vector3();
-  for (const track of sub.tracks) {
-    if (track.name === `${hips.name}.position`) {
-      // Keep the height (the fall), drop the travel across the floor.
-      for (let i = 0; i < track.values.length; i += 3) {
-        v.fromArray(track.values, i).applyMatrix4(toModel);
-        v.x = rest.x;
-        v.z = rest.z;
-        v.applyMatrix4(toLocal).toArray(track.values, i);
-      }
-    }
-    if (turn && track.name === `${hips.name}.quaternion`) {
-      // Turn about the vertical axis in model space: local' = P⁻¹ · yaw · P · local.
-      const p = new THREE.Quaternion();
-      toModel.decompose(new THREE.Vector3(), p, new THREE.Vector3()); // the armature is scaled, so not setFromRotationMatrix
-      const yaw = new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0, 1, 0), turn);
-      const pre = p.clone().invert().multiply(yaw).multiply(p);
-      const q = new THREE.Quaternion();
-      for (let i = 0; i < track.values.length; i += 4) q.fromArray(track.values, i).premultiply(pre).toArray(track.values, i);
-    }
-  }
-  return sub;
-}
-
 export function newTally() {
   return { thrown: 0, hits: 0, damage: 0, blocks: 0, bestCombo: 0, kos: 0, moves: {} };
 }
@@ -81,9 +43,14 @@ export class Fighter {
     this.mixer = new THREE.AnimationMixer(this.model);
     this.actions = {};
     for (const clip of gltf.animations) {
-      const paired = clip.name === 'throw' || clip.name === 'thrown';
-      const use = paired ? pairedClip(clip, this.model, clip.name === 'thrown' ? Math.PI : 0) : clip;
-      this.actions[clip.name] = this.mixer.clipAction(use);
+      if (clip.name !== 'throw' && clip.name !== 'thrown') this.actions[clip.name] = this.mixer.clipAction(clip);
+    }
+    // The throw's fight-ready window: the fighter's own clips, or Mixamo's lent to it (throws.js, prepared on load).
+    const throws = gltf.userData.throwClips;
+    if (throws) {
+      this.actions.throw = this.mixer.clipAction(throws.throw);
+      this.actions.thrown = this.mixer.clipAction(throws.thrown);
+      this.lentThrow = throws.lent;
     }
     this.mixer.addEventListener('finished', () => this.onClipFinished());
 
