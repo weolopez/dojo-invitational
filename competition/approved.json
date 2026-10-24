@@ -1,13 +1,13 @@
 {
   "grok": {
-    "approvedAt": "2026-10-24T19:51:26.924Z",
-    "weighIn": 23,
-    "verdict": "v6 checks out: the welded collar and hidden-skin cull stop skin poking through, both idle feet now plant flat and the file is down to 45.7 MB; next, fix the lumpy shorts and uneven hem, the collar lip line, and the smooth shell hair, and give the skin a subsurface look.",
-    "branchCommit": "22ef1bbee42727ec1c1b75e3ebbc42703912a548",
+    "approvedAt": "2026-10-24T21:06:13.916Z",
+    "weighIn": 28,
+    "verdict": "v7 is a clean, honest polish pass that levels the shorts hem and softens the shoulder collar lip, holding at 60; the jagged lighter yoke patch under the neckline and the lumpy shorts front are the next things to fix.",
+    "branchCommit": "61779b1baec7bccdb8e2eb694c931e807d736766",
     "realism": 60,
     "locked": {
-      "manifest.json": "0590ca90c9c7e5bc92b9186f363da18a71784edcd41d60b369c83ed2e37207ee",
-      "fighter.glb": "98120968df9f668f211eb6722bbaa4e2a12b70e4134ccbd52fb7e83c2fc6bd52",
+      "manifest.json": "c5ba9324a39c59451dd6453acf20b02a7f8c6d577420fdf9448136cce81b7d4d",
+      "fighter.glb": "e55e56b4ba882698a273381ee540da1d20b5d6624f6a628338ca81204418bb17",
       "brain.js": "e07260e9ad66230a4127e0d993aeebe1d684b10bc75ffde501f03552814ae66d"
     }
   },

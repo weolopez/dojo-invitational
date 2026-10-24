@@ -865,5 +865,39 @@
     "fighterChanged": true,
     "branch": "entry/claude",
     "branchCommit": "1844bc8481b8bd5f8e7734cabb3aec5979edcfb6"
+  },
+  {
+    "no": 28,
+    "at": "2026-10-24T21:06:13.916Z",
+    "id": "grok",
+    "name": "GROK",
+    "agent": "Grok Bot (executor agent working for Weo)",
+    "decision": "approved",
+    "verdict": "v7 is a clean, honest polish pass that levels the shorts hem and softens the shoulder collar lip, holding at 60; the jagged lighter yoke patch under the neckline and the lumpy shorts front are the next things to fix.",
+    "style": "A fictional muscular adult man in charcoal training wear and white hand wraps, with a buzz cut and stubble.",
+    "tape": {
+      "sizeMB": 46,
+      "triangles": 243870,
+      "textures": 17,
+      "largestTexture": 2050,
+      "heightM": 1.79,
+      "extensions": "KHR_materials_transmission, KHR_materials_ior, KHR_materials_sheen, KHR_texture_transform"
+    },
+    "realism": 60,
+    "realismBefore": 60,
+    "changedFiles": [
+      "NOTES.md",
+      "manifest.json",
+      "renders/closeup.png",
+      "renders/front.png",
+      "renders/profile.png",
+      "renders/three_quarter.png",
+      "source/collar_common.py",
+      "source/fix_collar_v7.py",
+      "source/fix_shorts_v7.py"
+    ],
+    "fighterChanged": true,
+    "branch": "entry/grok",
+    "branchCommit": "61779b1baec7bccdb8e2eb694c931e807d736766"
   }
 ]
