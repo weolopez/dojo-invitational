@@ -671,5 +671,32 @@
     "fighterChanged": false,
     "branch": "entry/me",
     "branchCommit": "96a1b8f0c79dca954c83617a34327f52e039c378"
+  },
+  {
+    "no": 22,
+    "at": "2026-10-24T17:57:08.175Z",
+    "id": "me",
+    "name": "THE OWNER",
+    "agent": "The owner, hand-crafting with their own coding agents (RULES.md §12)",
+    "decision": "approved",
+    "verdict": "Stand-in judge (owner's Me Fighter agent, Claude CLI judge offline; owner-authorized): brain-only update - walks in for takedowns/throws inside 0.95 m, slips incoming grapples and grabs on recovery, keeps per-round timer reset; fighter.glb unchanged (conflict noted: stand-in judge also built this brain; no realism rescore)",
+    "style": "The owner as a pressure fighter: the owner's photo-built head on a muscular MakeHuman body in a charcoal rash guard, shorts and white hand wraps.",
+    "tape": {
+      "sizeMB": 46.6,
+      "triangles": 213571,
+      "textures": 10,
+      "largestTexture": 2050,
+      "heightM": 1.79,
+      "extensions": "KHR_texture_transform, KHR_materials_sheen"
+    },
+    "realism": 38,
+    "realismBefore": 38,
+    "changedFiles": [
+      "NOTES.md",
+      "brain.js"
+    ],
+    "fighterChanged": false,
+    "branch": "entry/me",
+    "branchCommit": "59aff7fc632f7fe7ea87df604ed3e87b1e27eeca"
   }
 ]

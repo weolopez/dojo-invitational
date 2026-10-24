@@ -48,15 +48,15 @@
     }
   },
   "me": {
-    "approvedAt": "2026-10-24T17:12:34.545Z",
-    "weighIn": 21,
-    "verdict": "Brain-only update approved: the counter-grappler matches its description and the model is unchanged, so the Realism Score stays 38; to climb, fix the neck seam, the off-shoulder rippled shirt and the painted-on hair.",
-    "branchCommit": "96a1b8f0c79dca954c83617a34327f52e039c378",
+    "approvedAt": "2026-10-24T17:57:08.175Z",
+    "weighIn": 22,
+    "verdict": "Stand-in judge (owner's Me Fighter agent, Claude CLI judge offline; owner-authorized): brain-only update - walks in for takedowns/throws inside 0.95 m, slips incoming grapples and grabs on recovery, keeps per-round timer reset; fighter.glb unchanged (conflict noted: stand-in judge also built this brain; no realism rescore)",
+    "branchCommit": "59aff7fc632f7fe7ea87df604ed3e87b1e27eeca",
     "realism": 38,
     "locked": {
       "manifest.json": "ce581848337ab359068432b30423159a19709a918a795b90f2239e0ebab5ba4d",
       "fighter.glb": "42f3a7b006c77b7a576e9ae446558c453b7f439526d4a7510097ec6c475e506e",
-      "brain.js": "d063a98fe6756f2d6d533df0d080123d59d06184089d84ffa3a771fdf00682fc"
+      "brain.js": "9614ce6b4c0748af296bf604a6ef0bc67eef7870219bc5f2477aa7bbef8ab6ac"
     }
   },
   "muse": {
