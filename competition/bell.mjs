@@ -74,7 +74,9 @@ function ring(dryRun) {
     const entryDir = path.join(HERE, 'entries', id);
     const ready = readJson(path.join(entryDir, 'READY.json'), null);
     const last = state.runs[id] ?? {};
-    const why = !fs.existsSync(path.join(entryDir, 'manifest.json')) ? 'no entry yet'
+    const benched = readJson(path.join(HERE, 'bench.json'), {})[id]?.tournaments?.includes((call.tournament ?? 0) + 1);
+    const why = benched ? 'benched for the next tournament'
+      : !fs.existsSync(path.join(entryDir, 'manifest.json')) ? 'no entry yet'
       : ready?.call >= call.call ? 'already READY for this call'
         : last.call === call.call && last.tries >= 3 ? 'three tries used for this call'
           : last.running && Date.now() - last.startedAt < RUN_LIMIT_MS ? 'still running'

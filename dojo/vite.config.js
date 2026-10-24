@@ -286,6 +286,11 @@ function arenaApi() {
             spawnDetached('bell.mjs');
             return json(res, JSON.parse(fs.readFileSync(path.join(COMPETITION, 'calls', 'current.json'), 'utf8')));
           }
+          // Owner's bench (RULES.md §8): { "<id>": { "tournaments": [7] } } keeps a fighter out of those tournaments.
+          if (url.pathname === '/api/bench' && req.method === 'GET') {
+            const f = path.join(COMPETITION, 'bench.json');
+            return json(res, fs.existsSync(f) ? JSON.parse(fs.readFileSync(f, 'utf8')) : {});
+          }
           if (url.pathname === '/api/call' && req.method === 'GET') {
             const f = path.join(COMPETITION, 'calls', 'current.json');
             return json(res, fs.existsSync(f) ? JSON.parse(fs.readFileSync(f, 'utf8')) : null);

@@ -34,6 +34,8 @@ export class Tournament {
       this.defs = ROSTER.map((d) => ({ ...d, stats: EQUAL_STATS }));
     }
     this.byId = Object.fromEntries(this.defs.map((d) => [d.id, d]));
+    // Benched fighters still spar, but sit out the bracket, the update gate and the title.
+    this.sparDefs = this.defs;
     // The league's history survives new entrants joining: the key is the league, and newcomers get a blank row.
     this.key = `bracket-v1|${this.league}`;
     const saved = await fetch('/api/tournament').then((r) => r.json()).catch(() => null);
@@ -43,6 +45,10 @@ export class Tournament {
     for (const d of this.defs) this.data.standings[d.id] ??= blank[d.id];
     // Leagues saved before the update rule: count every weigh-in already introduced as "used".
     this.data.lastStartWeighIn ??= this.data.lastWeighIn ?? 0;
+    const bench = await fetch('/api/bench').then((r) => r.json()).catch(() => ({}));
+    const next = this.data.tournamentNo + 1;
+    this.benched = this.defs.filter((d) => bench[d.id.replace(/^entry:/, '')]?.tournaments?.includes(next));
+    this.defs = this.defs.filter((d) => !this.benched.includes(d));
     await this.refreshScores();
     await this.refreshDojos();
   }
@@ -223,7 +229,7 @@ const shuffle = (xs) => xs.map((x) => [Math.random(), x]).sort((p, q) => p[0] - 
   fillSparring() {
     const busy = new Set(this.arenas.flatMap((a) => a.lineup));
     const house = ROSTER.map((d) => ({ ...d, stats: EQUAL_STATS }));
-    const pool = [...shuffle(this.defs), ...shuffle(house)]
+    const pool = [...shuffle(this.sparDefs), ...shuffle(house)]
       .filter((d, i, all) => !busy.has(d.id) && all.findIndex((x) => x.id === d.id) === i);
     for (const arena of this.arenas) {
       if (arena.lineup.length || arena.reserved || pool.length < 2) continue;
