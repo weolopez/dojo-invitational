@@ -4,7 +4,16 @@ BASE = "/home/hatch/workspace/dojo-build"
 CLIPS = ['block','block_high','cross','crouch','fighting_idle','front_kick','getting_up',
  'hit_by_uppercut','hit_head_big','hit_head_light','hit_reaction','hook','jab','jab_cross','jump',
  'knocked_out','punch_combo','roundhouse_kick','side_kick','side_step_left','side_step_right',
- 'step_backward','step_forward','taunt','uppercut','victory','walk_backward','walk_forward']
+ 'step_backward','step_forward','taunt','throw','thrown','uppercut','victory','walk_backward','walk_forward',
+ 'knockdown_front','getup_back','getup_front']
+# 30 required clips (RULES v3.3) + the 3 optional knockdown/getup clips.
+# throw/thrown live in assets/mixamo/; knockdown_front/getup_* in assets/mixamo/extra/.
+
+def clip_path(clip):
+    for cand in (f"{BASE}/assets/mixamo/{clip}.fbx", f"{BASE}/assets/mixamo/extra/{clip}.fbx"):
+        if os.path.exists(cand):
+            return cand
+    return f"{BASE}/assets/mixamo/{clip}.fbx"
 
 def clean():
     bpy.ops.wm.read_factory_settings(use_empty=True)
@@ -44,7 +53,18 @@ if abs(height - TARGET_H) > 0.01:
     arm.scale = tuple(c * s for c in arm.scale)
     print(f"ARMATURE SCALE SET (unapplied): {tuple(round(c,5) for c in arm.scale)}")
 
-# Remove the roster idle action; we add the canonical 28 below
+# Skin/cloth realism: the base character's materials export with metallic 0.5,
+# which makes skin and cloth read as half-metal. Set metallic to 0 (non-metal)
+# on every material; the specular texture and roughness are left untouched.
+for mat in bpy.data.materials:
+    if not mat.use_nodes:
+        continue
+    for node in mat.node_tree.nodes:
+        if node.type == 'BSDF_PRINCIPLED' and 'Metallic' in node.inputs:
+            print(f"MATERIAL {mat.name}: metallic {node.inputs['Metallic'].default_value} -> 0.0")
+            node.inputs['Metallic'].default_value = 0.0
+
+# Remove the roster idle action; we add the canonical clips below
 for a in list(bpy.data.actions):
     bpy.data.actions.remove(a)
 
@@ -53,7 +73,7 @@ kept = {}
 for clip in CLIPS:
     before_actions = set(bpy.data.actions)
     before_objects = set(bpy.context.scene.objects)
-    bpy.ops.import_scene.fbx(filepath=f"{BASE}/assets/mixamo/{clip}.fbx")
+    bpy.ops.import_scene.fbx(filepath=clip_path(clip))
     new_actions = [a for a in bpy.data.actions if a not in before_actions]
     new_objects = [o for o in bpy.context.scene.objects if o not in before_objects]
     if not new_actions:
@@ -69,7 +89,7 @@ for clip in CLIPS:
         bpy.data.actions.remove(a)
 print("CLIPS KEPT:", kept)
 
-# Put every action on its own NLA track so the glTF exporter emits 28 animations
+# Put every action on its own NLA track so the glTF exporter emits 33 animations
 arm.animation_data_create()
 for clip in CLIPS:
     act = bpy.data.actions.get(clip)

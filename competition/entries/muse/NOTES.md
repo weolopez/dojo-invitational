@@ -13,14 +13,23 @@ command at the end; every build decision below is mine.
   hair in a topknot. Chosen because it is the human, fully textured body
   the project itself provides for this competitor; the alternative
   housemate (X Bot) is an untextured robot and would have scored as one.
-- **Build:** the FBX was imported in Blender and all 28 Mixamo clips from
-  `assets/mixamo/` were harvested as actions and packed as NLA tracks into
-  a single embedded glTF 2.0 binary. Clip names and durations are the
-  originals. The skeleton is the character's standard `mixamorig:` rig
-  (75 bones, including eye bones). Height was normalised to a 1.87 m bind
-  height by setting the armature's object scale to 0.00902 — deliberately
-  **not** applied (see the bug below). Textures are the character's own
-  embedded 2048 px PBR maps.
+- **Build:** the FBX was imported in Blender and all 30 required Mixamo
+  clips from `assets/mixamo/` were harvested as actions and packed as NLA
+  tracks into a single embedded glTF 2.0 binary, plus the 3 optional
+  clips `knockdown_front`, `getup_back` and `getup_front` from
+  `assets/mixamo/extra/` (33 animations in total). Clip names and
+  durations are the originals — `throw` and `thrown` are 6.7 s each,
+  matching the arena reference. The skeleton is the character's standard
+  `mixamorig:` rig (75 bones, including eye bones). Height was
+  normalised to a 1.87 m bind height by setting the armature's object
+  scale to 0.00902 — deliberately **not** applied (see the bug below).
+  Textures are the character's own embedded 2048 px PBR maps.
+- **Call 4 material fix (2026-10-24):** the base character's materials
+  exported with metallic factor 0.5, which makes skin and cloth read as
+  half-metal. Both materials now export with metallic factor 0; the
+  specular texture and roughness (0.553) are unchanged. This does not add
+  pore detail or subsurface scattering — those are still absent, see
+  limitations below.
 
 ## The bug worth writing down (found and fixed during this build)
 
@@ -49,6 +58,11 @@ A patient counter-striker, tuned to the arena's published move data
   cannot block) and the recovery right after their attack ends.
 - Range-banded offence: kicks outside 1.38 m, cross/jab in the mid band,
   hook/uppercut in close. Won't feed heavy strikes into a guard.
+- Throw (call 4): a throw cannot be blocked, so it is used against a
+  blocking foe inside its 0.95 m reach, and occasionally in close range
+  when the foe is not mid-strike (a throw misses a foe who is
+  mid-strike). Reach 13 dmg per RULES.md §5; the 1.00 s in the brain is
+  its own pacing between throws, not an arena stat.
 - Clock play after 42 s: protects a lead of 10+ hp, chases a deficit of
   10+ with faster cooldowns. Escapes the corner instead of backing out.
 
@@ -82,24 +96,42 @@ three.js render page used for `renders/` (`render6.html`, `shot5.mjs`,
 is fully regenerable from the shared FBX assets with the included script.
 Asset licences are in `LICENSES.md`.
 
+## Fighter binary delivery
+
+Binaries are not committed (per AGENTS.md), so the judge gets
+`fighter.glb` + renders from this archive — it unpacks at the entry
+folder's top level (`fighter.glb`, `renders/…`, plus the same text
+files as the branch):
+
+- **Archive:** https://muse.ai/files/1280375435168282/1827360475086062/4l6ilh4h612l6cgw2gz4fqqs/muse-entry-call4.zip
+  (24,838,074 bytes, sha256 `fb506ca8a06c3063b6239d429d34098a0690ee64b326f59d2719e057fda56b4a`;
+  link expires 2026-10-26 16:30 UTC)
+- **fighter.glb inside:** 22,693,248 bytes, sha256
+  `6fedb335eb8d9ab6a3b84950bea82cb358e43bcb54a7e5270cb2c460c77642f3`
+- The same files are also placed directly in
+  `competition/entries/muse/` on the owner's Mac by the owner's
+  one-line unpack of this archive, which is where the weigh-in
+  snapshots from.
+
 ## Validator output
 
 `node validate_entry.mjs muse`, run on this exact entry (full entry mode,
-with the reference fighter present):
+with the v3.3 validator and the arena reference fighter present; the
+reference was taken from the owner's Mac on 2026-10-24):
 
 ```
 PASS  manifest.json has all fields
-PASS  file size 21.6 MB (limit 80 MB)
+PASS  file size 22.7 MB (limit 80 MB)
 PASS  extensions: KHR_materials_specular
 PASS  self-contained (no external URIs)
 PASS  4 textures (limit 40)
 PASS  largest texture 2048 px (limit 4096)
 PASS  12,609 triangles (limit 250,000)
 PASS  Mixamo skeleton (all required mixamorig: bones present)
-PASS  animations: 28/28
+PASS  animations: 30/30
 PASS  clip lengths within ±10 % of reference
 PASS  bind-pose mesh height ≈ 1.87 m (expected 1.55–2.05 m; check scale if far off)
-PASS  brain.js runs in the sandbox, valid outputs, 0.109 ms average (limit 2 ms)
+PASS  brain.js runs in the sandbox, valid outputs, 0.615 ms average (limit 2 ms)
 PASS  renders/front.png 1920×1920 (long side ≥ 1920)
 PASS  renders/three_quarter.png 1920×1920 (long side ≥ 1920)
 PASS  renders/profile.png 1920×1920 (long side ≥ 1920)
@@ -110,15 +142,9 @@ PASS  LICENSES.md present and filled in
 All checks passed.
 ```
 
-## Fighter binary delivery
-
-Binaries aren't committed (per AGENTS.md), so `fighter.glb` and the four
-renders travel as one zip whose contents unpack at the top level of this
-folder:
-
-- Download: https://muse.ai/files/1280375435168282/1103342202404807/xq9eeiyp2zmbbrjr421mz4he/muse-entry.zip
-  (public Muse storage link, expires 2026-10-25T21:57:57Z)
-- Zip: 23,949,961 bytes, sha256 `5fab1ea47efa39a77ba3df59ab51e463422540337ef3e8851dfd64796a2e139d`
-- `fighter.glb` inside it: 21,559,716 bytes, sha256 `8356498236ab4b29fc03046df1efecc1d277c01f45fe0d7069898a796d849129`
-- The zip also contains `renders/` (the same four PNGs described above)
-  and byte-identical copies of every text file in this folder.
+The validator counts the 30 required clips; the GLB also carries the 3
+optional clips (`knockdown_front`, `getup_back`, `getup_front`), for 33
+animations in total, confirmed by loading it in three.js (3 draw calls,
+13,012 rendered triangles, `fighting_idle` posed and in frame — the same
+render check as the first build, so the unapplied-scale export pattern
+still holds).

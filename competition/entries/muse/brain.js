@@ -15,6 +15,10 @@ const MOVES = {
   uppercut:   { dmg: 14, reach: 1.05, cool: 0.90 },
   roundhouse: { dmg: 16, reach: 1.60, cool: 1.00 },
   frontkick:  { dmg: 12, reach: 1.50, cool: 0.85 },
+  // Throw (RULES.md §5): grab, reach 0.95 m, 13 dmg, cannot be blocked,
+  // misses a foe who is mid-strike. The 1.00 s here is this brain's own
+  // pacing between throws, not an arena stat.
+  throw:      { dmg: 13, reach: 0.95, cool: 1.00 },
 };
 
 function pickWeighted(table) {
@@ -87,7 +91,10 @@ export default function brain(state) {
 
   // ---- Spacing and offence by range band ----
   if (foe.state === 'block') {
-    // Do not feed heavy strikes into a guard. Close in, test with a jab.
+    // A guard stops strikes but not a throw, and a blocking foe is not
+    // mid-strike, so a throw cannot miss for that reason. Throw in range,
+    // otherwise close in or test with a jab.
+    if (distance <= 0.95 && ready && Math.random() < 0.5) return attack('throw');
     if (distance > 1.25) return { move: null, fwd: true, back: false, block: false };
     if (ready && Math.random() < 0.35) return attack('jab');
     return idle;
@@ -105,7 +112,11 @@ export default function brain(state) {
     if (ready) return attack(pickWeighted([['cross', 4], ['jab', 3], ['frontkick', 2], ['hook', 2]]));
     return idle;
   }
-  // Phone-booth range.
-  if (ready) return attack(pickWeighted([['hook', 4], ['uppercut', 4], ['cross', 2], ['jab', 1]]));
+  // Phone-booth range. A throw only when the foe is not mid-strike
+  // (it misses then) and we are inside its 0.95 m reach.
+  if (ready) {
+    if (distance <= 0.95 && foe.state !== 'attack' && Math.random() < 0.2) return attack('throw');
+    return attack(pickWeighted([['hook', 4], ['uppercut', 4], ['cross', 2], ['jab', 1]]));
+  }
   return { move: null, fwd: false, back: !cornered && Math.random() < 0.4, block: false };
 }
