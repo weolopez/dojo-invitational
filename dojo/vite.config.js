@@ -154,6 +154,12 @@ function arenaApi() {
       }, 5 * 60 * 1000);
       server.middlewares.use(async (req, res, next) => {
         const url = new URL(req.url, 'http://localhost');
+        // Other devices on the network (a phone watching with ?watch) may read but never write.
+        const local = ['127.0.0.1', '::1', '::ffff:127.0.0.1'].includes(req.socket.remoteAddress);
+        if (!local && req.method !== 'GET' && req.method !== 'HEAD' && url.pathname.startsWith('/api/')) {
+          res.statusCode = 403;
+          return res.end('Read-only from other devices');
+        }
         try {
           // Only entries approved at a weigh-in fight, and only the locked (approved) copy of their files.
           if (url.pathname === '/api/entries' && req.method === 'GET') {

@@ -5,7 +5,9 @@ import { DOJO_BUILDERS, ENTRY_COLORS, EQUAL_STATS, PERSONALITIES, ROSTER } from 
 import { CpuBrain, EntryBrain } from './brains.js';
 import { DOJO_PRESETS, championPreset } from './dojos.js';
 
-const post = (url, value) => fetch(url, {
+// ?watch: a spectator copy (say, on a phone) that runs its own fights but never writes results or state.
+export const WATCH = new URLSearchParams(location.search).has('watch');
+const post = (url, value) => WATCH ? Promise.resolve() : fetch(url, {
   method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(value),
 }).catch(() => {});
 const brainFor = (def) => (def.brainSrc ? new EntryBrain(def.brainSrc) : new CpuBrain(PERSONALITIES[def.id] ?? PERSONALITIES.default));
@@ -140,7 +142,7 @@ export class Tournament {
       this.ui.flash(`Six hours are up: starting without updates from ${late}`);
     }
     if (r.override) {
-      await fetch('/api/start-now', { method: 'DELETE' }).catch(() => {});
+      if (!WATCH) await fetch('/api/start-now', { method: 'DELETE' }).catch(() => {});
 const brainFor = (def) => (def.brainSrc ? new EntryBrain(def.brainSrc) : new CpuBrain(PERSONALITIES[def.id] ?? PERSONALITIES.default));
 const shuffle = (xs) => xs.map((x) => [Math.random(), x]).sort((p, q) => p[0] - q[0]).map((p) => p[1]);
       const waitingOn = r.fighters.filter((f) => !f.updated).map((f) => f.name).join(', ');

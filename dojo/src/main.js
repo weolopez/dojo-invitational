@@ -6,7 +6,7 @@ import { Arena } from './arena.js';
 import { CpuBrain } from './brains.js';
 import { DOJO_PRESETS } from './dojos.js';
 import { loadFighterAsset } from './assets.js';
-import { Tournament } from './tournament.js';
+import { Tournament, WATCH } from './tournament.js';
 
 const TOURNAMENT_MODE = new URLSearchParams(location.search).has('tournament');
 
@@ -371,7 +371,7 @@ async function startTournament() {
   ui.tournament.classList.remove('hidden');
   ui.hud.classList.remove('hidden');
   ui.loadingText.textContent = 'Setting up the arenas…';
-  arenas = [0, 1, 2, 3].map((i) => new Arena({ timing: TIMING.tournament, shadowSize: i === 0 ? 2048 : 1024 }));
+  arenas = [0, 1, 2, 3].map((i) => new Arena({ timing: TIMING.tournament, shadowSize: i === 0 && !WATCH ? 2048 : 1024 }));
   for (let i = 0; i < 3; i++) {
     const el = document.createElement('div');
     el.className = 'tile';
