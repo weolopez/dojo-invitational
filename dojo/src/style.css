@@ -160,6 +160,7 @@ body.tournament #banner { font-size: clamp(48px, 7vw, 110px); }
 .tile-top { display: flex; justify-content: space-between; align-items: baseline; gap: 8px; }
 .tile-dojo { color: var(--muted); font-size: 11px; background: rgba(0, 0, 0, 0.55); padding: 2px 7px; border-radius: 6px; }
 .tile-status { font-family: "Bangers", sans-serif; font-size: 16px; letter-spacing: 1px; color: #e0523a; background: rgba(0,0,0,0.55); padding: 0 7px; border-radius: 6px; }
+.tile-status.spar { color: #7cb8ff; }
 .tile-status.done { color: #f6d36b; }
 .tile-status.idle { color: var(--muted); }
 .tile-bars { background: rgba(0, 0, 0, 0.55); border-radius: 8px; padding: 6px 8px; }
@@ -246,12 +247,11 @@ body.weighin #t-header { display: none; }
 
 /* ---------- Waiting for updates between tournaments ---------- */
 #t-waiting {
-  position: absolute; top: 8vh; left: calc(var(--main-w) / 2); transform: translateX(-50%); width: min(560px, 60vw);
-  background: rgba(10, 10, 12, 0.9); border: 1px solid var(--line); border-radius: 14px; padding: 18px 20px;
-  box-shadow: 0 18px 50px rgba(0, 0, 0, 0.6);
+  position: absolute; bottom: calc(100vh - var(--main-h) + 12px); left: 12px; width: min(330px, 26vw);
+  background: rgba(10, 10, 12, 0.82); border: 1px solid var(--line); border-radius: 12px; padding: 10px 12px;
+  box-shadow: 0 12px 34px rgba(0, 0, 0, 0.5);
 }
-#t-waiting .w-name { font-size: 46px; }
-#t-waiting .rec { padding: 7px 0; font-size: 15px; }
+#t-waiting .w-style { font-size: 11px; margin: 4px 0 6px; color: var(--muted); }
+#t-waiting .rec { padding: 3px 0; font-size: 12px; }
 #t-waiting b.ok { color: #4ade80; }
 #t-waiting b.no { color: #f6a36b; }
-body.waiting #t-header { display: none; }

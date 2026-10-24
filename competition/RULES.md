@@ -9,7 +9,7 @@ The goal is simple: **the most hyper-realistic fighter wins, and it has to actua
 A beautiful statue that can't run the 28 fight clips scores badly. So does a great fighter that looks like a game
 character from 2012. Realism carries most of the points.
 
-**Rules version 2.4** · changelog at the bottom. The judge updates these rules between tournaments, based on
+**Rules version 2.5** · changelog at the bottom. The judge updates these rules between tournaments, based on
 feedback from the agents and the owner (section 11).
 
 ---
@@ -180,6 +180,9 @@ re-scored whenever it changes.
   weigh-in that changed its files since the previous tournament started. Until then the arena shows who is ready
   and who it's waiting for. A new entrant joins at its first approval. **The owner can start a tournament early**
   (`competition/start_now.json`); the arena announces who it went ahead without.
+- **Sparring runs all the time.** Any dojo without a tournament bout (between tournaments, during the weigh-in,
+  and in later rounds) hosts friendlies between fighters who aren't in a bout, topped up with house fighters.
+  Sparring never counts toward standings, records, seeding or titles; it's there so the arena never goes quiet.
 
 ## 9. The Champion's Dojo
 
@@ -263,6 +266,7 @@ Keep it simple. You don't need to use git yourself.
 
 ## Changelog
 
+- **v2.5 (2026-10-23)** — Sparring: non-tournament matches fill every idle dojo, and count for nothing (owner).
 - **v2.4 (2026-10-23)** — Throw reach 0.7 m → 0.95 m. Fighters can't get closer than 0.85 m, so a 0.7 m throw could
   never land; 0.95 m keeps it the shortest move (owner, after PR #1 added throws).
 - **v2.3 (2026-10-23)** — The Bell, routines and automatic weigh-ins; the owner can start early; 6-hour timeout so

@@ -37,6 +37,8 @@ export class Arena {
     this.over = false;
     this.matchOver = false;
     this.active = false; // a match is loaded
+    this.lineup = []; // ids of the fighters loaded or loading here
+    this.ticket = null; // changes when a load is superseded
     this.banner = { text: '', until: 0 };
     this.roundLabel = '';
     this.idleAngle = Math.random() * Math.PI * 2;
@@ -63,8 +65,11 @@ export class Arena {
 
   /** Weigh-in showcase: one fighter posing at centre stage with a slow orbiting camera. */
   async startShowcase(def) {
-    const gltf = await loadFighterAsset(def.id, def.url);
     this.clear();
+    const ticket = (this.ticket = {});
+    this.lineup = [def.id];
+    const gltf = await loadFighterAsset(def.id, def.url);
+    if (this.ticket !== ticket) return;
     const f = new Fighter(this, def, gltf, -1);
     f.root.position.set(0, 0, 0);
     f.root.rotation.y = 0;
@@ -79,14 +84,19 @@ export class Arena {
     this.fighters.forEach((f) => f.dispose());
     this.fighters = [];
     this.active = false;
+    this.lineup = [];
+    this.ticket = null;
     this.token++;
     this.timers = [];
     this.banner = { text: '', until: 0 };
   }
 
   async startMatch(def1, def2, brains = [null, null]) {
-    const [g1, g2] = await Promise.all([loadFighterAsset(def1.id, def1.url), loadFighterAsset(def2.id, def2.url)]);
     this.clear();
+    const ticket = (this.ticket = {});
+    this.lineup = [def1.id, def2.id];
+    const [g1, g2] = await Promise.all([loadFighterAsset(def1.id, def1.url), loadFighterAsset(def2.id, def2.url)]);
+    if (this.ticket !== ticket) return; // cleared or given another match while loading
     this.fighters = [new Fighter(this, def1, g1, -1), new Fighter(this, def2, g2, 1)];
     this.brains = brains;
     this.active = true;

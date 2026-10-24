@@ -8,6 +8,8 @@ import { DOJO_PRESETS, championPreset } from './dojos.js';
 const post = (url, value) => fetch(url, {
   method: 'POST', headers: { 'Content-Type': 'application/json' }, body: JSON.stringify(value),
 }).catch(() => {});
+const brainFor = (def) => (def.brainSrc ? new EntryBrain(def.brainSrc) : new CpuBrain(PERSONALITIES[def.id] ?? PERSONALITIES.default));
+const shuffle = (xs) => xs.map((x) => [Math.random(), x]).sort((p, q) => p[0] - q[0]).map((p) => p[1]);
 
 export class Tournament {
   constructor(arenas, ui) {
@@ -121,11 +123,12 @@ export class Tournament {
     const r = await this.readiness();
     if (!r.ready) {
       this.waiting = r;
-      this.arenas.forEach((a) => a.clear());
-      // Keep the dojos on screen while waiting.
+      // Keep the dojos busy with sparring while waiting.
+      this.arenas.forEach((a) => { if (!a.sparring) a.clear(); });
       if (this.arenas.some((a) => !a.preset)) {
         await Promise.all(this.arenas.map((a, i) => a.setDojo(this.dojos[i % this.dojos.length])));
       }
+      this.fillSparring();
       this.ui.waiting(r, this);
       setTimeout(() => this.start(), 30000);
       return;
@@ -138,9 +141,12 @@ export class Tournament {
     }
     if (r.override) {
       await fetch('/api/start-now', { method: 'DELETE' }).catch(() => {});
+const brainFor = (def) => (def.brainSrc ? new EntryBrain(def.brainSrc) : new CpuBrain(PERSONALITIES[def.id] ?? PERSONALITIES.default));
+const shuffle = (xs) => xs.map((x) => [Math.random(), x]).sort((p, q) => p[0] - q[0]).map((p) => p[1]);
       const waitingOn = r.fighters.filter((f) => !f.updated).map((f) => f.name).join(', ');
       this.ui.flash(`Owner's call: starting now${waitingOn ? ` without updates from ${waitingOn}` : ''}`);
     }
+    this.arenas.forEach((a) => { a.sparring = false; a.clear(); });
     this.data.lastStartWeighIn = r.latest;
     this.data.tournamentNo++;
     await this.refreshScores();
@@ -161,6 +167,10 @@ export class Tournament {
       .filter((c) => c.no > (this.data.lastWeighIn ?? 0));
     if (!cards.length) return;
     const stage = this.arenas[0];
+    stage.sparring = false;
+    stage.clear();
+    stage.reserved = true;
+    this.fillSparring();
     this.ui.flash(`The Weigh-In · ${cards.length} ${cards.length === 1 ? 'entry' : 'entries'} before tournament ${this.data.tournamentNo}`);
     for (const card of cards) {
       const def = this.byId[`entry:${card.id}`];
@@ -171,6 +181,7 @@ export class Tournament {
       this.data.lastWeighIn = card.no;
     }
     this.ui.weighIn(null);
+    stage.reserved = false;
     stage.clear();
     this.save();
   }
@@ -183,10 +194,9 @@ export class Tournament {
       if (m.b && !m.a) { m.winner = m.b; m.score = 'bye'; }
     }
     const live = round.filter((m) => m.a && m.b && !m.winner);
-    this.arenas.forEach((a) => { a.clear(); a.match = null; });
+    this.arenas.forEach((a) => { a.clear(); a.match = null; a.sparring = false; });
     this.ui.flash(`${this.roundName(this.roundIdx)} · Tournament ${this.data.tournamentNo}`);
-    const brain = (def) => (def.brainSrc ? new EntryBrain(def.brainSrc) : new CpuBrain(PERSONALITIES[def.id] ?? PERSONALITIES.default));
-    await Promise.all(live.map(async (m, i) => {
+    const starting = Promise.all(live.map(async (m, i) => {
       const arena = this.arenas[i];
       arena.match = m;
       arena.comebackLow = [100, 100];
@@ -194,11 +204,53 @@ export class Tournament {
       arena.onMatchEnd = (ar, winner) => this.onMatchEnd(ar, winner);
       const da = this.byId[m.a];
       const db = this.byId[m.b];
-      await arena.startMatch(da, db, [brain(da), brain(db)]);
+      await arena.startMatch(da, db, [brainFor(da), brainFor(db)]);
     }));
+    // Dojos without a bout this round host sparring between the fighters who aren't fighting.
+    this.fillSparring();
+    await starting;
     this.data.matchNo += live.length;
     this.emit();
     if (!live.length) this.afterRound();
+  }
+
+  /**
+   * Sparring (RULES.md §8): a friendly in every dojo with no tournament bout, between fighters who aren't in one,
+   * topped up with house fighters. It never counts toward standings, records, seeding or titles.
+   */
+  fillSparring() {
+    const busy = new Set(this.arenas.flatMap((a) => a.lineup));
+    const house = ROSTER.map((d) => ({ ...d, stats: EQUAL_STATS }));
+    const pool = [...shuffle(this.defs), ...shuffle(house)]
+      .filter((d, i, all) => !busy.has(d.id) && all.findIndex((x) => x.id === d.id) === i);
+    for (const arena of this.arenas) {
+      if (arena.lineup.length || arena.reserved || pool.length < 2) continue;
+      this.spar(arena, pool.shift(), pool.shift());
+    }
+  }
+
+  spar(arena, a, b) {
+    const gen = (arena.sparGen ?? 0) + 1;
+    Object.assign(arena, { sparGen: gen, sparring: true, match: null, comebackLow: null, onRoundEnd: null });
+    arena.onMatchEnd = (ar, winner) => this.onSparEnd(ar, winner, gen);
+    arena.startMatch(a, b, [brainFor(a), brainFor(b)]).catch(() => arena.clear());
+  }
+
+  onSparEnd(arena, winner, gen) {
+    const s = (this.data.sparring ??= { matches: 0, kos: 0 });
+    s.matches++;
+    s.kos += arena.fighters.reduce((n, f) => n + f.tally.kos, 0);
+    const loser = arena.fighters.find((f) => f !== winner);
+    const wi = arena.fighters.indexOf(winner);
+    s.last = { winner: winner.def.name, loser: loser.def.name, score: `${arena.wins[wi]}-${arena.wins[1 - wi]}` };
+    this.save();
+    // A short look at the result, then a fresh pairing.
+    setTimeout(() => {
+      if (arena.sparGen !== gen || !arena.sparring) return;
+      arena.sparring = false;
+      arena.clear();
+      this.fillSparring();
+    }, 4000);
   }
 
   tick() {

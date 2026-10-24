@@ -165,18 +165,24 @@ function layout() {
 
 const liveNow = (a) => a.active && !a.matchOver;
 
-/** Keep the main event on a live fight: when it ends, cut to another fight still going. */
+/** What the main screen should show: the weigh-in stage, then tournament bouts, then sparring. */
+const rank = (a) => (a.showcase ? 3 : !liveNow(a) ? 0 : a.sparring ? 1 : 2);
+
+/** Keep the main event on the best live fight: cut away when it ends, or when a tournament bout starts. */
 function pickMain(dt) {
   const main = arenas[mainIdx];
-  if (liveNow(main)) { overSince = null; return; }
-  overSince = (overSince ?? 0) + dt;
-  if (overSince < 2.5) return;
-  const next = arenas.findIndex((a) => liveNow(a));
-  if (next >= 0 && next !== mainIdx) {
-    mainIdx = next;
-    overSince = null;
-    flash(`Cut to ${arenas[next].fighters.map((f) => f.def.name).join(' vs ')}`);
-  }
+  // Hold a finished tournament bout on screen; leave it only for another tournament bout or the weigh-in.
+  const holding = main.active && main.matchOver && !main.sparring;
+  if (main.active && main.matchOver) {
+    overSince = (overSince ?? 0) + dt;
+    if (overSince < 2.5) return;
+  } else overSince = null;
+  const best = arenas.reduce((b, a, i) => (rank(a) > rank(arenas[b]) ? i : b), mainIdx);
+  if (best === mainIdx || rank(arenas[best]) === 0 || (holding && rank(arenas[best]) < 2)) return;
+  mainIdx = best;
+  overSince = null;
+  const next = arenas[best];
+  if (!next.showcase) flash(`${next.sparring ? 'Sparring' : 'Cut to'} · ${next.fighters.map((f) => f.def.name).join(' vs ')}`);
 }
 
 function tileOrder() {
@@ -194,12 +200,15 @@ function renderTiles() {
     el.style.height = `${r.h}px`;
     const dojo = a.preset ? `${esc(a.preset.name)}${a.preset.champion ? ` · by ${esc(a.preset.author)}` : ''}` : '';
     if (!a.active) {
+      const why = a.showcase ? 'The weigh-in' : a.lineup.length ? 'Fighters warming up…' : 'No fight in this dojo right now';
       el.innerHTML = `<div class="tile-top"><span class="tile-dojo">${dojo}</span><span class="tile-status idle">Waiting</span></div>`
-        + `<div class="tile-bars"><div class="tile-row"><span class="tn"></span><span class="mid">No fight in this dojo this round</span><span class="tn r"></span></div></div>`;
+        + `<div class="tile-bars"><div class="tile-row"><span class="tn"></span><span class="mid">${why}</span><span class="tn r"></span></div></div>`;
       return;
     }
     const [f1, f2] = a.fighters;
-    const status = a.matchOver ? `<span class="tile-status done">${esc(a.winner.def.name)} wins</span>` : `<span class="tile-status">LIVE · ${Math.ceil(a.timeLeft)}s</span>`;
+    const status = a.matchOver ? `<span class="tile-status done">${esc(a.winner.def.name)} wins</span>`
+      : a.sparring ? `<span class="tile-status spar">SPARRING · ${Math.ceil(a.timeLeft)}s</span>`
+        : `<span class="tile-status">LIVE · ${Math.ceil(a.timeLeft)}s</span>`;
     const bar = (f, right) => `<div class="mini${right ? ' r' : ''}"><i style="width:${(f.hp / f.maxHp) * 100}%"></i></div>`;
     const showBanner = performance.now() < a.banner.until && !a.matchOver;
     el.innerHTML = `<div class="tile-top"><span class="tile-dojo">${dojo}</span>${status}</div>`
@@ -277,6 +286,7 @@ function renderInfo(t) {
     rec('Greatest comeback', r.comeback ? `from ${r.comeback.hpPct}% · ${esc(t.name(r.comeback.who))}` : '—'),
     rec('Most thrown move', fav ? `${MOVE_LABELS[fav] ?? fav} (${d.moveTotals[fav]})` : '—'),
     rec('Matches · KOs · accuracy', `${d.totals.matches} · ${d.totals.kos} · ${pct(d.totals.hits, d.totals.thrown)}%`),
+    rec('Sparring (doesn\'t count)', d.sparring ? `${d.sparring.matches} matches · last: ${esc(d.sparring.last.winner)} def. ${esc(d.sparring.last.loser)} ${d.sparring.last.score}` : '—'),
   ].join('');
 }
 
@@ -284,7 +294,9 @@ function renderHeader(t) {
   const main = arenas[mainIdx];
   ui.league.textContent = t.league;
   const stage = t.bracket ? t.roundName(t.roundIdx) : '';
-  ui.stage.textContent = `Tournament ${t.data.tournamentNo} · ${stage} · Main event`;
+  const what = main.sparring ? 'Sparring · doesn\'t count' : 'Main event';
+  ui.stage.textContent = t.waiting ? `Between tournaments · ${main.sparring ? 'Sparring · doesn\'t count' : 'Waiting for updates'}`
+    : `Tournament ${t.data.tournamentNo} · ${stage} · ${what}`;
   ui.dojo.textContent = main.preset ? `${main.preset.name}${main.preset.champion ? ` · built by ${main.preset.author}` : ''}` : '';
   ui.ticker.innerHTML = t.data.recent.slice(0, 7).map((m) => {
     const loser = m.winner === m.left ? m.right : m.left;
@@ -329,16 +341,14 @@ function showWeighIn(card) {
 function showWaiting(r, t) {
   const el = $('t-waiting');
   document.body.classList.toggle('waiting', !!r);
-  if (!r) { el.classList.add('hidden'); ui.hud.classList.remove('hidden'); return; }
-  ui.hud.classList.add('hidden');
+  if (!r) { el.classList.add('hidden'); return; }
   const done = r.fighters.filter((f) => f.updated).length;
-  el.innerHTML = `<div class="w-head">BETWEEN TOURNAMENTS</div>`
-    + `<div class="w-name">Waiting for updates</div>`
+  el.innerHTML = `<div class="w-head">BETWEEN TOURNAMENTS · ${done} OF ${r.fighters.length} READY</div>`
     + `<p class="w-style">Tournament ${t.data.tournamentNo + 1} starts when every fighter has weighed in an improved version. `
-    + `${done} of ${r.fighters.length} ready.</p>`
+    + `Sparring until then; it doesn't count.</p>`
     + r.fighters.map((f) => `<div class="rec"><span>${dot(f.id)}${esc(f.name)}</span>`
       + `<b class="${f.updated ? 'ok' : 'no'}">${f.updated ? `updated · weigh-in #${f.weighIn}` : 'waiting for a new version'}</b></div>`).join('')
-    + `<p class="w-files">The judge runs node competition/weigh_in.mjs when agents reply READY FOR WEIGH-IN. Checking again every 30 seconds.</p>`;
+    + `<p class="w-files">Agents write READY.json; the judge weighs them in automatically. Checking every 30 seconds.</p>`;
   el.classList.remove('hidden');
   renderBroadcast(t);
 }
@@ -394,7 +404,7 @@ function frame(dt) {
     uiWait -= dt;
     infoFlip += dt;
     if (infoFlip > 9) { infoFlip = 0; infoPage = 1 - infoPage; }
-    if (uiWait <= 0 && tournament?.bracket) {
+    if (uiWait <= 0 && tournament?.data) {
       uiWait = 0.25;
       renderTiles();
       renderInfo(tournament);
