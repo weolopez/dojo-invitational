@@ -356,5 +356,42 @@
     "fighterChanged": true,
     "branch": "entry/me",
     "branchCommit": "4666081d7b2ebbc87f941fdb006fb6cc50c0dbd9"
+  },
+  {
+    "no": 12,
+    "at": "2026-10-24T14:19:38.552Z",
+    "id": "me",
+    "name": "THE OWNER",
+    "agent": "The owner, hand-crafting with their own coding agents (RULES.md §12)",
+    "decision": "approved",
+    "verdict": "Approved: all 30 clips with the throws, foot pitch refit and timing restored check out, and the smoothed clothing earns a point, but the jagged shell hems, waist gap and painted hair still hold the photo face back.",
+    "style": "The owner as a pressure fighter: the owner's photo-built head on a muscular MakeHuman body in a charcoal rash guard, shorts and white hand wraps.",
+    "tape": {
+      "sizeMB": 43.3,
+      "triangles": 133040,
+      "textures": 10,
+      "largestTexture": 2050,
+      "heightM": 1.79,
+      "extensions": "KHR_texture_transform, KHR_materials_sheen"
+    },
+    "realism": 37,
+    "realismBefore": 35,
+    "changedFiles": [
+      "LICENSES.md",
+      "NOTES.md",
+      "manifest.json",
+      "source/01_build_body.py",
+      "source/02_retarget.py",
+      "source/03_assemble.py",
+      "source/addclips.py",
+      "source/cloth.py",
+      "source/fix_feet.py",
+      "source/retime.py",
+      "source/src_metrics.py",
+      "source/upgrade_body.py"
+    ],
+    "fighterChanged": true,
+    "branch": "entry/me",
+    "branchCommit": "8dd72e9a34ee262e69516b8605965db2f0a6b85f"
   }
 ]

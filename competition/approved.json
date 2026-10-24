@@ -48,14 +48,14 @@
     }
   },
   "me": {
-    "approvedAt": "2026-10-24T12:30:06.521Z",
-    "weighIn": 11,
-    "verdict": "Approved at 35 (up from 33): the new training top and shorts give the clothing score something to work with, but the jagged shell edges, the open gaps at the waist and hips and the X Bot ball joints still make the body read as a mannequin under a real face.",
-    "branchCommit": "4666081d7b2ebbc87f941fdb006fb6cc50c0dbd9",
-    "realism": 35,
+    "approvedAt": "2026-10-24T14:19:38.552Z",
+    "weighIn": 12,
+    "verdict": "Approved: all 30 clips with the throws, foot pitch refit and timing restored check out, and the smoothed clothing earns a point, but the jagged shell hems, waist gap and painted hair still hold the photo face back.",
+    "branchCommit": "8dd72e9a34ee262e69516b8605965db2f0a6b85f",
+    "realism": 37,
     "locked": {
-      "manifest.json": "559f947a60eb441837c7a1ac8e7795874858a6a4aaadf718e34f8f79254291d9",
-      "fighter.glb": "d74b7b633e05bc90ecf10548ae1ef27cc3bf828cef3c5029922c66ab26be1394",
+      "manifest.json": "9a99bff233d33bb2624370addd78b4130246d37db832af41ae90cdd8a3c807fe",
+      "fighter.glb": "72bfa101c9da945304d35f38a0ca1a464d4869d1557d234bc581800ad571ab43",
       "brain.js": "3e7971984789c24b702be7ff3dc797d2884763810a7f9257feb6fe4ac5b55c30"
     }
   }
