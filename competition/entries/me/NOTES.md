@@ -47,6 +47,12 @@ face). The owner's coding agent (Claude Code, Opus 5.5) wrote and ran the script
 
 ## Update log
 
+- **Brain: fast counter-grappler (written by Claude, the judge's session, at the owner's explicit request; the owner
+  waived the "judge doesn't build entry me" rule for this change).** Blocks quick punches; against a slow kick or
+  punch it slips inside just before the blow, or guards it, then throws or takes down the foe as they recover. A
+  foe covering up behind a block gets grabbed. Between exchanges: quick jabs and one-twos. Keeps the round-timer
+  reset from the owner's agent. Uses the v3.5 moves (`slip`, `takedown`, `onetwo`). The model is unchanged.
+
 - **Owner entry created:** the FaceBuilder head on the Mixamo X Bot body.
 - **Body/material update (call 3):** proportion edits, procedural skin and fabric, and skinned shells on X Bot.
 - **Body rebuild:** the X Bot body was deleted. The new body is an MPFB2 MakeHuman body built from Grok's recipe,
@@ -137,6 +143,50 @@ PASS  animations: 30/30
 PASS  clip lengths within ±10 % of reference
 PASS  bind-pose mesh height ≈ 1.79 m (expected 1.55–2.05 m; check scale if far off)
 PASS  brain.js runs in the sandbox, valid outputs, 0.071 ms average (limit 2 ms)
+PASS  renders/front.png 1920×1080 (long side ≥ 1920)
+PASS  renders/three_quarter.png 1920×1080 (long side ≥ 1920)
+PASS  renders/profile.png 1920×1080 (long side ≥ 1920)
+PASS  renders/closeup.png 1920×1080 (long side ≥ 1920)
+PASS  NOTES.md present and filled in
+PASS  LICENSES.md present and filled in
+
+All checks passed.
+```
+
+## Call #5 — Brain: v3.5 grappling moves (written by the owner's AI agent, Me Fighter)
+
+- **What call #5 asked:** calls/me.md lists realism points only (neck seam, rippled shirt, boxy shorts, real hair).
+  The owner asked for the latest grapple/throw abilities and animations. Rules v3.5 added the brain moves
+  `sidekick, onetwo, combo, dodge, slip, takedown, sweep`; it adds **no new required clips** (still 30; takedown and
+  sweep play as the throw until the arena has their clips). This fighter already ships all 30 required clips plus the
+  optional `knockdown_front`, `getup_back`, `getup_front`, so **fighter.glb, renders and manifest are unchanged**.
+- **brain.js rewritten** (backup of the previous file in .work/pre_call5/; note the brain.js found on disk at 12:56
+  EDT had been replaced by a counter-grappler version not written in this run and without the finisher or step-in
+  plan; it is kept there as brain_found_1256.js):
+  - Kept: per-round timer reset, step-in-and-throw plan (foe 0.95–1.4 m and not attacking, decided twice a second,
+    ~22% base, +13% vs a blocking/idle foe, +15% if behind after 18 s; abandoned on foe attack or after 1 s), and the
+    hook/roundhouse finisher at ≤30% foe health.
+  - New: slip inside slow shots (roundhouse, front/side kick, hook, uppercut, combo) about half the time and grab on
+    the recovery; takedown (50/50 with throw) between 0.95 and 1.1 m; occasional sweep at 1.1–1.25 m vs a non-blocking
+    foe; one-twos and occasional four-punch combos in close.
+  - The shoulder throw stays the main grab, because the dojo/src engine on disk (config.js MOVES) does not yet define
+    the v3.5 moves and silently ignores unknown ones; in that engine slip/takedown/sweep/onetwo/combo would be no-ops.
+- **Not tested:** no fights were run; no win-rate or throw-rate numbers. Realism unchanged (no mesh/texture work).
+
+### Validator output (call #5)
+```
+PASS  manifest.json has all fields
+PASS  file size 46.6 MB (limit 80 MB)
+PASS  extensions: KHR_texture_transform, KHR_materials_sheen
+PASS  self-contained (no external URIs)
+PASS  10 textures (limit 40)
+PASS  largest texture 2050 px (limit 4096)
+PASS  213,571 triangles (limit 250,000)
+PASS  Mixamo skeleton (all required mixamorig: bones present)
+PASS  animations: 30/30
+PASS  clip lengths within ±10 % of reference
+PASS  bind-pose mesh height ≈ 1.79 m (expected 1.55–2.05 m; check scale if far off)
+PASS  brain.js runs in the sandbox, valid outputs, 0.101 ms average (limit 2 ms)
 PASS  renders/front.png 1920×1080 (long side ≥ 1920)
 PASS  renders/three_quarter.png 1920×1080 (long side ≥ 1920)
 PASS  renders/profile.png 1920×1080 (long side ≥ 1920)
