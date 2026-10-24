@@ -90,7 +90,9 @@ function snapshotToBranch(id, message) {
   const env = { GIT_INDEX_FILE: indexFile };
   try {
     gitEnv(env, 'read-tree', parent);
-    gitEnv(env, 'rm', '-r', '-q', '--cached', '--ignore-unmatch', `competition/entries/${id}`);
+    // -f: the branch's copy can differ from both main and the folder (e.g. after a pull request merged to main);
+    // this only clears the temporary index, never the files.
+    gitEnv(env, 'rm', '-r', '-q', '-f', '--cached', '--ignore-unmatch', `competition/entries/${id}`);
     const files = committable(id);
     if (files.length) gitEnv(env, 'add', '-f', '--', ...files);
     const tree = gitEnv(env, 'write-tree');
@@ -108,7 +110,7 @@ function snapshotToBranch(id, message) {
 function mergeToMain(id, branchCommit, files, message) {
   // An agent in the shared folder may have switched branches; the weigh-in always lands on main.
   if (git('rev-parse', '--abbrev-ref', 'HEAD') !== 'main') git('checkout', '-q', 'main');
-  git('rm', '-r', '-q', '--cached', '--ignore-unmatch', `competition/entries/${id}`);
+  git('rm', '-r', '-q', '-f', '--cached', '--ignore-unmatch', `competition/entries/${id}`);
   if (files.length) git('add', '-f', '--', ...files);
   git('add', '--', path.relative(ROOT, APPROVED_FILE), path.relative(ROOT, WEIGHINS_FILE));
   const tree = git('write-tree');
