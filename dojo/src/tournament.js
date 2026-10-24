@@ -122,7 +122,9 @@ export class Tournament {
     // No deadlocks: 6 hours after the call for updates, the tournament starts with whoever is ready.
     const call = await fetch('/api/call').then((r) => r.json()).catch(() => null);
     const timedOut = !!call && Date.now() - Date.parse(call.at) > 6 * 3600 * 1000;
-    return { ready: !gated || fighters.every((f) => f.updated) || !!override || timedOut, gated, fighters, override,
+    // Never a tournament of one: with fewer than two fighters (after the bench), keep waiting.
+    const enough = this.defs.length >= 2;
+    return { ready: enough && (!gated || fighters.every((f) => f.updated) || !!override || timedOut), enough, gated, fighters, override,
       timedOut, latest: cards.at(-1)?.no ?? 0 };
   }
 
@@ -138,7 +140,8 @@ export class Tournament {
       }
       this.fillSparring();
       this.ui.waiting(r, this);
-      setTimeout(() => this.start(), 30000);
+      clearTimeout(this.retry);
+      this.retry = setTimeout(() => this.start(), 30000);
       return;
     }
     this.waiting = null;
@@ -167,6 +170,14 @@ const shuffle = (xs) => xs.map((x) => [Math.random(), x]).sort((p, q) => p[0] - 
     this.emit();
     await this.weighInCeremony();
     await this.playRound();
+  }
+
+  /** Owner controls: re-check now instead of at the next 30-second check (only while waiting between tournaments). */
+  startNow() {
+    if (!this.waiting) return false;
+    clearTimeout(this.retry);
+    this.start();
+    return true;
   }
 
   /** Introduce every entry approved or sent back since the last tournament (RULES.md §11). */

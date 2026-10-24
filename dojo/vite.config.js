@@ -142,6 +142,18 @@ const json = (res, value, status = 200) => {
 };
 
 /** Dev-server endpoints for the competition arena: entry discovery, entry files, and the tournament log. */
+let broadcastSeen = 0;
+// The owner's link for other devices: http://<mac>:5173/?tournament&watch#owner=<token>. The token never leaves the
+// Mac except in that link (the part after # isn't sent to servers or kept in their logs).
+const OWNER_TOKEN_FILE = path.join(COMPETITION, '.bell', 'owner_token');
+function ownerToken() {
+  if (!fs.existsSync(OWNER_TOKEN_FILE)) {
+    fs.mkdirSync(path.dirname(OWNER_TOKEN_FILE), { recursive: true });
+    fs.writeFileSync(OWNER_TOKEN_FILE, crypto.randomBytes(18).toString('base64url'), { mode: 0o600 });
+  }
+  return fs.readFileSync(OWNER_TOKEN_FILE, 'utf8').trim();
+}
+
 function arenaApi() {
   return {
     name: 'dojo-arena-api',
@@ -154,9 +166,11 @@ function arenaApi() {
       }, 5 * 60 * 1000);
       server.middlewares.use(async (req, res, next) => {
         const url = new URL(req.url, 'http://localhost');
-        // Other devices on the network (a phone watching with ?watch) may read but never write.
+        // Other devices on the network (a phone watching with ?watch) may read but never write, except the owner's
+        // controls (/api/bench, /api/start-now) sent with the owner's token.
         const local = ['127.0.0.1', '::1', '::ffff:127.0.0.1'].includes(req.socket.remoteAddress);
-        if (!local && req.method !== 'GET' && req.method !== 'HEAD' && url.pathname.startsWith('/api/')) {
+        const owner = ['/api/bench', '/api/start-now'].includes(url.pathname) && req.headers['x-owner-token'] === ownerToken();
+        if (!local && !owner && req.method !== 'GET' && req.method !== 'HEAD' && url.pathname.startsWith('/api/')) {
           res.statusCode = 403;
           return res.end('Read-only from other devices');
         }
@@ -227,6 +241,20 @@ function arenaApi() {
           if (url.pathname === '/api/start-now') {
             if (req.method === 'GET') return json(res, fs.existsSync(START_NOW_FILE) ? JSON.parse(fs.readFileSync(START_NOW_FILE, 'utf8')) : null);
             if (req.method === 'DELETE') { fs.rmSync(START_NOW_FILE, { force: true }); return json(res, { ok: true }); }
+            if (req.method === 'POST') {
+              const b = JSON.parse((await readBody(req)) || '{}');
+              const value = { by: 'owner', at: new Date().toISOString(), via: 'owner controls', note: String(b.note ?? '').slice(0, 200) };
+              fs.writeFileSync(START_NOW_FILE, `${JSON.stringify(value, null, 2)}\n`);
+              return json(res, value);
+            }
+          }
+          // The broadcast page checks in every 20 s, so the owner controls can tell whether a broadcast is running.
+          if (url.pathname === '/api/heartbeat' && req.method === 'GET') {
+            broadcastSeen = Date.now();
+            return json(res, { ok: true });
+          }
+          if (url.pathname === '/api/broadcast' && req.method === 'GET') {
+            return json(res, { secondsAgo: broadcastSeen ? Math.round((Date.now() - broadcastSeen) / 1000) : null });
           }
           if (url.pathname === '/api/scores' && req.method === 'GET') {
             return json(res, fs.existsSync(SCORES_FILE) ? JSON.parse(fs.readFileSync(SCORES_FILE, 'utf8')) : null);
@@ -298,6 +326,22 @@ function arenaApi() {
           if (url.pathname === '/api/bench' && req.method === 'GET') {
             const f = path.join(COMPETITION, 'bench.json');
             return json(res, fs.existsSync(f) ? JSON.parse(fs.readFileSync(f, 'utf8')) : {});
+          }
+          // Owner controls: { tournament, benched: [ids] } sets who sits out that tournament.
+          if (url.pathname === '/api/bench' && req.method === 'POST') {
+            const f = path.join(COMPETITION, 'bench.json');
+            const bench = fs.existsSync(f) ? JSON.parse(fs.readFileSync(f, 'utf8')) : {};
+            const b = JSON.parse(await readBody(req));
+            const no = Number(b.tournament);
+            const out = new Set((b.benched ?? []).map(String).filter((id) => /^[a-z0-9_-]+$/.test(id)));
+            for (const id of new Set([...Object.keys(bench), ...out])) {
+              const row = bench[id] ?? { tournaments: [], by: 'owner' };
+              row.tournaments = row.tournaments.filter((t) => t !== no);
+              if (out.has(id)) { row.tournaments.push(no); row.reason = 'Benched with the owner controls.'; }
+              if (row.tournaments.length) bench[id] = row; else delete bench[id];
+            }
+            fs.writeFileSync(f, `${JSON.stringify(bench, null, 2)}\n`);
+            return json(res, bench);
           }
           if (url.pathname === '/api/call' && req.method === 'GET') {
             const f = path.join(COMPETITION, 'calls', 'current.json');

@@ -251,8 +251,30 @@ body.weighin #t-header { display: none; }
 }
 #t-caption::before { content: "🎙 THE ANNOUNCER  "; color: #f6d36b; font-size: 0.75em; letter-spacing: 2px; }
 #t-weighin { max-height: calc(var(--main-h) - 6vh); overflow: hidden; }
+#t-owner {
+  position: absolute; left: 12px; top: calc(var(--main-h) - 44px); pointer-events: auto; cursor: pointer; z-index: 2;
+  font: 600 12px system-ui, sans-serif; color: var(--text); background: rgba(10, 10, 12, 0.8); border: 1px solid var(--line);
+  border-radius: 16px; padding: 6px 12px;
+}
+body.waiting #t-owner { left: auto; right: calc(100vw - var(--main-w) + 14px); top: 14px; }
+#t-owner-panel {
+  position: absolute; top: 8vh; left: calc(var(--main-w) / 2); transform: translateX(-50%); width: min(440px, 64vw);
+  max-height: 84vh; overflow: auto; pointer-events: auto; z-index: 3;
+  background: rgba(10, 10, 12, 0.94); border: 1px solid #f6d36b; border-radius: 14px; padding: 16px 18px;
+  box-shadow: 0 18px 50px rgba(0, 0, 0, 0.7);
+}
+#t-owner-panel .w-name { font-size: 40px; }
+.o-row { display: flex; align-items: center; gap: 10px; padding: 7px 0; border-bottom: 1px solid var(--line); font-size: 15px; cursor: pointer; }
+.o-row input { width: 18px; height: 18px; accent-color: #f6d36b; }
+.o-row span { flex: 1; }
+.o-row b.ok { color: #4ade80; } .o-row b.wait { color: #f6a36b; } .o-row b.no { color: var(--muted); }
+.o-buttons { display: flex; gap: 10px; margin-top: 12px; }
+.o-buttons button { font: 700 14px system-ui, sans-serif; border-radius: 10px; padding: 10px 16px; cursor: pointer; border: 1px solid var(--line); background: #222; color: var(--text); }
+#o-start { flex: 1; background: #f6d36b; color: #111; border: 0; }
+#o-start:disabled { opacity: 0.4; cursor: default; }
+.o-msg { margin-top: 8px; color: #f6d36b; font-size: 12px; }
 #t-sound {
-  position: absolute; right: calc(100vw - var(--main-w) + 14px); top: 14px; pointer-events: auto; cursor: pointer;
+  position: absolute; right: calc(100vw - var(--main-w) + 14px); top: 54px; pointer-events: auto; cursor: pointer;
   font: 600 14px system-ui, sans-serif; color: #111; background: #f6d36b; border: 0; border-radius: 20px; padding: 8px 14px;
 }
 

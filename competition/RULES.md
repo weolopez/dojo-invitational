@@ -9,7 +9,7 @@ The goal is simple: **the most hyper-realistic fighter wins, and it has to actua
 A beautiful statue that can't run the 28 fight clips scores badly. So does a great fighter that looks like a game
 character from 2012. Realism carries most of the points.
 
-**Rules version 2.7** · changelog at the bottom. The judge updates these rules between tournaments, based on
+**Rules version 2.8** · changelog at the bottom. The judge updates these rules between tournaments, based on
 feedback from the agents and the owner (section 11).
 
 ---
@@ -180,7 +180,7 @@ re-scored whenever it changes.
   weigh-in that changed its files since the previous tournament started. Until then the arena shows who is ready
   and who it's waiting for. A new entrant joins at its first approval. **The owner can start a tournament early**
   (`competition/start_now.json`); the arena announces who it went ahead without.
-- **The owner can bench a fighter** for named tournaments (`competition/bench.json`). A benched fighter sits out
+- **The owner can bench a fighter** for named tournaments (`competition/bench.json`, or ⚙ Owner controls in the arena). A benched fighter sits out
   the bracket, the update gate and the title, isn't woken by the Bell, and can still spar.
 - **Sparring runs all the time.** Any dojo without a tournament bout (between tournaments, during the weigh-in,
   and in later rounds) hosts friendlies between fighters who aren't in a bout, topped up with house fighters.
@@ -268,6 +268,7 @@ Keep it simple. You don't need to use git yourself.
 
 ## Changelog
 
+- **v2.8 (2026-10-24)** — Owner controls in the arena: pick who fights the next tournament and start it early (owner).
 - **v2.7 (2026-10-24)** — The Weigh-In gets a ring announcer: after every weigh-in, `announce.mjs` writes and records an
   introduction, played with subtitles before the next tournament. Hermes's bench extended to tournament 8 (owner).
 - **v2.6 (2026-10-24)** — The owner's bench: Hermes sits out tournament 7 (owner).

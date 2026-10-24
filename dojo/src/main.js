@@ -392,6 +392,81 @@ function announceChampion(entry, t) {
     : `${t.name(entry.bracketWinner)} won the bracket`);
 }
 
+// ---------- Owner controls: who fights the next tournament, and an early start ----------
+const baseId = (id) => id.replace(/^entry:/, '');
+let ownerMsg = '';
+const OWNER_TOKEN = new URLSearchParams(location.hash.slice(1)).get('owner');
+const ownerPost = (url, body) => fetch(url, { method: 'POST', body: JSON.stringify(body),
+  headers: { 'Content-Type': 'application/json', ...(OWNER_TOKEN ? { 'X-Owner-Token': OWNER_TOKEN } : {}) } }).catch(() => null);
+
+/** On the Mac itself, or on another device opened with the owner's link (#owner=<token>). */
+function setupOwnerControls() {
+  if (!['localhost', '127.0.0.1', '[::1]'].includes(location.hostname) && !OWNER_TOKEN) return;
+  const btn = $('t-owner');
+  const panel = $('t-owner-panel');
+  btn.classList.remove('hidden');
+  btn.addEventListener('click', () => {
+    panel.classList.toggle('hidden');
+    ownerMsg = '';
+    if (!panel.classList.contains('hidden')) renderOwner();
+  });
+  panel.addEventListener('change', (e) => { if (e.target.matches('input[data-id]')) saveLineup(); });
+  panel.addEventListener('click', (e) => {
+    if (e.target.id === 'o-start') startEarly();
+    if (e.target.id === 'o-close') panel.classList.add('hidden');
+  });
+}
+
+async function ownerState() {
+  const t = tournament;
+  const next = t.data.tournamentNo + 1;
+  const [bench, r, seen] = await Promise.all([
+    fetch('/api/bench').then((x) => x.json()).catch(() => ({})),
+    t.readiness(),
+    fetch('/api/broadcast').then((x) => x.json()).catch(() => ({})),
+  ]);
+  const fighters = t.sparDefs.map((d) => {
+    const ready = r.fighters.find((f) => f.id === d.id);
+    return { id: d.id, name: d.name, benched: !!bench[baseId(d.id)]?.tournaments?.includes(next), updated: ready?.updated, weighIn: ready?.weighIn };
+  });
+  return { next, fighters, running: !t.waiting, here: !WATCH, seenAgo: seen.secondsAgo };
+}
+
+async function renderOwner() {
+  const panel = $('t-owner-panel');
+  const s = await ownerState();
+  const playing = s.fighters.filter((f) => !f.benched).length;
+  const broadcast = s.here ? 'This screen is the broadcast.'
+    : s.seenAgo !== null && s.seenAgo < 45 ? `The broadcast is running on another screen (checked in ${s.seenAgo}s ago).`
+      : 'No broadcast is running. Open localhost:5173/?tournament on the Mac to run one.';
+  const canStart = !s.running && playing >= 2;
+  panel.innerHTML = `<div class="w-head">OWNER CONTROLS</div><div class="w-name">Tournament ${s.next}</div>`
+    + `<p class="w-style">${s.running ? `Tournament ${s.next - 1} is under way: changes apply to tournament ${s.next}.` : 'Choose who fights, then start it now. It opens with the announced weigh-in.'}</p>`
+    + s.fighters.map((f) => `<label class="o-row"><input type="checkbox" data-id="${esc(baseId(f.id))}" ${f.benched ? '' : 'checked'}`
+      + `${!f.benched && playing <= 2 ? ' disabled' : ''}><span>${dot(f.id)}${esc(f.name)}</span>`
+      + `<b class="${f.benched ? 'no' : f.updated ? 'ok' : 'wait'}">${f.benched ? 'benched' : f.updated ? `updated · #${f.weighIn}` : 'no update yet'}</b></label>`).join('')
+    + `<p class="w-files">${esc(broadcast)} At least two fighters must fight.</p>`
+    + `<div class="o-buttons"><button id="o-start" ${canStart ? '' : 'disabled'}>Start tournament ${s.next} now</button><button id="o-close">Close</button></div>`
+    + (ownerMsg ? `<p class="o-msg">${esc(ownerMsg)}</p>` : '');
+}
+
+async function saveLineup() {
+  const s = await ownerState();
+  const benched = [...$('t-owner-panel').querySelectorAll('input[data-id]')].filter((i) => !i.checked).map((i) => i.dataset.id);
+  const r = await ownerPost('/api/bench', { tournament: s.next, benched });
+  ownerMsg = r?.ok ? 'Lineup saved.' : 'Couldn\'t save: use the Mac, or the owner\'s link.';
+  if (r?.ok && tournament.waiting) await tournament.init();
+  renderOwner();
+}
+
+async function startEarly() {
+  const r = await ownerPost('/api/start-now', { note: 'Started early from the owner controls' });
+  if (!r?.ok) { ownerMsg = 'Couldn\'t start: use the Mac, or the owner\'s link.'; renderOwner(); return; }
+  $('t-owner-panel').classList.add('hidden');
+  if (tournament.startNow()) flash('Owner\'s call: the tournament starts now');
+  else flash('Owner\'s call sent: the broadcast starts within 30 seconds');
+}
+
 async function startTournament() {
   document.body.classList.add('tournament');
   ui.tournament.classList.remove('hidden');
@@ -406,6 +481,9 @@ async function startTournament() {
   }
   tournament = new Tournament(arenas, { flash, champion: announceChampion, weighIn: showWeighIn, waiting: showWaiting, announce, speak });
   if (import.meta.env.DEV) { window.__tournament = tournament; window.__arenas = arenas; }
+  // Let the owner controls know a real broadcast is running here.
+  if (!WATCH) { const beat = () => fetch('/api/heartbeat').catch(() => {}); beat(); setInterval(beat, 20000); }
+  setupOwnerControls();
   tournament.onChange(renderBroadcast);
   // Browsers block sound until someone taps the page; this button is that tap.
   $('t-sound').addEventListener('click', () => {
