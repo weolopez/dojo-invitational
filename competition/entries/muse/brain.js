@@ -37,12 +37,19 @@ export default function brain(state) {
   memory.coolUntil ??= 0;
   memory.lastFoeState ??= null;
   memory.foeThrewAt ??= -10;
+  // Round-timer reset (RULES v3.4): `time` restarts at 0 every round but
+  // `memory` lasts the whole match, so a cooldown set late in round 1
+  // (coolUntil > 30) would otherwise keep `ready` false for all of round 2,
+  // and a stale foeThrewAt would fake a whiff window at round start.
+  memory.lastTime ??= 0;
+  if (time < memory.lastTime) { memory.coolUntil = 0; memory.foeThrewAt = -10; }
+  memory.lastTime = time;
 
   if (me.state === 'ko' || foe.state === 'ko') return idle;
   if (me.state === 'hit' || me.state === 'attack') return idle;
 
   const hpDiff = me.hp - foe.hp;
-  const late = time > 42;
+  const late = time > 24; // final 6 s of a 30 s round (RULES §8); time restarts each round, so 42 never fired
   const protecting = late && hpDiff >= 10;   // ahead late: bank the lead
   const chasing = late && hpDiff <= -10;     // behind late: take risks
 

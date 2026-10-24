@@ -1,0 +1,60 @@
+<!doctype html><html><head><style>
+  html, body { margin: 0; padding: 0; background: #17150f; overflow: hidden; }
+  #out { display: none; }
+  canvas { display: block; }
+</style></head><body><pre id="out">LOADING</pre>
+<script type="importmap">{"imports":{"three":"/node_modules/three/build/three.module.js","three/addons/":"/node_modules/three/examples/jsm/"}}</script>
+<script type="module">
+import * as THREE from 'three';
+import { GLTFLoader } from 'three/addons/loaders/GLTFLoader.js';
+import { RoomEnvironment } from 'three/addons/environments/RoomEnvironment.js';
+const out = document.getElementById('out');
+try {
+  const renderer = new THREE.WebGLRenderer({ antialias: true, preserveDrawingBuffer: true });
+  renderer.setSize(1920, 1920);
+  renderer.toneMapping = THREE.ACESFilmicToneMapping;
+  renderer.toneMappingExposure = 1.05;
+  renderer.outputColorSpace = THREE.SRGBColorSpace;
+  document.body.appendChild(renderer.domElement);
+  const scene = new THREE.Scene();
+  scene.background = new THREE.Color(0x17150f);
+  const pmrem = new THREE.PMREMGenerator(renderer);
+  scene.environment = pmrem.fromScene(new RoomEnvironment(), 0.04).texture;
+  const gltf = await new GLTFLoader().loadAsync('fighter.glb');
+  const root = gltf.scene; scene.add(root);
+  const mixer = new THREE.AnimationMixer(root);
+  mixer.clipAction(gltf.animations.find(a => a.name === 'fighting_idle')).play();
+  mixer.update(1.2);
+  root.updateMatrixWorld(true);
+  // Framing is fixed from the verified dimensions of this fighter:
+  // bind height 1.88 m (validator), fighting_idle stands at the origin,
+  // feet at y=0, facing +Z (all confirmed visually in three.js).
+  const center = new THREE.Vector3(0, 0.94, 0);
+  const size = new THREE.Vector3(1.2, 1.85, 0.6);
+  const bb = { min: new THREE.Vector3(-0.6, 0, -0.3), max: new THREE.Vector3(0.6, 1.85, 0.3) };
+  const key = new THREE.DirectionalLight(0xfff1dd, 2.4); key.position.set(center.x - 2.5, center.y + 3.5, center.z + 3); scene.add(key);
+  const rim = new THREE.DirectionalLight(0xbcd2ff, 1.1); rim.position.set(center.x + 2.5, center.y + 2, center.z - 3); scene.add(rim);
+  const ground = new THREE.Mesh(new THREE.CircleGeometry(3.4, 48),
+    new THREE.MeshStandardMaterial({ color: 0x14120e, roughness: 0.95 }));
+  ground.rotation.x = -Math.PI / 2; ground.position.set(center.x, 0, center.z); scene.add(ground);
+  const cam = new THREE.PerspectiveCamera(38, 1, 0.05, 100); scene.add(cam);
+  const F = new THREE.Vector3(0, 0, 1);
+  const rotY = (v, deg) => v.clone().applyAxisAngle(new THREE.Vector3(0, 1, 0), THREE.MathUtils.degToRad(deg));
+  const headT = new THREE.Vector3(center.x, bb.max.y - size.y * 0.13, center.z);
+  const VIEWS = {
+    front:         { dir: F,            target: center, fitH: size.y * 1.18 },
+    three_quarter: { dir: rotY(F, 38),  target: center, fitH: size.y * 1.18 },
+    profile:       { dir: rotY(F, 90),  target: center, fitH: size.y * 1.18 },
+    closeup:       { dir: rotY(F, 16),  target: headT,  fitH: size.y * 0.34 },
+  };
+  window.__view = (name) => {
+    const v = VIEWS[name];
+    const d = (v.fitH / 2) / Math.tan(THREE.MathUtils.degToRad(cam.fov / 2));
+    cam.position.copy(v.target).addScaledVector(v.dir, d);
+    cam.lookAt(v.target);
+    renderer.render(scene, cam);
+    return true;
+  };
+  out.textContent = 'READY fixed-frame h=1.85';
+} catch (e) { out.textContent = 'ERROR ' + e.message; }
+</script></body></html>

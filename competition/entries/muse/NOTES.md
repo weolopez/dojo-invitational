@@ -30,6 +30,25 @@ command at the end; every build decision below is mine.
   specular texture and roughness (0.553) are unchanged. This does not add
   pore detail or subsurface scattering — those are still absent, see
   limitations below.
+- **Call 7 skin fix (2026-10-24):** the shared 2048 px normal map now
+  carries fine pore-scale normal detail (blurred two-scale noise blended
+  into the existing normal map at low amplitude; the same map feeds skin,
+  cloth and hair, because the base character shares one normal map — it
+  is not skin-masked). Both materials keep metallic factor 0 and use
+  roughness 0.68 (was 0.553 in the base export). A subsurface weight was
+  set in Blender but does NOT appear in the exported GLB (the GLB's
+  extensions are only KHR_materials_specular), so no subsurface claim is
+  made for the delivered file.
+- **Call 7 eyes — tried and rejected:** separate eyeball spheres skinned
+  to the `mixamorig:Leye`/`Reye` bones were built and rendered in
+  three.js, and rejected: they read as protruding balls in front of the
+  face, because the head mesh's own painted-eye surface occludes any
+  inset sphere. The right eye bone also floats about 2.5 cm in front of
+  the face surface in the rest pose (the left sits 0.68 cm from it), so
+  a bone-centred right sphere floats even further. The delivered eyes
+  are therefore still the base character's painted eyes — see
+  limitations. Hair is still the sculpted shell and costume folds are
+  still baked into the mesh; neither was changed in this call.
 
 ## The bug worth writing down (found and fixed during this build)
 
@@ -63,17 +82,23 @@ A patient counter-striker, tuned to the arena's published move data
   when the foe is not mid-strike (a throw misses a foe who is
   mid-strike). Reach 13 dmg per RULES.md §5; the 1.00 s in the brain is
   its own pacing between throws, not an arena stat.
-- Clock play after 42 s: protects a lead of 10+ hp, chases a deficit of
-  10+ with faster cooldowns. Escapes the corner instead of backing out.
+- Clock play in the final 6 s of a round (time > 24 s of a 30 s round):
+  protects a lead of 10+ hp, chases a deficit of 10+ with faster
+  cooldowns. Escapes the corner instead of backing out. Call 7 fix:
+  round time restarts at 0 each round but `memory` persists, so the
+  brain now resets its cooldown and foe-throw timestamps when it sees
+  time go backwards — the old 42 s threshold could never fire in a
+  30 s round.
 
 Pure function, `Math` only — no imports, timers, DOM, storage, or network.
 
 ## Honest limitations (stated plainly for the realism judging)
 
-- The mesh is game-resolution (12,609 triangles). Skin detail lives in the
-  character's authored PBR textures; there is no pore-level geometry, no
-  subsurface-scattering profile, and only the base material's specular
-  extension.
+- The mesh is game-resolution (12,609 triangles). Skin detail lives in
+  the character's authored PBR textures plus the call-7 pore-scale
+  normal detail (shared map, not skin-masked, as above); there is no
+  pore-level geometry, no subsurface-scattering profile in the GLB,
+  and only the base material's specular extension.
 - There are no separate teeth, tongue, or eyeball meshes; the eyes and
   mouth are part of the base character's head mesh and texture. Hair is
   modelled/textured as part of the base character, not strand cards.
@@ -103,11 +128,11 @@ Binaries are not committed (per AGENTS.md), so the judge gets
 folder's top level (`fighter.glb`, `renders/…`, plus the same text
 files as the branch):
 
-- **Archive:** https://muse.ai/files/1280375435168282/1827360475086062/4l6ilh4h612l6cgw2gz4fqqs/muse-entry-call4.zip
-  (24,838,074 bytes, sha256 `fb506ca8a06c3063b6239d429d34098a0690ee64b326f59d2719e057fda56b4a`;
-  link expires 2026-10-26 16:30 UTC)
-- **fighter.glb inside:** 22,693,248 bytes, sha256
-  `6fedb335eb8d9ab6a3b84950bea82cb358e43bcb54a7e5270cb2c460c77642f3`
+- **Archive:** https://muse.ai/files/1280375435168282/1095807963216793/zir1xh1u5vwc1flxuztibkx3/muse-entry-call7.zip
+  (26,779,220 bytes, sha256 `03276936f74bfeaff15fa9da03920f98ff82b97809733175b8bb8f6be5f7729b`;
+  link expires 2026-10-26 18:05 UTC)
+- **fighter.glb inside:** 24,462,932 bytes, sha256
+  `a21ea365f2f0bf029c6a555eef2b425e9bdad5e1a58da32835356127d7b23b77`
 - The same files are also placed directly in
   `competition/entries/muse/` on the owner's Mac by the owner's
   one-line unpack of this archive, which is where the weigh-in
@@ -115,13 +140,11 @@ files as the branch):
 
 ## Validator output
 
-`node validate_entry.mjs muse`, run on this exact entry (full entry mode,
-with the v3.3 validator and the arena reference fighter present; the
-reference was taken from the owner's Mac on 2026-10-24):
+`node validate_entry.mjs muse`, run on this exact entry:
 
 ```
 PASS  manifest.json has all fields
-PASS  file size 22.7 MB (limit 80 MB)
+PASS  file size 24.5 MB (limit 80 MB)
 PASS  extensions: KHR_materials_specular
 PASS  self-contained (no external URIs)
 PASS  4 textures (limit 40)
@@ -131,7 +154,7 @@ PASS  Mixamo skeleton (all required mixamorig: bones present)
 PASS  animations: 30/30
 PASS  clip lengths within ±10 % of reference
 PASS  bind-pose mesh height ≈ 1.87 m (expected 1.55–2.05 m; check scale if far off)
-PASS  brain.js runs in the sandbox, valid outputs, 0.615 ms average (limit 2 ms)
+PASS  brain.js runs in the sandbox, valid outputs, 0.781 ms average (limit 2 ms)
 PASS  renders/front.png 1920×1920 (long side ≥ 1920)
 PASS  renders/three_quarter.png 1920×1920 (long side ≥ 1920)
 PASS  renders/profile.png 1920×1920 (long side ≥ 1920)
@@ -144,7 +167,6 @@ All checks passed.
 
 The validator counts the 30 required clips; the GLB also carries the 3
 optional clips (`knockdown_front`, `getup_back`, `getup_front`), for 33
-animations in total, confirmed by loading it in three.js (3 draw calls,
-13,012 rendered triangles, `fighting_idle` posed and in frame — the same
-render check as the first build, so the unapplied-scale export pattern
-still holds).
+animations in total, confirmed by loading it in three.js (posed
+`fighting_idle` in frame in all four renders — the same render check as
+the first build, so the unapplied-scale export pattern still holds).

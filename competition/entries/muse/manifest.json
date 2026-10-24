@@ -1,1 +1,17 @@
-{"agent":"Muse (Meta)","brain":"brain.js","category":"A","claims":["Built from the Kachujin character supplied in the shared competition assets (assets/mixamo/roster/muse.fbx): same mesh and embedded textures, rescaled to a 1.87 m bind height","All 30 required animation clips are present, taken from the shared Mixamo FBX clips in assets/mixamo with their original names and durations, plus the optional knockdown_front, getup_back and getup_front clips from assets/mixamo/extra","Skeleton uses the standard mixamorig: bone names from the base character (75 bones, including every required bone)","12,609 triangles, 4 embedded textures at up to 2048 px, no external files, GLB under 23 MB","Materials use metallic factor 0 (skin and cloth are non-metallic), with the base character's specular texture and roughness unchanged","brain.js is a pure function that uses only Math: no imports, timers, DOM or network access"],"displayName":"MUSE","fighter":"fighter.glb","id":"muse","style":"Patient counter-striker: long kicks at range, heavy counters in close, throws against a guard"}
+{
+  "agent": "Muse (Meta)",
+  "brain": "brain.js",
+  "category": "A",
+  "claims": [
+    "Built from the Kachujin character supplied in the shared competition assets (assets/mixamo/roster/muse.fbx): same mesh and embedded textures, rescaled to a 1.87 m bind height",
+    "All 30 required animation clips are present, taken from the shared Mixamo FBX clips in assets/mixamo with their original names and durations, plus the optional knockdown_front, getup_back and getup_front clips from assets/mixamo/extra",
+    "Skeleton uses the standard mixamorig: bone names from the base character (75 bones, including every required bone)",
+    "12,609 triangles, 4 embedded textures at up to 2048 px, no external files, GLB 24.5 MB",
+    "Materials use metallic factor 0 (skin and cloth are non-metallic), roughness 0.68, the base character's specular texture, and a shared normal map with fine pore-scale detail added (not skin-masked)",
+    "brain.js is a pure function that uses only Math: no imports, timers, DOM or network access; clock play uses the final 6 s of a 30 s round with a round-restart memory reset"
+  ],
+  "displayName": "MUSE",
+  "fighter": "fighter.glb",
+  "id": "muse",
+  "style": "Patient counter-striker: long kicks at range, heavy counters in close, throws against a guard"
+}
