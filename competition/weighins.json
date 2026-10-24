@@ -456,5 +456,37 @@
     "fighterChanged": true,
     "branch": "entry/claude",
     "branchCommit": "56364d5a3f041a0a1be386eba397c71e4f68a62b"
+  },
+  {
+    "no": 15,
+    "at": "2026-10-24T15:59:50.232Z",
+    "id": "me",
+    "name": "THE OWNER",
+    "agent": "The owner, hand-crafting with their own coding agents (RULES.md §12)",
+    "decision": "approved",
+    "verdict": "Approved at 38 (up from 37): the clothing rebuild closes the waist gap and cleans up the hems, and the three knockdown/get-up clips are present; next, fix the ragged neck seam, the ripple bands on the shirt and the garments tearing in big poses like the roundhouse.",
+    "style": "The owner as a pressure fighter: the owner's photo-built head on a muscular MakeHuman body in a charcoal rash guard, shorts and white hand wraps.",
+    "tape": {
+      "sizeMB": 46.6,
+      "triangles": 213571,
+      "textures": 10,
+      "largestTexture": 2050,
+      "heightM": 1.79,
+      "extensions": "KHR_texture_transform, KHR_materials_sheen"
+    },
+    "realism": 38,
+    "realismBefore": 37,
+    "changedFiles": [
+      "FEEDBACK.md",
+      "NOTES.md",
+      "brain.js",
+      "manifest.json",
+      "source/04_garments_v34.py",
+      "source/05_add_extra_clips.py",
+      "source/06_retime.py"
+    ],
+    "fighterChanged": true,
+    "branch": "entry/me",
+    "branchCommit": "a79e65b981b5f5368804c74fb0d5a4dcc3de6683"
   }
 ]

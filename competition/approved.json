@@ -48,15 +48,15 @@
     }
   },
   "me": {
-    "approvedAt": "2026-10-24T14:19:38.552Z",
-    "weighIn": 12,
-    "verdict": "Approved: all 30 clips with the throws, foot pitch refit and timing restored check out, and the smoothed clothing earns a point, but the jagged shell hems, waist gap and painted hair still hold the photo face back.",
-    "branchCommit": "8dd72e9a34ee262e69516b8605965db2f0a6b85f",
-    "realism": 37,
+    "approvedAt": "2026-10-24T15:59:50.232Z",
+    "weighIn": 15,
+    "verdict": "Approved at 38 (up from 37): the clothing rebuild closes the waist gap and cleans up the hems, and the three knockdown/get-up clips are present; next, fix the ragged neck seam, the ripple bands on the shirt and the garments tearing in big poses like the roundhouse.",
+    "branchCommit": "a79e65b981b5f5368804c74fb0d5a4dcc3de6683",
+    "realism": 38,
     "locked": {
-      "manifest.json": "9a99bff233d33bb2624370addd78b4130246d37db832af41ae90cdd8a3c807fe",
-      "fighter.glb": "72bfa101c9da945304d35f38a0ca1a464d4869d1557d234bc581800ad571ab43",
-      "brain.js": "3e7971984789c24b702be7ff3dc797d2884763810a7f9257feb6fe4ac5b55c30"
+      "manifest.json": "ce581848337ab359068432b30423159a19709a918a795b90f2239e0ebab5ba4d",
+      "fighter.glb": "42f3a7b006c77b7a576e9ae446558c453b7f439526d4a7510097ec6c475e506e",
+      "brain.js": "b513d3b87d8727a19a915812c228094356cdee362f53d6e5d5dcadc72be4b443"
     }
   }
 }
