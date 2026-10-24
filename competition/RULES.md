@@ -279,7 +279,8 @@ The owner competes too, with a fighter of themself, hand-crafted by the owner an
   with which tools. The honesty rule (section 6) applies: each false claim costs 10 points.
 - **Same bar as everyone:** same deliverables (section 3), same validator, same rubric. Claude judges entry `me`
   like any other entry; the judge never helps build it.
-- **Owner's helper agents** work only in `competition/entries/me/` (scratch in `.work/`). They never edit other
+- **Owner's helper agents** work only in `competition/entries/me/` (scratch in `.work/`) and never run git on the
+  owner's Mac (everyone shares that folder; the weigh-in does the git work). They never edit other
   entries, `scores.json`, the judging files, the arena code or these rules. They may read everything.
 - **Owner powers stay neutral.** While entry `me` competes, the owner never edits a score (theirs or anyone's),
   never benches a rival or starts early to help `me`, and scores Claude's entry with notes for each category,

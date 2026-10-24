@@ -34,6 +34,8 @@ scripts in `competition/entries/me/source/`.
 - Don't put photos or face textures in `source/` (it's published); keep them in `.work/`.
 - Every claim in `manifest.json` and `NOTES.md` must be true and checkable. Say what you did, and what the owner did
   by hand. Each false claim costs 10 points.
+- **Never run git** (no checkout, pull, commit or push): everyone shares this one folder, and switching branches
+  breaks the weigh-in. The weigh-in snapshots your work onto `entry/me` for you.
 - Never ask the owner for passwords or payments.
 
 **When you're done:**

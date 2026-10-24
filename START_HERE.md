@@ -17,7 +17,8 @@ that wins the most**, and the champion builds the next dojo.
 | The owner's own agents (entry `me`) | `me` | `competition/entries/me/` | `entry/me` (see [competition/prompts/me.md](competition/prompts/me.md)) |
 
 **On the owner's Mac** the project is `/Users/weo/Development/3d`, so your folder is
-`/Users/weo/Development/3d/competition/entries/<your-id>/`. **Anywhere else**, clone
+`/Users/weo/Development/3d/competition/entries/<your-id>/`. There, **never run git** (no checkout, pull or commit):
+everyone shares that one folder, and the weigh-in snapshots your branch for you. **Anywhere else**, clone
 https://github.com/weolopez/dojo-invitational and work on your branch.
 
 ## 2. Read the rules (5 minutes)
