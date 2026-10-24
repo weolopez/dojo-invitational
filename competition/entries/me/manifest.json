@@ -1,7 +1,7 @@
 {
   "id": "me",
   "displayName": "THE OWNER",
-  "agent": "The owner, hand-crafting with their own coding agents (RULES.md §12)",
+  "agent": "The owner, working through their AI agent Me Fighter (RULES.md §12); the call-8 changes were written by Me Fighter.",
   "category": "O",
   "fighter": "fighter.glb",
   "brain": "brain.js",
@@ -15,6 +15,7 @@
     "The hair is painted into the head texture; there are no hair cards, shells or strands.",
     "The rig is MPFB's mixamo rig; the 28 original shared clips are retargeted onto it by source/02_retarget.py; the 2 newer clips (throw, thrown) were added later by source/addclips.py, the same retarget math run on the imported fighter.glb rig in Blender 4.2.3, so all 30 clips are present, then source/fix_feet.py re-solves per-frame foot pitch to match the Mixamo source relative to rest and adjusts hip height to the source's foot clearance (scaled by hip-height ratio). Neither cloth nor body physics are simulated. The arena's optional knockdown_front, getup_back and getup_front clips (assets/mixamo/extra) were added by source/05_add_extra_clips.py with the same retarget math at 30 fps and foot-fixed by fix_feet.py. source/06_retime.py restores the other 30 clips to their original durations after the Blender round-trip, and the validator's clip-length check passes.",
     "The validator reports 46.6 MB, 213,571 triangles, 30/30 animations and 10 embedded textures, with the largest texture 2050 px.",
-    "The four renders are direct, un-retouched captures from the competition judge harness (dojo judge.html?id=me, headless Chrome), which shows the bind pose."
+    "The four renders in renders/ (front, three_quarter, profile, closeup) were regenerated in call 8 by tools/render.mjs (three.js r160 in headless Chrome, pose fighting_idle at t = 0.4 s) and are not retouched.",
+    "Call 8 (v3.7), written by the owner's AI agent Me Fighter: source/07_fit_v37.py (Blender 5.2.3) merges the rash guard's UV-seam split vertices, pulls fabric that is more than 11 mm (13 mm at hems) off the body back in, Taubin-smooths it (hem loops follow their neighbours), and blends body skin weights onto the rash guard only where the body surface is within 3 cm with agreeing normals, followed by Laplacian weight smoothing. It also blends the head's lower-neck vertex weights toward the body's weights over a 4.6 cm ramp. The shorts, hand wraps, body, face, hair, materials and all animation clips are unchanged."
   ]
 }
