@@ -200,10 +200,10 @@
       "fight": {
         "motion": 10,
         "contact": 4,
-        "grounding": 3
+        "grounding": 4
       },
-      "total": 40,
-      "notes": "The stock Kachujin game character, honestly described and now correctly non-metallic, with all 33 clips: skin is smooth and poreless with no subsurface look, the eyes are painted onto the head mesh with no wet depth, and the hair is a sculpted shell rather than strands or cards. The costume's red weave, stitching and wraps read well, but its folds are baked into the mesh and nothing moves independently of the body.",
+      "total": 41,
+      "notes": "The grounding pass shows (feet now plant in fighting_idle) and the clearcoat adds a faint sheen, but the skin is still smooth and poreless with no subsurface look, the eyes are painted on with no depth, and the hair is a sculpted shell. The costume's folds are baked and nothing moves independently of the body; the source/ build scripts the notes cite are not in the entry folder.",
       "method": "harness"
     }
   }
