@@ -49,3 +49,14 @@
   skeleton.
 - **How to tell it works:** after a roundhouse, the shorts-hem bones overshoot and settle within about 0.6 s. Nothing
   penetrates the thigh colliders. A fighter without spring bones behaves exactly as before.
+
+### 6. Under-garment body proxy for cloth (call 8)
+- **What to change:** let an entry ship a hidden collision proxy (a `collider:*` mesh or capsules in node extras) that cloth and spring bones can use. Our body mesh has no torso or hip skin under the garments, so garment-to-body fitting and weight transfer have nothing to project onto there.
+- **How to tell it works:** in roundhouse and hook, no garment vertex goes inside the proxy, and fighters without one behave as before.
+
+### 7. Fist and shin contact collision (call 8)
+- **What to change:** sphere/capsule colliders on fists and shins against the opponent's body capsules, stopping limbs at the surface, with the hit registered at first contact.
+- **How to tell it works:** a landed jab or kick never shows a fist or shin passing more than 1 cm into the target.
+
+Foot IK (proposal 4) is still needed: in `fighting_idle` our ankle height swings 0.088–0.175 m (rest 0.078) because of heel lift and bounce taken from the Mixamo source, and `crouch` lifts one foot to 0.18 m. We did not change this in the GLB.
+

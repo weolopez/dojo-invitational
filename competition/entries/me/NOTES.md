@@ -7,7 +7,7 @@ folder; MPFB2, the MakeHuman assets and the Poly Haven fabrics were downloaded f
 `.work/`, and the scripts in `source/` were written for this entry.
 
 **Who did what:** the owner chose the approach (copy Grok's body, keep their own head, match the body skin to their
-face). The owner's coding agent (Claude Code, Opus 5.5) wrote and ran the scripts. No hand sculpting or painting.
+face). The owner's coding agent (Claude Code, Opus 5.5) wrote and ran the scripts up to call 7; the call-8 changes were written and run by the owner's AI agent Me Fighter. No hand sculpting or painting.
 
 ## Pipeline (`node tools/build.mjs`, then `node tools/render.mjs`)
 
@@ -238,6 +238,43 @@ PASS  animations: 30/30
 PASS  clip lengths within ±10 % of reference
 PASS  bind-pose mesh height ≈ 1.79 m (expected 1.55–2.05 m; check scale if far off)
 PASS  brain.js runs in the sandbox, valid outputs, 0.065 ms average (limit 2 ms)
+PASS  renders/front.png 1920×1080 (long side ≥ 1920)
+PASS  renders/three_quarter.png 1920×1080 (long side ≥ 1920)
+PASS  renders/profile.png 1920×1080 (long side ≥ 1920)
+PASS  renders/closeup.png 1920×1080 (long side ≥ 1920)
+PASS  NOTES.md present and filled in
+PASS  LICENSES.md present and filled in
+
+All checks passed.
+```
+
+## Call 8 (rules v3.7): fit and deformation pass, by the owner's AI agent Me Fighter
+
+**Changed** (`source/07_fit_v37.py`, Blender 5.2.3, run as `MIND=-1 GARMENTS=RashGuard HEADK=3`):
+- Rash guard: UV-seam vertices merged; fabric that sits more than 11 mm off the body (13 mm at hems) is pulled back in; the result is Taubin-smoothed, and the hem loops follow their neighbours. Body weights are blended in only where the body surface is within 3 cm and the normals agree, then the weights are smoothed. Result: a tighter shirt and less shoulder ballooning in the hook back view.
+- Neck: the head's lower-neck vertices (z between 1.538 and 1.584 m) blend their weights toward the body's weights. In a ±40° head turn and in `hit_head_big` with a forced spine twist and fold, the open crack seen before under the jaw is gone. What is left is stubble in the texture.
+- Renders: regenerated with `node tools/render.mjs`.
+
+**Tried and rejected:** pushing garments out of the body, and fitting or reskinning the shorts. The body has no torso or hip skin under the clothes, so both produced shredded, shiny shorts in the roundhouse. **The shorts are unchanged**, so their boxy shape and the hip split in the roundhouse remain.
+
+**Not changed:** face, head and hair (deliberately left unchanged; the hair is still painted into the texture), materials, hand wraps, body mesh, all 33 animation clips, foot planting, and brain.js. brain.js passes the v3.7 validator sandbox, but it was not re-tested in the arena. Stance feet still lift and bounce (`fighting_idle` ankle 0.088–0.175 m). That needs engine foot IK, which is proposed in FEEDBACK.md.
+
+**Tested:** offline three.js renders of idle, hook, roundhouse, hit_head_big, a ±40° head yaw and simulated spring-layer twist/fold, compared before and after; and the validator. **Not tested:** the live arena, the spring layer itself, and the arena's lent moves (takedown, sweep, spinkick, knee, lowkick, dodge) retargeted onto this rig.
+
+Validator output (call 8):
+```
+PASS  manifest.json has all fields
+PASS  file size 46.6 MB (limit 80 MB)
+PASS  extensions: KHR_texture_transform, KHR_materials_sheen
+PASS  self-contained (no external URIs)
+PASS  10 textures (limit 40)
+PASS  largest texture 2050 px (limit 4096)
+PASS  213,571 triangles (limit 250,000)
+PASS  Mixamo skeleton (all required mixamorig: bones present)
+PASS  animations: 30/30
+PASS  clip lengths within ±10 % of reference
+PASS  bind-pose mesh height ≈ 1.79 m (expected 1.55–2.05 m; check scale if far off)
+PASS  brain.js runs in the sandbox, valid outputs, 0.042 ms average (limit 2 ms)
 PASS  renders/front.png 1920×1080 (long side ≥ 1920)
 PASS  renders/three_quarter.png 1920×1080 (long side ≥ 1920)
 PASS  renders/profile.png 1920×1080 (long side ≥ 1920)

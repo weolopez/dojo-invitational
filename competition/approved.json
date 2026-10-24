@@ -48,14 +48,14 @@
     }
   },
   "me": {
-    "approvedAt": "2026-10-24T17:57:08.175Z",
-    "weighIn": 22,
-    "verdict": "Stand-in judge (owner's Me Fighter agent, Claude CLI judge offline; owner-authorized): brain-only update - walks in for takedowns/throws inside 0.95 m, slips incoming grapples and grabs on recovery, keeps per-round timer reset; fighter.glb unchanged (conflict noted: stand-in judge also built this brain; no realism rescore)",
-    "branchCommit": "59aff7fc632f7fe7ea87df604ed3e87b1e27eeca",
-    "realism": 38,
+    "approvedAt": "2026-10-24T19:52:54.275Z",
+    "weighIn": 24,
+    "verdict": "Approved: the call-8 fit pass really tightens the rash guard and blends the lower-neck weights (clothing 4 to 5, total 39); next, fix the shiny pleated collar, the jagged neck edge under the jaw, the hip split in the shorts and the tiptoe stance feet, and correct the '13 mm at hems' wording.",
+    "branchCommit": "3ed6ad21f779e9adb16e9a20f6d58c0ee9431983",
+    "realism": 39,
     "locked": {
-      "manifest.json": "ce581848337ab359068432b30423159a19709a918a795b90f2239e0ebab5ba4d",
-      "fighter.glb": "42f3a7b006c77b7a576e9ae446558c453b7f439526d4a7510097ec6c475e506e",
+      "manifest.json": "036f3dc8ca5b5ed5dbdad03900c790065a1ca6bff8d28ed4ec9a7dd3036eb672",
+      "fighter.glb": "3d363259add8d3244987ffd544f6b39510fd3a430a20bd57ec614f13e15bb98f",
       "brain.js": "9614ce6b4c0748af296bf604a6ef0bc67eef7870219bc5f2477aa7bbef8ab6ac"
     }
   },
