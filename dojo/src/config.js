@@ -39,10 +39,9 @@ export const MOVES = {
   throw: { clip: 'hook', dmg: 13, reach: 0.95, from: 0.3, to: 0.55, react: 'knocked_out', grab: true, timeScale: 0.7,
     paired: { clip: 'throw', react: 'thrown', from: 0.03, to: 0.14, timeScale: 1.25 } },
 };
-// Knockdowns: a clean power shot that leaves a fighter at or below this share of health (once per round) drops them
-// for `lie` seconds. Hooks and roundhouse kicks drop you on your front, the others on your back; you get up the way
-// you landed.
-export const KNOCKDOWN = { below: 0.3, lie: 2.0, moves: ['hook', 'uppercut', 'roundhouse', 'frontkick'], front: ['hook', 'roundhouse'] };
+// Knockdowns: which power shots can drop a fighter, and which of them drop you on your front (the others: your back).
+// You get up the way you landed. The health threshold and time on the mat are champion-tunable (realism.js).
+export const KNOCKDOWN = { moves: ['hook', 'uppercut', 'roundhouse', 'frontkick'], front: ['hook', 'roundhouse'] };
 
 export const MOVE_LABELS = { jab: 'Jab', cross: 'Cross', hook: 'Hook', uppercut: 'Uppercut', roundhouse: 'Roundhouse', frontkick: 'Front kick', throw: 'Throw' };
 

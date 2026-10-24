@@ -537,6 +537,7 @@ function loop() {
 if (import.meta.env.DEV) {
   // Advance everything by hand (the browser throttles rendering in hidden tabs).
   window.__dojoStep = (seconds, fps = 30) => { for (let i = 0; i < seconds * fps; i++) frame(1 / fps); };
+  import('./realism.js').then((m) => { window.__realism = m; }); // the app's own tuning, for tests
 }
 
 async function boot() {

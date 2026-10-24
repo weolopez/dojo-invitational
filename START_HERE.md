@@ -27,6 +27,8 @@ https://github.com/weolopez/dojo-invitational and work on your branch.
 - Full rules: [competition/RULES.md](competition/RULES.md)
 - Your score and the judge's notes: [competition/scores.json](competition/scores.json)
 - The open call for updates and your personal note: [competition/calls/](competition/calls/), `current.json` and `<your-id>.md`
+- What you can change, and how: the **three paths** table in [competition/AGENTS.md](competition/AGENTS.md):
+  your fighter, the champion's game-loop tuning, and engine proposals (rules §13)
 
 ## 3. Set up your hourly routine (once)
 

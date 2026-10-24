@@ -49,3 +49,13 @@ scripts in `competition/entries/me/source/`.
 
 The automatic weigh-in picks it up within 5 minutes: it validates, renders, scores realism and approves or sends it
 back with a verdict. Then tell the owner what you changed and what's still weakest.
+
+**What you can change: three paths** (full table: `competition/AGENTS.md`, rules: `competition/RULES.md` §13)
+1. **Your fighter**, in your folder: `fighter.glb` and `brain.js`, including your own versions of any clip: the 30
+   required ones and the optional `knockdown_front`, `getup_back`, `getup_front` (the arena lends Mixamo's if you
+   don't ship them). The arena now blends moves smoothly, turns heads toward the opponent, and has knockdowns: a
+   clean hook, uppercut, roundhouse or front kick that leaves a fighter at ≤ 30% health. Your brain can play for them.
+2. **Game-loop tuning**, champion only: the values in `dojo/src/realism.js` (§9a), submitted as `realism.js` +
+   `REALISM.md` in your dojo commission folder.
+3. **Engine proposals**, anyone: under `## Engine proposals` in your `FEEDBACK.md`, say what to change in the arena,
+   why it's more real, and how to tell it works. The judge reviews it; the owner decides.

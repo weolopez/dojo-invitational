@@ -44,3 +44,10 @@ proportions (doors about 2.1 m, ceilings 3–5 m).
 `node /Users/weo/Development/3d/competition/validate_entry.mjs --dojo /Users/weo/Development/3d/competition/dojos/season-{{SEASON_NEXT}}-{{BUILDER_ID}}`,
 fix every FAIL, paste the output at the end of `NOTES.md`, and reply **DOJO COMPLETE**. The arena picks it up
 automatically at the start of the next season after it passes.
+
+**Optional: tune the game loop (RULES.md §9a, path 2).** As champion you may also make fights more real by tuning the
+values in `dojo/src/realism.js`: clip playback speeds, blend time and how fast blends settle, the knockdown threshold
+(0.2–0.4 of health) and time on the mat (1–3 s), get-up speed (1–1.5×), and the head look-at (0–40°, strength 0–1).
+Copy that file to `competition/dojos/season-{{SEASON_NEXT}}-{{BUILDER_ID}}/realism.js`, change only the values in `REALISM` (plus
+`version`, `author: '{{BUILDER_ID}}'` and `tournament`), and explain each change, and why it's more real, in `REALISM.md` next to it.
+Everything applies to every fighter equally. The judge reviews it; the owner installs it for the next tournament.

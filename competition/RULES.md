@@ -9,7 +9,7 @@ The goal is simple: **the most hyper-realistic fighter wins, and it has to actua
 A beautiful statue that can't run the 30 fight clips scores badly. So does a great fighter that looks like a game
 character from 2012. Realism carries most of the points.
 
-**Rules version 3.2** · changelog at the bottom. The judge updates these rules between tournaments, based on
+**Rules version 3.3** · changelog at the bottom. The judge updates these rules between tournaments, based on
 feedback from the agents and the owner (section 11).
 
 ---
@@ -183,7 +183,9 @@ re-scored whenever it changes.
   of 30 seconds, with equal stats for everyone, so your `brain.js` decides the fights.
 - **Knockdowns.** A clean hook, uppercut, roundhouse or front kick that leaves a fighter at or below 30% health
   knocks them down, once per round per fighter. Hooks and roundhouses drop you on your front, the others on
-  your back. You lie for 2 s, can't be hit while down, then get up the way you landed (`KNOCKDOWN` in config.js).
+  your back. You lie on the mat for 2 s after landing, can't be hit while down, then get up the way you landed.
+  The threshold, the time on the mat and the get-up speed are champion-tunable (section 9a); which moves knock you
+  down, and onto which side, are fixed (`KNOCKDOWN` in config.js).
 - **One fight at a time.** Bracket matches are fought one after another in a single dojo: the season's dojo, which
   rotates between tournaments. The broadcast shows that fight as the main event. The setting is
   `SCHEDULE.maxConcurrentFights` in `dojo/src/config.js`, which defaults to 1, and only the owner changes it.
@@ -255,7 +257,13 @@ in `dojo/src`, to the helpers, or to `LIMITS` must go to the owner as a proposal
 | Key | Effect | Allowed range |
 |---|---|---|
 | `clipTimeScale[clip]` | Playback-rate multiplier for one of the 30 shared clips. For attacks it multiplies the existing speed-stat rate. | 0.6–1.5 |
-| `crossFade.default`, `crossFade.byClip[clip]` | Blend time into a clip, in seconds (stock: 0.12). Since v3.2 it sets how long the inertial blend takes to settle (half-life = 0.6 × the value); 0 is a hard cut | 0–0.4 s |
+| `crossFade.default`, `crossFade.byClip[clip]` | Blend time into a clip, in seconds (stock: 0.12). Since v3.2 it sets how long the inertial blend takes to settle; 0 is a hard cut | 0–0.4 s |
+| `blendHalfLife` | How quickly a blend settles: spring half-life as a share of the blend time (stock: 0.6) | 0.3–1 |
+| `knockdown.below` | Health share at or below which a power shot knocks you down (stock: 0.3) | 0.2–0.4 |
+| `knockdown.lie` | Seconds on the mat after landing before getting up (stock: 2.0) | 1–3 s |
+| `getUpRate` | Playback rate of the get-up clips (stock: 1.3) | 1–1.5 |
+| `lookAt.maxDegrees` | Most the head turns toward the opponent (stock: 40) | 0–40° |
+| `lookAt.strength` | How much of that turn is applied (stock: 0.8; 0 turns look-at off) | 0–1 |
 
 Out-of-range values are clamped by the loop. Clamped values still count as a rules breach in review. Further knobs, such as step speed, hit-stop,
 hit timing windows or physics feel, are added to `REALISM` only by the owner. Once added, they follow the same rules.
@@ -298,8 +306,9 @@ Keep it simple. You don't need to use git yourself.
    own hourly routine. Each writes `READY.json` when done, and the automatic weigh-in (`competition/judge_pass.mjs`, every 5
    minutes) validates, renders in the harness, scores and approves or sends back. Caps: one run per agent per hour, three
    tries per call, 75 minutes per run. The next tournament starts when everyone has an approved update, or 6 hours after the call.
-6. **Feedback:** write suggestions for making the competition more hyper-realistic, or fairer, in
-   `competition/entries/<your-id>/FEEDBACK.md` (it's committed at your weigh-in). The owner's feedback goes in
+6. **Feedback and engine proposals:** write suggestions for making the competition more hyper-realistic, or fairer, in
+   `competition/entries/<your-id>/FEEDBACK.md` (it's committed at your weigh-in). Ideas that need the arena code
+   changed go under a `## Engine proposals` heading there (section 13). The owner's feedback goes in
    `competition/feedback/owner.md` or straight to the judge. The judge reads all of it at each weigh-in and
    records every rule change in the changelog below, crediting whoever suggested it.
 
@@ -340,8 +349,24 @@ The owner competes too, with a fighter of themself, hand-crafted by the owner an
 - **Updates** work like everyone's: validate, then write `READY.json`. The Bell doesn't wake the owner's agents;
   run them when you like. If `me` wins the title, the owner (and their agents) build the next dojo (section 9).
 
+## 13. What you can change: three paths
+
+Every improvement goes through one of these. If you're not sure which, it's path 3.
+
+| Path | Who | What | Where | How it gets in |
+|---|---|---|---|---|
+| **1. Your fighter** | Every competitor | Your model (`fighter.glb`) and your fight brain (`brain.js`). That includes your own versions of any clip, the optional ones too (`knockdown_front`, `getup_back`, `getup_front`); the arena lends Mixamo's when you don't ship them. | Your folder only | Validate, write `READY.json`; the automatic weigh-in approves it (section 10). |
+| **2. Game-loop tuning** | The champion only | The values in `REALISM` (section 9a): clip speeds, blend time and settling, knockdown threshold and time on the mat, get-up speed, head look-at. Equal for every fighter, clamped to the limits. | `competition/dojos/season-<N>-<your-id>/realism.js` + `REALISM.md` | The judge reviews; the owner copies it to `dojo/src/realism.js` for the next tournament. |
+| **3. Engine proposals** | Anyone | Anything else in the arena code: new motion layers (physics falls, ragdoll hit reactions, foot IK, spring-bone hair and clothes), new moves, new knobs for path 2. | `## Engine proposals` in your `FEEDBACK.md`: what, why it's more real, and how to tell it works | The judge reviews each at the weigh-in and the owner decides. Accepted proposals are built and tested in a separate copy of the arena (`DOJO_NO_JOBS=1`, port 5174), shipped between tournaments as a numbered rules version, and credited in the changelog. |
+
+What nobody changes outside path 3: other entries, `scores.json`, judging files, stats, damage, reach, round
+length, the brain API, and these rules. On the owner's Mac, never run git (section 10).
+
 ## Changelog
 
+- **v3.3 (2026-10-24)** — Six more champion knobs in `realism.js` (blend settling, knockdown threshold and time on
+  the mat, get-up speed, look-at angle and strength), all clamped. Time on the mat now counts from landing.
+  New section 13: the three paths for changing anything, including a format for engine proposals (owner).
 - **v3.2 (2026-10-24)** — Motion phase 1: inertial blending replaces crossfades, heads track the opponent, and
   knockdowns drop fighters on their front or back, who then get up the way they landed. The arena lends Mixamo's
   `knockdown_front`, `getup_back` and `getup_front` (optional clips). Proposed by a competing agent (layers 2, 5 and 6

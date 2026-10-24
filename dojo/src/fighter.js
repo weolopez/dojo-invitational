@@ -1,6 +1,6 @@
 // A fighter in one arena: model, animation, moves, hit handling and per-match stats.
 import * as THREE from 'three';
-import { clipRate, crossFadeFor, hasClipRate } from './realism.js';
+import { clipRate, crossFadeFor, getUpRate, hasClipRate, knockdownBelow, knockdownLie } from './realism.js';
 import * as SkeletonUtils from 'three/addons/utils/SkeletonUtils.js';
 import { KNOCKDOWN, MOVES } from './config.js';
 import { Inertializer, LookAt } from './motion.js';
@@ -71,6 +71,8 @@ export class Fighter {
     // Measured in the rest pose (model space, facing +Z): which way the hips bone's front points, to tell face up
     // from face down after a fall.
     this.model.updateMatrixWorld(true);
+    // Standing hips height, to tell when a falling fighter has reached the mat.
+    this.standHips = this.bones.hips ? this.bones.hips.getWorldPosition(new THREE.Vector3()).y : 1;
     if (this.bones.hips) {
       this.hipsFront = new THREE.Vector3(0, 0, 1).applyQuaternion(this.bones.hips.getWorldQuaternion(new THREE.Quaternion()).invert());
     }
@@ -95,6 +97,8 @@ export class Fighter {
     this.hitLanded = false;
     this.whiffAt = null;
     this.downed = false;
+    this.landedAt = null;
+    this.downSince = null;
     this.knockedDown = false; // once per round
     this.cooldown = 0;
     this.combo = 0;
@@ -212,7 +216,7 @@ export class Fighter {
       fx.shake(0.12);
       return;
     }
-    if (KNOCKDOWN.moves.includes(move.name) && !this.knockedDown && this.hp / this.maxHp <= KNOCKDOWN.below) {
+    if (KNOCKDOWN.moves.includes(move.name) && !this.knockedDown && this.hp / this.maxHp <= knockdownBelow()) {
       // Knockdown: down on the mat, then up again the way you landed (onClipFinished).
       this.knockedDown = true;
       this.downed = true;
@@ -238,11 +242,9 @@ export class Fighter {
   }
 
   onClipFinished() {
-    if (this.state === 'hit' && this.downed && !this.gettingUp) {
-      this.getUp();
-      return;
-    }
-    if (this.gettingUp) { this.gettingUp = false; this.downed = false; }
+    // A fall that ends stays on its last frame: the get-up starts once the fighter has lain long enough (animate).
+    if (this.state === 'hit' && this.downed && !this.gettingUp) return;
+    if (this.gettingUp) { this.gettingUp = false; this.downed = false; this.landedAt = null; this.downSince = null; }
     if (['attack', 'hit', 'taunt'].includes(this.state)) {
       this.state = 'idle';
       this.cooldown = 0.12;
@@ -254,7 +256,7 @@ export class Fighter {
   getUp() {
     this.gettingUp = true;
     const clip = this.fade(this.faceUp() ? 'getup_back' : 'getup_front', true) ?? this.fade('getting_up', true);
-    if (clip) clip.timeScale = 1.3;
+    if (clip) clip.timeScale = getUpRate();
   }
 
   /** input: {fwd, back, block} booleans. */
@@ -321,9 +323,14 @@ export class Fighter {
 
   /** Clips, then inertial blending, then the head turning to the opponent. */
   animate(dt, opponent) {
-    // A knockdown fall keeps lying in its clip for a long time; get up after KNOCKDOWN.lie seconds on the mat.
-    if (this.downed && !this.gettingUp && this.state === 'hit' && ['knocked_out', 'knockdown_front'].includes(this.current?.getClip().name)
-      && this.current.time > KNOCKDOWN.lie) this.getUp();
+    // Down: get up once the hips have been on the mat for the tuned time (realism.js knockdown.lie).
+    if (this.downed && !this.gettingUp && this.state === 'hit' && this.bones.hips) {
+      this.downSince ??= this.arena.clock;
+      const low = this.bones.hips.getWorldPosition(new THREE.Vector3()).y < this.standHips * 0.4;
+      // (A fall that never reaches the mat, say a badly lent clip, still ends after 4 s.)
+      if (this.landedAt === null && (low || this.arena.clock - this.downSince > 4)) this.landedAt = this.arena.clock;
+      if (this.landedAt !== null && this.arena.clock - this.landedAt > knockdownLie()) this.getUp();
+    }
     this.mixer.update(dt);
     this.inertia.apply(dt, this.root);
     this.inertia.record(this.root);

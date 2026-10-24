@@ -1,10 +1,10 @@
 // Motion layers that run on top of the clips every frame (RULES.md §4): inertial blending and head look-at.
 import * as THREE from 'three';
+import { blendHalfLife, lookAtMax, lookAtStrength } from './realism.js';
 
-// How fast the leftover of a clip switch fades: a critically damped spring whose half-life is 0.6 × the blend time
-// (realism.js crossFade; the stock 0.12 s gives 72 ms). A blend time of 0 is a hard cut.
-const HALF_LIFE_PER_BLEND = 0.6;
-const dampingFor = (blend) => (2 * Math.LN2) / Math.max(1e-3, blend * HALF_LIFE_PER_BLEND);
+// How fast the leftover of a clip switch fades: a critically damped spring whose half-life is a share of the blend
+// time (realism.js crossFade and blendHalfLife; stock 0.12 s × 0.6 = 72 ms). A blend time of 0 is a hard cut.
+const dampingFor = (blend) => (2 * Math.LN2) / Math.max(1e-3, blend * blendHalfLife());
 const FORWARD = new THREE.Vector3(0, 0, 1); // fighters face +Z in their own model space (RULES.md §4)
 const IDENTITY = new THREE.Quaternion();
 
@@ -124,7 +124,7 @@ export class Inertializer {
   }
 }
 
-/** Turns the head towards the opponent's head, up to 40°, fading in and out with the fighter's state. */
+/** Turns the head towards the opponent's head (realism.js lookAt), fading in and out with the fighter's state. */
 export class LookAt {
   constructor(model) {
     model.traverse((o) => { if (o.isBone && /Head$/.test(o.name)) this.head = o; });
@@ -144,8 +144,8 @@ export class LookAt {
     const to = target.clone().sub(this.head.getWorldPosition(new THREE.Vector3())).normalize();
     const turn = new THREE.Quaternion().setFromUnitVectors(from, to);
     const angle = 2 * Math.acos(THREE.MathUtils.clamp(Math.abs(turn.w), 0, 1));
-    const limit = THREE.MathUtils.degToRad(40);
-    const amount = (angle > limit ? limit / angle : 1) * this.weight * 0.8;
+    const limit = lookAtMax();
+    const amount = limit <= 0 ? 0 : (angle > limit ? limit / angle : 1) * this.weight * lookAtStrength();
     const world = IDENTITY.clone().slerp(turn, amount).multiply(hq);
     const parent = this.head.parent.getWorldQuaternion(new THREE.Quaternion()).invert();
     this.head.quaternion.copy(parent.multiply(world));
