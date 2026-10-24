@@ -186,7 +186,7 @@
         "grounding": 3
       },
       "total": 38,
-      "notes": "Unchanged model: the photo-textured face is still the most real in the field, but the eyes are downcast, the hair is painted on, the head-to-neck seam is ragged, and the shirt shows horizontal ripple bands with an off-shoulder neckline over boxy shorts that split at the hip in the roundhouse. The new brain (round-timer reset, step-in throws, hook/roundhouse finisher) matches its description but changes nothing the realism rubric sees.",
+      "notes": "Unchanged model (fighter.glb hash matches the approved lock): the photo-textured face is still the most real in the field, but the eyes are downcast, the hair is painted on, the head-to-neck seam is ragged, and the off-shoulder shirt with ripple bands over boxy shorts that split at the hip in the roundhouse holds it back. The new counter-grappling brain (blocks, slips, takedowns, throws) matches its description but changes nothing the realism rubric sees.",
       "method": "harness"
     },
     "entry:muse": {
