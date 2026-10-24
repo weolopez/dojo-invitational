@@ -6,9 +6,10 @@
     "Built from the Kachujin character supplied in the shared competition assets (assets/mixamo/roster/muse.fbx): same mesh and embedded textures, rescaled to a 1.87 m bind height",
     "All 30 required animation clips are present, taken from the shared Mixamo FBX clips in assets/mixamo with their original names and durations, plus the optional knockdown_front, getup_back and getup_front clips from assets/mixamo/extra",
     "Skeleton uses the standard mixamorig: bone names from the base character (75 bones, including every required bone)",
-    "12,609 triangles, 4 embedded textures at up to 2048 px, no external files, GLB 24.5 MB",
-    "Materials use metallic factor 0 (skin and cloth are non-metallic), roughness 0.68, the base character's specular texture, and a shared normal map with fine pore-scale detail added (not skin-masked)",
-    "brain.js is a pure function that uses only Math: no imports, timers, DOM or network access; clock play uses the final 6 s of a 30 s round with a round-restart memory reset"
+    "12,609 triangles, 5 embedded textures at up to 2048 px, no external files, GLB under 27 MB",
+    "Materials: metallic factor 0 with a metallic-roughness texture (skin roughness ~0.60, cloth ~0.85, hair ~0.46; the gold ornaments metallic at roughness 0.34); the painted-eye regions use roughness 0.07 so the eyes take a wet specular highlight; the base character's specular texture is unchanged",
+    "The normal map is the base character's own, blended with procedural micro-detail masked from the character's diffuse (pore speckle on skin, weave on cloth, strand grooves on hair); no pore geometry or subsurface scattering is claimed",
+    "brain.js is a pure function that uses only Math: no imports, timers, DOM or network access; it resets its round-time cooldowns when time restarts at a new round (RULES v3.4 round-timer trap), and at foe hp <= 30 it hunts the knockdown with the four knockdown strikes (hook, uppercut, roundhouse, front kick)"
   ],
   "displayName": "MUSE",
   "fighter": "fighter.glb",

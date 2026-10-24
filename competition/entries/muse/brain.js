@@ -5,8 +5,12 @@
 //
 // Style: disciplined counter-striker. Fight at the edge of roundhouse range,
 // block what can hurt, punish whiffs and hit-stuns, and manage the clock:
-// protect a lead late, chase a deficit late. Stats are equal for everyone,
-// so this brain is the whole edge.
+// protect a lead late, chase a deficit late. Call 7 adds knockdown play:
+// when the foe is at 30 hp or less, a clean hook, uppercut, roundhouse or
+// front kick knocks them down (RULES v3.3), so offence switches to those
+// finishers; and in throw range it steps out instead of waiting in reach
+// of the foe's unblockable throw. Stats are equal for everyone, so this
+// brain is the whole edge.
 
 const MOVES = {
   jab:        { dmg: 5,  reach: 1.25, cool: 0.55 },
@@ -20,6 +24,9 @@ const MOVES = {
   // pacing between throws, not an arena stat.
   throw:      { dmg: 13, reach: 0.95, cool: 1.00 },
 };
+
+// The four strikes that score a knockdown on a foe at <= 30 hp.
+const FINISHERS = ['hook', 'uppercut', 'roundhouse', 'frontkick'];
 
 function pickWeighted(table) {
   let total = 0;
@@ -52,6 +59,7 @@ export default function brain(state) {
   const late = time > 24; // final 6 s of a 30 s round (RULES §8); time restarts each round, so 42 never fired
   const protecting = late && hpDiff >= 10;   // ahead late: bank the lead
   const chasing = late && hpDiff <= -10;     // behind late: take risks
+  const foeFragile = foe.hp <= 30;           // one clean finisher = knockdown
 
   // Remember when the foe starts an attack so we can punish the recovery.
   if (foe.state === 'attack' && memory.lastFoeState !== 'attack') memory.foeThrewAt = time;
@@ -93,6 +101,14 @@ export default function brain(state) {
     if (distance <= 1.65) return attack(pickWeighted([['roundhouse', 4], ['frontkick', 4]]));
   }
 
+  // ---- Knockdown play: the foe is fragile, hunt the four finishers ----
+  if (foeFragile && ready && foe.state !== 'attack') {
+    if (distance <= 1.06) return attack(pickWeighted([['uppercut', 5], ['hook', 4]]));
+    if (distance <= 1.16) return attack(pickWeighted([['hook', 5], ['uppercut', 3]]));
+    if (distance <= 1.52) return attack(pickWeighted([['frontkick', 4], ['roundhouse', 3]]));
+    if (distance <= 1.62) return attack(pickWeighted([['roundhouse', 5], ['frontkick', 2]]));
+  }
+
   // ---- Corner escape: never keep backing into the wall ----
   const cornered = Math.abs(me.x) > 3.55;
 
@@ -124,6 +140,11 @@ export default function brain(state) {
   if (ready) {
     if (distance <= 0.95 && foe.state !== 'attack' && Math.random() < 0.2) return attack('throw');
     return attack(pickWeighted([['hook', 4], ['uppercut', 4], ['cross', 2], ['jab', 1]]));
+  }
+  // Not ready and inside the foe's throw reach: step out of 0.95 m rather
+  // than wait in range of an unblockable throw (unless cornered).
+  if (distance <= 0.95 && !cornered) {
+    return { move: null, fwd: false, back: Math.random() < 0.65, block: false };
   }
   return { move: null, fwd: false, back: !cornered && Math.random() < 0.4, block: false };
 }
