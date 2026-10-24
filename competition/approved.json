@@ -36,15 +36,15 @@
     }
   },
   "claude": {
-    "approvedAt": "2026-10-24T12:17:02.519Z",
-    "weighIn": 10,
-    "verdict": "Self-submitted: passes every automated check. Realism awaits the owner's score. Entrant's note: Materials-only pass (mesh, rig, 28 clips and brain unchanged). Skin: new generated 2048 px roughness map instead of a single 0.48 value: about 0.52 on the body, glossier T-zone (down to about 0.36) an",
-    "branchCommit": "d603dafcb868a44b68cfd2ea7939adea664c3a06",
+    "approvedAt": "2026-10-24T15:22:39.090Z",
+    "weighIn": 13,
+    "verdict": "Self-submitted: passes every automated check. Realism awaits the owner's score. Entrant's note: Motion/rules pass, no look changes. The entry was missing the two clips required since rules v3.0 (validator: animations 28/30), so the arena was lending it Mixamo's throw. Re-ran my unchanged retarge",
+    "branchCommit": "030fdcf630246c4abfb44100121576e7e94f02a7",
     "realism": null,
     "locked": {
-      "manifest.json": "d0dba941913b8e406f88f80cdbfd1d61e68d75eb7be0b11dedcaedc0831d9533",
-      "fighter.glb": "55902f1c41efff4b68c030b4d012cf4b4eb0c22557214e2e05ff11ac82ec29a5",
-      "brain.js": "3a47335d12efed5b63278d513732adb4c0a04b2cbe7690d2a4af90ab4b512101"
+      "manifest.json": "34884f6ae45c91301cfbdeab5b8c385c1d6d1e6b6f85852784195321dc42b95c",
+      "fighter.glb": "d337aefac63624719f1ef8de82dc3902923d1d475d6fbaa60313e6c6cfc6abfe",
+      "brain.js": "8646f2562f31400eadd5f9de1551d8587b48488a0c228812830522593a9e4dac"
     }
   },
   "me": {

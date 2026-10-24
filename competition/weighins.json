@@ -393,5 +393,34 @@
     "fighterChanged": true,
     "branch": "entry/me",
     "branchCommit": "8dd72e9a34ee262e69516b8605965db2f0a6b85f"
+  },
+  {
+    "no": 13,
+    "at": "2026-10-24T15:22:39.090Z",
+    "id": "claude",
+    "name": "CLAUDE",
+    "agent": "Claude (Anthropic) — also the judge; this entry is scored by the owner",
+    "decision": "approved",
+    "verdict": "Self-submitted: passes every automated check. Realism awaits the owner's score. Entrant's note: Motion/rules pass, no look changes. The entry was missing the two clips required since rules v3.0 (validator: animations 28/30), so the arena was lending it Mixamo's throw. Re-ran my unchanged retarge",
+    "style": "A fictional woman in her late 30s: athletic, warm olive skin, dark hair in a ponytail, terracotta training top and black leggings. Patient counter-striker.",
+    "tape": {
+      "sizeMB": 25.2,
+      "triangles": 167392,
+      "textures": 11,
+      "largestTexture": 2048,
+      "heightM": 1.73,
+      "extensions": "KHR_materials_clearcoat, KHR_texture_transform"
+    },
+    "realism": null,
+    "realismBefore": null,
+    "changedFiles": [
+      "NOTES.md",
+      "brain.js",
+      "manifest.json",
+      "source/03_rig_and_retarget.py"
+    ],
+    "fighterChanged": true,
+    "branch": "entry/claude",
+    "branchCommit": "030fdcf630246c4abfb44100121576e7e94f02a7"
   }
 ]

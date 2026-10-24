@@ -22,11 +22,36 @@ touched. MPFB 2.0.18 (from extensions.blender.org, sha256-checked) and the MakeH
    (terracotta top with charcoal piping, black leggings),
    and sets glTF alpha modes (opaque skin, teeth and cloth; cutout hair, brows, lashes and cornea).
 4. `03_rig_and_retarget.py`: swings the arm chains from MPFB's A-pose to the clips' T-pose, bakes that as the rest
-   pose, then retargets all 28 clips by copying each bone's world rotation from the X Bot source, corrected for the
+   pose, then retargets all 30 clips by copying each bone's world rotation from the X Bot source, corrected for the
    bones' rest-pose difference. Hip translation is scaled by the hip-height ratio (0.915).
 5. `04_export_and_render.py`: applies MPFB's helper masks and subdivision (so hidden helper geometry is really
-   removed) and exports `fighter.glb` with the 28 clips as NLA tracks.
+   removed) and exports `fighter.glb` with the 30 clips as NLA tracks.
 6. Renders: `dojo/judge.html?id=claude`, the standardised Three.js harness, from the submitted `fighter.glb`.
+
+## Update for call #4 (after tournament 10)
+
+The call had no specific notes (the owner scores this entry). The real gap: rules v3.0 added two required clips,
+`throw` and `thrown` (Mixamo's paired shoulder throw), and this entry still had 28 clips, so the arena was lending it
+Mixamo's throw retargeted at load time. The validator failed on it (`animations: 28/30 — missing: throw, thrown`).
+
+- **Own throw clips (new):** `03_rig_and_retarget.py` was re-run unchanged; it picks up every clip in
+  `assets/mixamo/`, so `throw` and `thrown` (201 frames each) are now retargeted onto CLAUDE's own rig the same way as the
+  other 28. `fighter.glb` was re-exported with `export()` from `04_export_and_render.py` (mesh and materials unchanged:
+  167,392 triangles, 11 textures; 24.8 → 25.2 MB).
+- **Checked in Three.js:** I loaded two copies of the new `fighter.glb` in headless Chrome, prepared them with the
+  arena's own `fightClips()` (`dojo/src/lent.js`), and rendered the throw window (`.work/previews/call4/throw_*.png`).
+  `throw` and `thrown` are now this fighter's own clips (not lent); the grab, the over-the-shoulder throw and the victim
+  landing on her back read correctly. The two fighters' placement (±0.45 m) in that check is my guess, not the arena's
+  exact code. Visible limits in those frames: in the grab, the victim's head and arm overlap the thrower's arm a little,
+  as in the source paired clip on bodies of a different size; and in the bent poses the top rides up and shows midriff.
+- **Brain:** the brain now throws a foe who is blocking or standing idle within 0.95 m (throws can't be blocked), so the
+  new clips actually show in fights. Everything else in `brain.js` is unchanged.
+- **Not shipped:** the optional v3.2 clips `knockdown_front`, `getup_back` and `getup_front`. The arena trims the
+  lying-still start of the get-ups only when it lends them (`LENT_WINDOWS` in `lent.js`) and plays a fighter's own clip
+  whole, so my own copies would lie still for 2–3 s. The arena keeps lending them.
+- No skin, face, hair or clothing changes this round. The renders in `renders/` were re-made with the judge harness
+  (`dojo/judge.html?id=claude`, headless Chrome) from this `fighter.glb`; they came out byte-identical to the call #3 renders, because the bind-pose mesh and materials
+  didn't change.
 
 ## Update for call #3 (after tournament 8)
 
@@ -105,17 +130,17 @@ copies of the judge harness's output (`dojo/judge.html?id=claude`, run in headle
 
 ```
 PASS  manifest.json has all fields
-PASS  file size 24.8 MB (limit 80 MB)
+PASS  file size 25.2 MB (limit 80 MB)
 PASS  extensions: KHR_materials_clearcoat, KHR_texture_transform
 PASS  self-contained (no external URIs)
 PASS  11 textures (limit 40)
 PASS  largest texture 2048 px (limit 4096)
 PASS  167,392 triangles (limit 250,000)
 PASS  Mixamo skeleton (all required mixamorig: bones present)
-PASS  animations: 28/28
+PASS  animations: 30/30
 PASS  clip lengths within ±10 % of reference
 PASS  bind-pose mesh height ≈ 1.73 m (expected 1.55–2.05 m; check scale if far off)
-PASS  brain.js runs in the sandbox, valid outputs, 0.069 ms average (limit 2 ms)
+PASS  brain.js runs in the sandbox, valid outputs, 0.044 ms average (limit 2 ms)
 PASS  renders/front.png 1920×1080 (long side ≥ 1920)
 PASS  renders/three_quarter.png 1920×1080 (long side ≥ 1920)
 PASS  renders/profile.png 1920×1080 (long side ≥ 1920)

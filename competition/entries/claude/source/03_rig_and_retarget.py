@@ -1,4 +1,4 @@
-"""Stage 3: put CLAUDE's MPFB Mixamo rig into the clips' T-pose rest, then retarget all 28 shared Mixamo clips.
+"""Stage 3: put CLAUDE's MPFB Mixamo rig into the clips' T-pose rest, then retarget all 30 shared Mixamo clips.
 Opens .work/claude_materials.blend, writes .work/claude_rigged.blend.
 
 Retarget: for every frame, each bone's world rotation is copied from the source skeleton (X Bot clips in

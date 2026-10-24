@@ -33,11 +33,14 @@ export default function brain(state) {
     return { ...STAND, fwd: true };
   }
 
-  // 3. Range control: hover at kicking range, just outside punching range.
+  // 3. Clinch range: a foe who turtles up (or stands still) inside 0.95 m gets thrown; throws beat the block.
+  if (ready && distance <= 0.95 && (foe.state === 'block' || foe.state === 'idle')) return strike('throw');
+
+  // 4. Range control: hover at kicking range, just outside punching range.
   if (distance > 1.7) return { ...STAND, fwd: true };
   if (distance < 1.1) return ready && Math.random() < 0.5 ? strike('jab') : { ...STAND, back: true };
 
-  // 4. Opportunistic kicks at long range; a trailing foe on low health gets pressed.
+  // 5. Opportunistic kicks at long range; a trailing foe on low health gets pressed.
   if (ready && (foe.state === 'idle' || foe.state === 'walk_b')) {
     if (foe.hp < 30 && distance <= REACH.cross) return strike('cross');
     if (Math.random() < 0.35) return strike(distance > 1.4 ? 'roundhouse' : 'frontkick');
