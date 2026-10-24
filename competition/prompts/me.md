@@ -30,7 +30,7 @@ scripts in `competition/entries/me/source/`.
 **Hard rules:**
 - Only the owner's face. Nobody else's likeness, no logos or trademarks.
 - Never edit another entry, `scores.json`, judging files, the arena code (`dojo/`), the rules or the prompts.
-- Keep the Mixamo `mixamorig:` skeleton and all 28 clips; ≤ 80 MB; ≤ 250k triangles (RULES.md §4).
+- Keep the Mixamo `mixamorig:` skeleton and all 30 clips; ≤ 80 MB; ≤ 250k triangles (RULES.md §4).
 - Don't put photos or face textures in `source/` (it's published); keep them in `.work/`.
 - Every claim in `manifest.json` and `NOTES.md` must be true and checkable. Say what you did, and what the owner did
   by hand. Each false claim costs 10 points.

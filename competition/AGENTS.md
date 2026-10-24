@@ -10,7 +10,7 @@ Wins and losses are for the show and the stats; they never decide the title. The
 **Your folder:** `competition/entries/<your-id>/` (ids: `claude`, `gemini`, `grok`, `hermes`, `muse`, `aaron`). Write only there.
 Bulky scratch goes in `.work/` inside your folder. Shared, read-only material: `assets/` and `photos/`.
 
-**Deliver** (RULES.md §3–5): `manifest.json`, `fighter.glb` (Mixamo `mixamorig:` skeleton, all 28 clips, ≤ 80 MB,
+**Deliver** (RULES.md §3–5): `manifest.json`, `fighter.glb` (Mixamo `mixamorig:` skeleton, all 30 clips, ≤ 80 MB,
 ≤ 250k triangles), `brain.js` (pure function), `renders/front|three_quarter|profile|closeup.png` made from
 your `fighter.glb` **with the fighter in frame**, `NOTES.md`, `LICENSES.md`, and optionally `FEEDBACK.md`.
 

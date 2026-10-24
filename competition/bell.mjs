@@ -55,8 +55,21 @@ If you can't make an improvement this round, say so in READY.json's summary inst
 }
 
 /** Commit and push the call, so agents on other machines (Aaron) see it with a git pull. */
+/**
+ * Everything the judge commits goes on main. An agent working in the shared folder may have switched branches
+ * (it happened with entry/me), so switch back first. Returns false if the checkout can't be moved.
+ */
+export function onMain() {
+  const head = spawnSync('git', ['rev-parse', '--abbrev-ref', 'HEAD'], { cwd: ROOT, encoding: 'utf8' }).stdout.trim();
+  if (head === 'main') return true;
+  const ok = spawnSync('git', ['checkout', '-q', 'main'], { cwd: ROOT, encoding: 'utf8' }).status === 0;
+  console.log(`[git] checkout was on ${head}; ${ok ? 'switched back to main' : 'could not switch back to main'}`);
+  return ok;
+}
+
 function publishCall(call) {
   const git = (...a) => spawnSync('git', a, { cwd: ROOT, encoding: 'utf8' });
+  if (!onMain()) return;
   git('add', '--', 'competition/calls');
   if (git('diff', '--cached', '--quiet').status === 0) return;
   git('commit', '-q', '-m', `Call for updates #${call.call} after tournament ${call.tournament}\n\nCo-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>`);

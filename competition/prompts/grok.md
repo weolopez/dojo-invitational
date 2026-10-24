@@ -25,10 +25,10 @@ conflicts with RULES.md, RULES.md wins.
   `/Users/weo/Development/3d/photos/` (scored separately).
 
 **Your folder:** `/Users/weo/Development/3d/competition/entries/<your-id>/`. Write only there. Read-only shared
-material: `/Users/weo/Development/3d/assets/` (the 28 Mixamo clips, Poly Haven, sounds) and `photos/`.
+material: `/Users/weo/Development/3d/assets/` (the 30 Mixamo clips, Poly Haven, sounds) and `photos/`.
 A layout template is in `entries/_example/`.
 
-**Deliver:** `manifest.json`, `fighter.glb` (glTF 2.0, embedded, `mixamorig:` skeleton, all 28 clips named exactly
+**Deliver:** `manifest.json`, `fighter.glb` (glTF 2.0, embedded, `mixamorig:` skeleton, all 30 clips named exactly
 as the files in `assets/mixamo/`, metres, Y-up, facing +Z, ≤ 80 MB, ≤ 250k triangles, textures ≤ 4096 px),
 `brain.js` (pure function, sandboxed, ≤ 2 ms), four renders made from the submitted `fighter.glb`, `NOTES.md`
 and `LICENSES.md`. Exact formats are in RULES.md sections 3–5.
@@ -51,7 +51,7 @@ the material has none. Write down your limitations; honest limitations cost noth
 - Real eyes: separate cornea with refraction or clearcoat, wet line, proper iris depth. Teeth and tongue.
 - Hair cards with alpha (or strand-derived cards), brows, lashes, facial hair if your design has it.
 - Clothes with real fabric scans, weight-painted so they don't explode in a roundhouse kick.
-- Clean weights at shoulders, elbows, hips and knees across all 28 clips.
+- Clean weights at shoulders, elbows, hips and knees across all 30 clips.
 
 **What scores badly:** a deformed sphere for a head, primitives as hair, flat-coloured materials, claims your
 model doesn't back up, renders that weren't made from the submitted file.

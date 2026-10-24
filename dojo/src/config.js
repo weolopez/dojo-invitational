@@ -34,8 +34,10 @@ export const MOVES = {
   roundhouse: { clip: 'roundhouse_kick', dmg: 16, reach: 1.6, from: 0.35, to: 0.6, react: 'hit_head_big' },
   frontkick: { clip: 'front_kick', dmg: 12, reach: 1.5, from: 0.3, to: 0.55, react: 'hit_reaction' },
   // Throw (grab): short reach, ignores block, but whiffs if the target is mid-strike (strikes beat throws).
-  // Attacker reuses the 'hook' clip slowed down as the grab/turn; defender plays knocked_out then getting_up.
-  throw: { clip: 'hook', dmg: 13, reach: 0.95, from: 0.3, to: 0.55, react: 'knocked_out', grab: true, timeScale: 0.7 },
+  // Fighters with the paired Mixamo shoulder throw (clips 'throw' and 'thrown', RULES.md §4) use it; others fall back
+  // to the slowed hook (attacker) and knocked_out then getting_up (defender).
+  throw: { clip: 'hook', dmg: 13, reach: 0.95, from: 0.3, to: 0.55, react: 'knocked_out', grab: true, timeScale: 0.7,
+    paired: { clip: 'throw', react: 'thrown', from: 0.03, to: 0.14, timeScale: 1.25 } },
 };
 export const MOVE_LABELS = { jab: 'Jab', cross: 'Cross', hook: 'Hook', uppercut: 'Uppercut', roundhouse: 'Roundhouse', frontkick: 'Front kick', throw: 'Throw' };
 

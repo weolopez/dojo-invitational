@@ -106,7 +106,8 @@ function snapshotToBranch(id, message) {
 
 /** Merge the branch snapshot into main (the working tree already holds the same files). */
 function mergeToMain(id, branchCommit, files, message) {
-  if (git('rev-parse', '--abbrev-ref', 'HEAD') !== 'main') throw new Error('check out main before approving');
+  // An agent in the shared folder may have switched branches; the weigh-in always lands on main.
+  if (git('rev-parse', '--abbrev-ref', 'HEAD') !== 'main') git('checkout', '-q', 'main');
   git('rm', '-r', '-q', '--cached', '--ignore-unmatch', `competition/entries/${id}`);
   if (files.length) git('add', '-f', '--', ...files);
   git('add', '--', path.relative(ROOT, APPROVED_FILE), path.relative(ROOT, WEIGHINS_FILE));

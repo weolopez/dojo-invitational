@@ -16,7 +16,7 @@ const REFERENCE_GLB = path.join(PROJECT, 'dojo', 'public', 'fighters', 'me.glb')
 const CLIPS = ['block', 'block_high', 'cross', 'crouch', 'fighting_idle', 'front_kick', 'getting_up',
   'hit_by_uppercut', 'hit_head_big', 'hit_head_light', 'hit_reaction', 'hook', 'jab', 'jab_cross', 'jump',
   'knocked_out', 'punch_combo', 'roundhouse_kick', 'side_kick', 'side_step_left', 'side_step_right',
-  'step_backward', 'step_forward', 'taunt', 'uppercut', 'victory', 'walk_backward', 'walk_forward'];
+  'step_backward', 'step_forward', 'taunt', 'throw', 'thrown', 'uppercut', 'victory', 'walk_backward', 'walk_forward'];
 const BONES = ['Hips', 'Spine', 'Spine1', 'Spine2', 'Neck', 'Head',
   ...['Left', 'Right'].flatMap((s) => ['Shoulder', 'Arm', 'ForeArm', 'Hand', 'UpLeg', 'Leg', 'Foot', 'ToeBase']
     .map((b) => `${s}${b}`))].map((b) => `mixamorig:${b}`);

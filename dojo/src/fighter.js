@@ -3,6 +3,44 @@ import * as THREE from 'three';
 import * as SkeletonUtils from 'three/addons/utils/SkeletonUtils.js';
 import { MOVES } from './config.js';
 
+// The paired Mixamo shoulder throw runs 6 s, from a run-up to lying on the mat. The fight uses only the grab-to-
+// recovery window, in place (the arena moves fighters), with the victim turned to face the thrower as in the clip.
+const THROW_WINDOW = [1.85, 4.0];
+
+function pairedClip(clip, model, turn) {
+  const sub = THREE.AnimationUtils.subclip(clip, clip.name, Math.round(THROW_WINDOW[0] * 30), Math.round(THROW_WINDOW[1] * 30), 30);
+  let hips = null;
+  model.traverse((o) => { if (o.isBone && /Hips$/.test(o.name)) hips = o; });
+  if (!hips) return sub;
+  // Work in model space: the armature above the hips is usually rotated and scaled (Mixamo/Blender exports).
+  model.updateMatrixWorld(true);
+  const toModel = hips.parent.matrixWorld.clone();
+  const toLocal = toModel.clone().invert();
+  const rest = hips.position.clone().applyMatrix4(toModel);
+  const v = new THREE.Vector3();
+  for (const track of sub.tracks) {
+    if (track.name === `${hips.name}.position`) {
+      // Keep the height (the fall), drop the travel across the floor.
+      for (let i = 0; i < track.values.length; i += 3) {
+        v.fromArray(track.values, i).applyMatrix4(toModel);
+        v.x = rest.x;
+        v.z = rest.z;
+        v.applyMatrix4(toLocal).toArray(track.values, i);
+      }
+    }
+    if (turn && track.name === `${hips.name}.quaternion`) {
+      // Turn about the vertical axis in model space: local' = P⁻¹ · yaw · P · local.
+      const p = new THREE.Quaternion();
+      toModel.decompose(new THREE.Vector3(), p, new THREE.Vector3()); // the armature is scaled, so not setFromRotationMatrix
+      const yaw = new THREE.Quaternion().setFromAxisAngle(new THREE.Vector3(0, 1, 0), turn);
+      const pre = p.clone().invert().multiply(yaw).multiply(p);
+      const q = new THREE.Quaternion();
+      for (let i = 0; i < track.values.length; i += 4) q.fromArray(track.values, i).premultiply(pre).toArray(track.values, i);
+    }
+  }
+  return sub;
+}
+
 export function newTally() {
   return { thrown: 0, hits: 0, damage: 0, blocks: 0, bestCombo: 0, kos: 0, moves: {} };
 }
@@ -42,7 +80,11 @@ export class Fighter {
 
     this.mixer = new THREE.AnimationMixer(this.model);
     this.actions = {};
-    for (const clip of gltf.animations) this.actions[clip.name] = this.mixer.clipAction(clip);
+    for (const clip of gltf.animations) {
+      const paired = clip.name === 'throw' || clip.name === 'thrown';
+      const use = paired ? pairedClip(clip, this.model, clip.name === 'thrown' ? Math.PI : 0) : clip;
+      this.actions[clip.name] = this.mixer.clipAction(use);
+    }
     this.mixer.addEventListener('finished', () => this.onClipFinished());
 
     this.stats = def.stats;
@@ -71,6 +113,7 @@ export class Fighter {
     this.state = 'idle';
     this.move = null;
     this.hitLanded = false;
+    this.whiffAt = null;
     this.cooldown = 0;
     this.combo = 0;
     this.root.position.set(this.side * 1.4, 0, 0);
@@ -111,10 +154,13 @@ export class Fighter {
     this.moveName = moveName;
     this.tally.thrown++;
     this.tally.moves[moveName] = (this.tally.moves[moveName] ?? 0) + 1;
-    const base = MOVES[moveName];
+    // A move with a paired animation uses it when this fighter has the clip (the throw).
+    const base = MOVES[moveName].paired && this.actions[MOVES[moveName].paired.clip]
+      ? { ...MOVES[moveName], ...MOVES[moveName].paired } : MOVES[moveName];
     this.move = { ...base, dmg: Math.round(base.dmg * this.stats.power), reach: base.reach * this.stats.reach,
                   heavy: base.dmg >= 12, high: base.react !== 'hit_reaction', grab: !!base.grab };
     this.hitLanded = false;
+    this.whiffAt = null;
     const action = this.fade(this.move.clip, true);
     if (action) action.timeScale = (0.85 + 0.25 * this.stats.speed) * (base.timeScale ?? 1);
     this.arena.sound('swing', 0.35);
@@ -134,7 +180,9 @@ export class Fighter {
     const where = this.hitPoint(move.high);
     if (this.hp === 0) {
       this.state = 'ko';
-      this.fade('knocked_out', true);
+      // A throw that knocks you out ends the way the throw does: flat on the mat.
+      const fall = move.sync && this.actions.thrown ? this.fade('thrown', true) : this.fade('knocked_out', true);
+      if (fall && move.sync && this.actions.thrown) { fall.time = move.sync.time; fall.timeScale = move.sync.timeScale; }
       this.arena.sound('heavy', 0.9);
       fx.sparks(where, 0xfff2b0, 60, 3.2);
       fx.shake(0.16);
@@ -149,11 +197,14 @@ export class Fighter {
     }
     this.combo = 0;
     this.state = 'hit';
-    this.fade(move.react, true);
+    // The paired fall plays in step with the thrower's clip; fighters without it fall back to the knock-down.
+    const react = move.react === 'thrown' && !this.actions.thrown ? 'knocked_out' : move.react;
+    const reaction = this.fade(react, true);
+    if (reaction && move.sync) { reaction.time = move.sync.time; reaction.timeScale = move.sync.timeScale; }
     if (move.grab) {
       // Thrown: knockdown, then get up (chained in onClipFinished). Pushed further than a strike.
       this.downed = true;
-      this.root.position.x += this.side * 0.45;
+      this.root.position.x += this.side * (move.sync ? 0.2 : 0.45);
       this.arena.sound('heavy', 0.9);
       fx.sparks(where, 0xffb347, 30, 2.2);
       fx.shake(0.12);
@@ -212,12 +263,15 @@ export class Fighter {
         // Throws can't be blocked, but a foe who is mid-strike (or already down) slips the grab.
         if (this.move.grab && (opponent.state === 'attack' || opponent.downed)) {
           this.arena.sound('swing', 0.2);
+          // A paired throw that grabs nothing shouldn't play the whole throw on thin air.
+          if (this.move.react === 'thrown') this.whiffAt = this.arena.clock + 0.25;
           this.mixer.update(dt);
           return;
         }
         const blocked = !this.move.grab && opponent.state === 'block';
         const hpBefore = opponent.hp;
-        opponent.takeHit(this.move, blocked);
+        const sync = this.move.react === 'thrown' ? { time: this.current.time, timeScale: this.current.timeScale } : null;
+        opponent.takeHit(sync ? { ...this.move, sync } : this.move, blocked);
         this.tally.damage += hpBefore - opponent.hp;
         if (blocked) {
           opponent.tally.blocks++;
@@ -231,6 +285,14 @@ export class Fighter {
         }
         if (opponent.hp === 0) this.tally.kos++;
       }
+    }
+    if (this.state === 'attack' && this.move?.react === 'thrown' && !this.hitLanded && this.whiffAt === null && this.current
+      && this.current.time / this.current.getClip().duration > this.move.to) this.whiffAt = this.arena.clock;
+    if (this.whiffAt !== null && this.arena.clock >= this.whiffAt && this.state === 'attack') {
+      this.whiffAt = null;
+      this.state = 'idle';
+      this.cooldown = 0.3;
+      this.playLoop('fighting_idle');
     }
     this.mixer.update(dt);
   }

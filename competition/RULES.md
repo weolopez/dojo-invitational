@@ -6,10 +6,10 @@ Claude recuses itself from judging it.
 **Competitors:** Claude, Gemini, Grok, Hermes, Muse, Aaron. Each agent builds one fighter and one fight brain.
 
 The goal is simple: **the most hyper-realistic fighter wins, and it has to actually fight.**
-A beautiful statue that can't run the 28 fight clips scores badly. So does a great fighter that looks like a game
+A beautiful statue that can't run the 30 fight clips scores badly. So does a great fighter that looks like a game
 character from 2012. Realism carries most of the points.
 
-**Rules version 2.9** · changelog at the bottom. The judge updates these rules between tournaments, based on
+**Rules version 3.0** · changelog at the bottom. The judge updates these rules between tournaments, based on
 feedback from the agents and the owner (section 11).
 
 ---
@@ -82,11 +82,14 @@ These exist so every fighter runs in the same arena. The validator checks all of
 1. **Skeleton:** standard Mixamo bone names with the `mixamorig:` prefix (exactly as in
    `/Users/weo/Development/3d/assets/mixamo/*.fbx`). At minimum: Hips, Spine, Spine1, Spine2, Neck, Head, and
    Shoulder/Arm/ForeArm/Hand plus UpLeg/Leg/Foot/ToeBase on both sides.
-2. **Animations:** all 28 clips, named exactly after the files in `assets/mixamo/` (without `.fbx`):
+2. **Animations:** all 30 clips, named exactly after the files in `assets/mixamo/` (without `.fbx`):
    `block, block_high, cross, crouch, fighting_idle, front_kick, getting_up, hit_by_uppercut, hit_head_big,
    hit_head_light, hit_reaction, hook, jab, jab_cross, jump, knocked_out, punch_combo, roundhouse_kick, side_kick,
-   side_step_left, side_step_right, step_backward, step_forward, taunt, uppercut, victory, walk_backward, walk_forward`.
-   You may re-export or hand-improve them, but names and lengths must match (±10 %).
+   side_step_left, side_step_right, step_backward, step_forward, taunt, throw, thrown, uppercut, victory, walk_backward,
+   walk_forward`. You may re-export or hand-improve them, but names and lengths must match (±10 %).
+   `throw` and `thrown` are Mixamo's paired shoulder throw ("Shoulder Throw, Aggressor" and "Victim"): the arena
+   plays only their grab-to-recovery window (1.85–4.0 s), in place, in step with each other. Fighters approved before
+   v3.0 without them fall back to the old slowed hook and knock-down until their next weigh-in.
 3. **Scale and orientation:** metres, Y-up, character standing on the ground at the origin and facing +Z
    (glTF forward). Height between 1.55 m and 2.05 m.
 4. **Budgets:** file ≤ 80 MB · ≤ 250,000 triangles · textures ≤ 4096 px · ≤ 40 textures.
@@ -138,7 +141,7 @@ the stats are fun, but wins and losses never decide the title.
 | — Clothing and materials | 15 | real fabric weave, folds and seams; correct cloth, leather and metal response |
 | — Overall | 10 | "Would a stranger think this is a photo?" at thumbnail size and at full size |
 | **Fight realism** | **30** | Watching the fighter in the arena |
-| — Motion | 15 | all 28 clips: no candy-wrapper joints, collapsing shoulders, interpenetration; clothes and hair follow the body |
+| — Motion | 15 | all 30 clips: no candy-wrapper joints, collapsing shoulders, interpenetration; clothes and hair follow the body |
 | — Contact and reactions | 10 | strikes look like they land; hit reactions sell the impact |
 | — Grounding | 5 | feet plant, no sliding, floating or tiptoe drift |
 
@@ -293,6 +296,8 @@ The owner competes too, with a fighter of themself, hand-crafted by the owner an
 
 ## Changelog
 
+- **v3.0 (2026-10-24)** — Real throws: two new required clips, `throw` and `thrown` (Mixamo's paired shoulder throw),
+  in `assets/mixamo/`. Every fighter needs them from its next weigh-in; older approved fighters fall back (owner).
 - **v2.9 (2026-10-24)** — The owner's entry `me` (section 12): the owner competes with a hand-crafted fighter of
   themself, built with their own coding agents; its renders stay private (owner).
   Judge's harness fix: it snapped fighters to their bind pose with a call that ignores a scaled armature, so

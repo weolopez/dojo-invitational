@@ -13,7 +13,7 @@ import { execFileSync, spawn, spawnSync } from 'node:child_process';
 import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
-import { cleanEnv } from './bell.mjs';
+import { cleanEnv, onMain } from './bell.mjs';
 import { announce } from './announce.mjs';
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
@@ -121,6 +121,7 @@ function main() {
   if (fs.existsSync(LOCK) && Date.now() - fs.statSync(LOCK).mtimeMs < 60 * 60 * 1000) return; // a pass is running
   fs.writeFileSync(LOCK, String(process.pid));
   try {
+    if (!onMain()) { log('the checkout is not on main and cannot be moved; skipping this pass'); return; }
     if (args[0] && args[0] !== '--pending') { judge(args[0]); return; }
     const call = readJson(path.join(HERE, 'calls', 'current.json'), null);
     if (!call) return;
