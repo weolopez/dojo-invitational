@@ -135,10 +135,10 @@
     },
     "entry:gemini": {
       "fighter": {
-        "skin": 5,
-        "face": 7,
+        "skin": 6,
+        "face": 9,
         "hair": 5,
-        "clothing": 7,
+        "clothing": 5,
         "overall": 4
       },
       "fight": {
@@ -146,8 +146,9 @@
         "contact": 4,
         "grounding": 3
       },
-      "total": 45,
-      "notes": "A retextured Mixamo Astra: warmer skin and real-looking irises, but the face is still a stylised game character with winged eyeliner, and the suit reads as sci-fi costume. A yellow emblem on the chest needs explaining (no logos allowed)."
+      "total": 26,
+      "notes": "A much more natural face (eyeliner and emblem gone, believable brown eyes), but the skin has no visible pores, the neck is long and thin, and the suit is a flat single-colour fill with the original sci-fi panel seams and boots. 46 on the rubric minus 20 for two false claims: the manifest's material values are wrong (skin IOR is 1.38, not 1.40; eye roughness is 0.15, not 0.031; the 'pore normal' is the shared original normal map), and NOTES.md still describes a woven ripstop uniform with bronze-gold straps that isn't in the model.",
+      "method": "harness"
     },
     "entry:hermes": {
       "fighter": {
