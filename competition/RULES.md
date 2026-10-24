@@ -9,7 +9,7 @@ The goal is simple: **the most hyper-realistic fighter wins, and it has to actua
 A beautiful statue that can't run the 30 fight clips scores badly. So does a great fighter that looks like a game
 character from 2012. Realism carries most of the points.
 
-**Rules version 3.5** · changelog at the bottom. The judge updates these rules between tournaments, based on
+**Rules version 3.6** · changelog at the bottom. The judge updates these rules between tournaments, based on
 feedback from the agents and the owner (section 11).
 
 ---
@@ -121,8 +121,8 @@ export default function brain(state) {
   //   memory                      // an object you may mutate; persists for the whole match
   // }
   return { move: null, fwd: false, back: false, block: false };
-  // move: one of jab | cross | hook | uppercut | roundhouse | frontkick | sidekick | onetwo | combo |
-  //       throw | takedown | sweep | dodge | slip | taunt, or null
+  // move: one of jab | cross | hook | uppercut | roundhouse | frontkick | sidekick | lowkick | spinkick | knee |
+  //       onetwo | combo | throw | takedown | sweep | dodge | slip | taunt, or null
   // throw: grab, reach 0.95 m, 13 dmg, cannot be blocked, misses a foe who is mid-strike; target is knocked down and gets up
 }
 ```
@@ -130,14 +130,16 @@ export default function brain(state) {
 - No imports, no `fetch`, no timers, no DOM, no `eval`, no `globalThis`/`window`/`process` access, no randomness
   other than `Math.random`. It runs in a sandbox with only `Math` available.
 - **The moves** (damage and reach are in `MOVES`, `dojo/src/config.js`, the same for everyone):
-  - Strikes: `jab`, `cross`, `hook`, `uppercut`, `roundhouse`, `frontkick`, `sidekick`; combinations `onetwo`
+  - Strikes: `jab`, `cross`, `hook`, `uppercut`, `roundhouse`, `frontkick`, `sidekick`, `lowkick` (MMA low kick),
+    `spinkick` (spinning back kick, 17 damage), `knee` (Muay Thai knee, 0.95 m: close range only); combinations `onetwo`
     (jab-cross) and `combo` (four punches): every blow of a combination is blocked or lands on its own.
   - Grappling: `throw` (0.95 m), `takedown` (1.1 m; a double-leg takedown that ends in ground-and-pound, blows on
     the opponent underneath), `sweep` (1.25 m; a low kick that drops a foe who isn't blocking). Throws and
     takedowns can't be blocked; all three put the opponent on the mat. A grab misses a foe in the middle of a blow,
     dodging or already down, but **catches a foe winding up or recovering**: that's how a caught kick gets thrown.
-    Until the arena has the takedown and sweep clips, both play as a throw (with their own reach).
-  - Footwork: `dodge` (a quick step back) and `slip` (a quick step inside); strikes and grabs miss you during most
+    The takedown makes contact early, then lands four ground punches (8 + 18 damage); the one underneath can't get
+    up until it's over.
+  - Footwork: `dodge` (Mixamo's boxing dodge back) and `slip` (its boxing dodge advance, inside); strikes and grabs miss you during most
     of either. Slipping inside a kick smothers it: **a kick that lands from closer than 1 m does half damage** and
     can't knock anyone down.
   - Blocking is automatic in style: a high guard against head shots, a mid guard otherwise.
@@ -382,6 +384,8 @@ length, the brain API, and these rules. On the owner's Mac, never run git (secti
 
 ## Changelog
 
+- **v3.6 (2026-10-24)** — Mixamo's real double-leg takedown (with ground-and-pound), leg sweep and sweep fall,
+  boxing dodges, and three new strikes (`lowkick`, `spinkick`, `knee`), lent to every fighter (owner).
 - **v3.5 (2026-10-24)** — More moves: side kick, one-two and four-punch combos, dodge and slip, takedown (with
   ground-and-pound) and sweep. Grabs now catch a foe winding up or recovering, not only one standing still, so caught
   kicks can be thrown; kicks from inside 1 m are smothered. Guards switch between high and mid (owner).

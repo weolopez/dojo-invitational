@@ -22,7 +22,7 @@ const BONES = ['Hips', 'Spine', 'Spine1', 'Spine2', 'Neck', 'Head',
     .map((b) => `${s}${b}`))].map((b) => `mixamorig:${b}`);
 const ALLOWED_EXT = /^(KHR_materials_[a-z_]+|KHR_texture_transform|KHR_mesh_quantization|EXT_texture_webp)$/;
 const MOVES = ['jab', 'cross', 'hook', 'uppercut', 'roundhouse', 'frontkick', 'throw', 'sidekick', 'onetwo', 'combo',
-  'dodge', 'slip', 'sweep', 'takedown', 'taunt'];
+  'dodge', 'slip', 'sweep', 'takedown', 'lowkick', 'knee', 'spinkick', 'taunt'];
 const LIMITS = { fileMB: 80, triangles: 250_000, texturePx: 4096, textures: 40, minHeight: 1.55, maxHeight: 2.05 };
 
 const results = [];

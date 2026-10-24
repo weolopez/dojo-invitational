@@ -8,7 +8,8 @@ import { Inertializer, LookAt } from './motion.js';
 // Clips that travel along the floor: switching into or out of them keeps the body where it lies.
 const GROUND = new Set(['knocked_out', 'knockdown_front', 'thrown', 'getting_up', 'getup_back', 'getup_front', 'sweep_fall', 'takedown_victim']);
 // The clips prepared or lent at load time (lent.js).
-const PREPARED = ['throw', 'thrown', 'knockdown_front', 'getup_back', 'getup_front', 'sweep', 'sweep_fall', 'takedown', 'takedown_victim'];
+const PREPARED = ['throw', 'thrown', 'knockdown_front', 'getup_back', 'getup_front', 'sweep', 'sweep_fall', 'takedown',
+  'takedown_victim', 'dodge_in', 'dodge_back', 'low_kick', 'knee', 'spin_kick'];
 
 export function newTally() {
   return { thrown: 0, hits: 0, damage: 0, blocks: 0, bestCombo: 0, kos: 0, moves: {} };
@@ -152,7 +153,9 @@ export class Fighter {
     // (The fallback keeps the requested move's reach, so a takedown shot from 1.1 m still connects as a throw.)
     if (def.needs && !this.actions[def.needs]) { const reach = def.reach; moveName = def.fallback; def = { ...MOVES[moveName], reach }; }
     // A move with a paired animation uses it when this fighter has the clip (the throw).
-    const base = def.paired && this.actions[def.paired.clip] ? { ...def, ...def.paired } : def;
+    const paired = def.paired && this.actions[def.paired.clip] ? { ...def, ...def.paired } : def;
+    // Footwork plays Mixamo's boxing dodges where available, otherwise the fighter's own step clips.
+    const base = paired.alt && !this.actions[paired.clip] ? { ...paired, clip: paired.alt } : paired;
     const power = this.stats.power;
     const hits = (base.hits ?? (base.footwork ? [] : [{ from: base.from, to: base.to, dmg: base.dmg }]))
       .map((h) => ({ ...h, dmg: Math.round(h.dmg * power) }));
@@ -418,7 +421,9 @@ export class Fighter {
       const low = this.bones.hips.getWorldPosition(new THREE.Vector3()).y < this.standHips * 0.4;
       // (A fall that never reaches the mat, say a badly lent clip, still ends after 4 s.)
       if (this.landedAt === null && (low || this.arena.clock - this.downSince > 4)) this.landedAt = this.arena.clock;
-      if (this.landedAt !== null && this.arena.clock - this.landedAt > knockdownLie()) this.getUp();
+      // (Not while someone is on top of you after a takedown.)
+      const pinned = this.arena.fighters.some((f) => f !== this && f.clinch);
+      if (this.landedAt !== null && this.arena.clock - this.landedAt > knockdownLie() && !pinned) this.getUp();
     }
     this.mixer.update(dt);
     this.inertia.apply(dt, this.root);
