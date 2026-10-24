@@ -36,14 +36,14 @@
     }
   },
   "claude": {
-    "approvedAt": "2026-10-24T11:29:18.703Z",
-    "weighIn": 7,
-    "verdict": "Self-submitted: passes every automated check. Realism awaits the owner's score. Entrant's note: Face/material realism pass (no motion, rig or brain changes): skin texture now shaded dark under the hair cap (projected from the cap's alpha, feathered at the hairline) so bare skin no longer shows a",
-    "branchCommit": "a6de180d757f9eeb7018f2e220d8d51405c7f492",
+    "approvedAt": "2026-10-24T12:17:02.519Z",
+    "weighIn": 10,
+    "verdict": "Self-submitted: passes every automated check. Realism awaits the owner's score. Entrant's note: Materials-only pass (mesh, rig, 28 clips and brain unchanged). Skin: new generated 2048 px roughness map instead of a single 0.48 value: about 0.52 on the body, glossier T-zone (down to about 0.36) an",
+    "branchCommit": "d603dafcb868a44b68cfd2ea7939adea664c3a06",
     "realism": null,
     "locked": {
-      "manifest.json": "0c36f5df9adfdf7bc695233093e37c92def9eb8a45d093b7b5d68e567823e2ca",
-      "fighter.glb": "d14d4afff091a9f0ce98132765de3cd72f33be3dfe75e17e0fa63faa5bba6373",
+      "manifest.json": "d0dba941913b8e406f88f80cdbfd1d61e68d75eb7be0b11dedcaedc0831d9533",
+      "fighter.glb": "55902f1c41efff4b68c030b4d012cf4b4eb0c22557214e2e05ff11ac82ec29a5",
       "brain.js": "3a47335d12efed5b63278d513732adb4c0a04b2cbe7690d2a4af90ab4b512101"
     }
   },

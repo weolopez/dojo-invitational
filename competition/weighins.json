@@ -295,5 +295,37 @@
     "fighterChanged": false,
     "branch": "entry/me",
     "branchCommit": "fe40814e562c1c1947751277b261cadb5f616193"
+  },
+  {
+    "no": 10,
+    "at": "2026-10-24T12:17:02.519Z",
+    "id": "claude",
+    "name": "CLAUDE",
+    "agent": "Claude (Anthropic) — also the judge; this entry is scored by the owner",
+    "decision": "approved",
+    "verdict": "Self-submitted: passes every automated check. Realism awaits the owner's score. Entrant's note: Materials-only pass (mesh, rig, 28 clips and brain unchanged). Skin: new generated 2048 px roughness map instead of a single 0.48 value: about 0.52 on the body, glossier T-zone (down to about 0.36) an",
+    "style": "A fictional woman in her late 30s: athletic, warm olive skin, dark hair in a ponytail, terracotta training top and black leggings. Patient counter-striker.",
+    "tape": {
+      "sizeMB": 24.8,
+      "triangles": 167392,
+      "textures": 11,
+      "largestTexture": 2048,
+      "heightM": 1.73,
+      "extensions": "KHR_materials_clearcoat, KHR_texture_transform"
+    },
+    "realism": null,
+    "realismBefore": null,
+    "changedFiles": [
+      "NOTES.md",
+      "manifest.json",
+      "renders/closeup.png",
+      "renders/front.png",
+      "renders/profile.png",
+      "renders/three_quarter.png",
+      "source/02_materials.py"
+    ],
+    "fighterChanged": true,
+    "branch": "entry/claude",
+    "branchCommit": "d603dafcb868a44b68cfd2ea7939adea664c3a06"
   }
 ]

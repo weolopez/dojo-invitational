@@ -1,11 +1,12 @@
 """Stage 2: realism pass on materials for CLAUDE. Opens .work/claude_human.blend, writes .work/claude_materials.blend.
 - Skin: diffuse graded from the CC0 'middleage caucasian female' map toward a warm olive tone; a procedurally generated,
-  tiling pore/micro-detail normal map (made here, see make_pore_normal); roughness 0.48.
+  tiling pore/micro-detail normal map (made here, see make_pore_normal); a blood-flush tint on cheeks, nose tip and
+  ears and a roughness map (T-zone and lips glossier), both placed from face landmarks found in the rest mesh.
 - Eyes: CC0 brown iris texture with its red cast shifted to a dark brown; clearcoat for a wet cornea.
 - Hair, brows: darkened to near-black brown, alpha kept.
 - Scalp and brow shading: the hair cap and brow cards are projected onto the skin texture (paint_under_cards), so
   the skin under the hairline and brows is dark instead of bare skin showing through the cutout gaps.
-- Sportsuit: blue top recoloured to terracotta, grey leggings to charcoal black.
+- Sportsuit: blue top recoloured to an even terracotta with charcoal piping, grey leggings to charcoal black.
 """
 import colorsys
 import os
@@ -83,6 +84,85 @@ def make_pore_normal(size=1024, seed=7):
     return img
 
 
+def position_map(obj, h, w):
+    """Rest-pose 3D position of every skin texel of the visible body (helper shells skipped), by rasterising the
+    mesh's UV triangles. Returns an (h, w, 3) array and an (h, w) coverage mask."""
+    verts, tris, uvs = rest_mesh(obj)
+    gi = obj.vertex_groups["body"].index
+    body = {v.index for v in obj.data.vertices if any(g.group == gi and g.weight > 0.5 for g in v.groups)}
+    pos = np.zeros((h, w, 3), np.float32)
+    hit = np.zeros((h, w), bool)
+    for t, tuv in zip(tris, uvs):
+        if not all(k in body for k in t):
+            continue
+        p = np.array([tuple(verts[k]) for k in t], np.float32)
+        px = np.array([[q.x * w - 0.5, q.y * h - 0.5] for q in tuv])
+        x0, y0 = np.maximum(np.floor(px.min(0)).astype(int), 0)
+        x1, y1 = np.minimum(np.ceil(px.max(0)).astype(int), (w - 1, h - 1))
+        if x1 < x0 or y1 < y0:
+            continue
+        (ax, ay), (bx, by), (cx, cy) = px
+        den = (by - cy) * (ax - cx) + (cx - bx) * (ay - cy)
+        if abs(den) < 1e-9:
+            continue
+        ys, xs = np.mgrid[y0:y1 + 1, x0:x1 + 1]
+        l0 = ((by - cy) * (xs - cx) + (cx - bx) * (ys - cy)) / den
+        l1 = ((cy - ay) * (xs - cx) + (ax - cx) * (ys - cy)) / den
+        l2 = 1 - l0 - l1
+        m = (l0 >= -0.02) & (l1 >= -0.02) & (l2 >= -0.02)
+        if not m.any():
+            continue
+        lam = np.stack([l0[m], l1[m], l2[m]], -1)
+        pos[ys[m], xs[m]] = lam @ p
+        hit[ys[m], xs[m]] = True
+    return pos, hit
+
+
+def blob(pos, centre, radii):
+    """Smooth ellipsoidal falloff (1 at the centre, 0 past the radii) around a 3D point."""
+    d = ((pos - np.array(centre, np.float32)) / np.array(radii, np.float32)) ** 2
+    return np.clip(1.0 - d.sum(-1), 0, 1) ** 2
+
+
+def skin_regions(pos, hit):
+    """Masks for regional skin variation, placed from the face's own landmarks in the rest pose (MakeHuman faces -Y):
+    the nose tip is the most forward head point, the ears the widest."""
+    head = hit & (pos[..., 2] > pos[..., 2][hit].max() - 0.25)
+    hp = pos[head]
+    nose = hp[hp[:, 1].argmin()]
+    ear = hp[np.abs(hp[:, 0]).argmax()]
+    x_ear, z_ear = abs(ear[0]), ear[2]
+    nx, ny, nz = nose
+    flush = np.zeros(pos.shape[:2], np.float32)
+    for sx in (-1, 1):
+        flush = np.maximum(flush, 0.8 * blob(pos, (sx * 0.042, ny + 0.045, nz + 0.0), (0.028, 0.03, 0.026)))
+        flush = np.maximum(flush, 0.9 * blob(pos, (sx * x_ear, ear[1], z_ear), (0.02, 0.035, 0.045)))
+    flush = np.maximum(flush, blob(pos, (nx, ny + 0.004, nz - 0.002), (0.016, 0.02, 0.016)))
+    # T-zone (forehead centre, nose) is oilier and shinier; lips are glossier still.
+    tzone = np.maximum(blob(pos, (0, ny + 0.06, nz + 0.075), (0.04, 0.05, 0.035)),
+                       blob(pos, (nx, ny + 0.01, nz + 0.02), (0.014, 0.03, 0.04)))
+    lips = blob(pos, (nx, ny + 0.022, nz - 0.042), (0.024, 0.02, 0.011))
+    return flush * head, tzone * head, lips * head
+
+
+def make_skin_roughness(pos, hit, tzone, lips, size):
+    """Roughness map: 0.52 on the body, down to ~0.36 on the T-zone and ~0.3 on the lips, plus a little fine
+    noise so the specular breaks up. Stored in G (glTF metallicRoughness)."""
+    rng = np.random.default_rng(11)
+    noise = blur_wrap(rng.random((size, size)).astype(np.float32), 2)
+    noise = (noise - noise.mean()) / noise.std()
+    r = 0.52 - 0.16 * tzone - 0.22 * lips + 0.03 * noise
+    r = np.clip(np.where(hit, r, 0.52), 0.25, 0.75)
+    rgba = np.stack([r, r, r, np.ones_like(r)], -1).astype(np.float32)
+    img = bpy.data.images.new("claude_skin_roughness", size, size, alpha=False)
+    img.pixels.foreach_set(rgba.ravel())
+    img.filepath_raw = os.path.join(TEX, "claude_skin_roughness.png")
+    img.file_format = "PNG"
+    img.save()
+    img.colorspace_settings.name = "Non-Color"
+    return img
+
+
 def skin(obj, cards):
     mat = obj.active_material
     node = image_nodes(mat)[0]
@@ -91,13 +171,25 @@ def skin(obj, cards):
     lum = rgb.mean(axis=-1, keepdims=True)
     warm = np.array([1.0, 0.86, 0.72], dtype=np.float32)
     rgb = np.clip(rgb * warm * 0.86 + (lum * warm * 0.86 - rgb * warm * 0.86) * 0.08, 0, 1)
+    h, w = a.shape[:2]
+    pos, hit = position_map(obj, h, w)
+    flush, tzone, lips = skin_regions(pos, hit)
+    # Blood flush: cheeks, nose tip and ears shift toward a deeper rose.
+    f = flush[..., None] * 0.75
+    rgb = rgb * (1 - f) + rgb * np.array([1.0, 0.8, 0.78], np.float32) * f
     a[..., :3] = rgb
     if cards:
         paint_under_cards(obj, a, *cards)
     node.image = save_copy(node.image, a, "claude_skin_diffuse")
     bsdf = principled(mat)
-    bsdf.inputs["Roughness"].default_value = 0.48
     nt = mat.node_tree
+    rough = nt.nodes.new("ShaderNodeTexImage")
+    rough.image = make_skin_roughness(pos, hit, tzone, lips, h)
+    sep = nt.nodes.new("ShaderNodeSeparateColor")
+    nt.links.new(rough.outputs["Color"], sep.inputs["Color"])
+    nt.links.new(sep.outputs["Green"], bsdf.inputs["Roughness"])
+    print(f"[materials] skin regions: {int(hit.sum())} body texels, flush {int((flush > 0.05).sum())}, "
+          f"t-zone {int((tzone > 0.05).sum())}, lips {int((lips > 0.05).sum())}")
     tex = nt.nodes.new("ShaderNodeTexImage")
     tex.image = make_pore_normal()
     coord = nt.nodes.new("ShaderNodeTexCoord")
@@ -277,9 +369,16 @@ def sportsuit(mat):
     r, g, b = rgb[..., 0], rgb[..., 1], rgb[..., 2]
     blue = (b > r * 1.15) & (b > g) & (sat > 0.18)
     grey = sat < 0.12
-    terracotta = np.array(colorsys.hsv_to_rgb(13 / 360, 0.72, 0.56), dtype=np.float32)
+    orange = (r > g * 1.2) & (r > b * 2.0) & (sat > 0.45)
+    terracotta = np.array(colorsys.hsv_to_rgb(12 / 360, 0.76, 0.42), dtype=np.float32)
     shade = (mx / max(mx[blue].mean() if blue.any() else 1, 1e-3))[..., None]
+    # The CC0 top's lighter and darker blue panels (collar band, inner neckline) turned into blotchy light/dark
+    # terracotta patches; keep only 40 % of that contrast so the fabric reads as one dyed knit.
+    shade = np.clip(1.0 + 0.4 * (shade - 1.0), 0.82, 1.08)
     rgb[blue] = np.clip(terracotta * shade[blue], 0, 1)
+    # Bright orange piping on terracotta looked like a costume; make it charcoal, like the leggings.
+    piping = np.array([0.075, 0.07, 0.068], np.float32)
+    rgb[orange] = piping * (0.85 + 0.3 * (mx[orange] / max(mx[orange].mean(), 1e-3)))[..., None]
     rgb[grey] = np.clip(rgb[grey] * 0.32, 0, 1)
     a[..., :3] = rgb
     node.image = save_copy(node.image, a, "claude_trainingwear_diffuse")
