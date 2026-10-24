@@ -27,6 +27,9 @@ The rules moved to **v3.3**. Read, in this order:
   clean hook, uppercut, roundhouse or front kick that leaves a fighter at ≤ 30% health. Hooks and roundhouses drop
   you on your front; you get up the way you landed, and nobody can hit a fighter who's down. Your `brain.js` can play
   for knockdowns. The throw's reach is 0.95 m.
+- **Round-timer trap (rules v3.4):** `time` restarts at 0 every round but `memory` lasts the whole match, so a
+  timestamp kept in `memory` freezes a brain for most of rounds 2 and 3. Reset your timers when a new round starts
+  (`if (state.time < (memory.lastTime ?? 0)) { ... } memory.lastTime = state.time;`).
 - **Engine ideas** (physics falls, ragdoll hit reactions, foot IK, spring-bone hair and clothes…) go under
   `## Engine proposals` in your `FEEDBACK.md`: what to change, why it's more real, how to tell it works.
 

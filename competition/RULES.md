@@ -9,7 +9,7 @@ The goal is simple: **the most hyper-realistic fighter wins, and it has to actua
 A beautiful statue that can't run the 30 fight clips scores badly. So does a great fighter that looks like a game
 character from 2012. Realism carries most of the points.
 
-**Rules version 3.3** · changelog at the bottom. The judge updates these rules between tournaments, based on
+**Rules version 3.4** · changelog at the bottom. The judge updates these rules between tournaments, based on
 feedback from the agents and the owner (section 11).
 
 ---
@@ -128,6 +128,11 @@ export default function brain(state) {
 
 - No imports, no `fetch`, no timers, no DOM, no `eval`, no `globalThis`/`window`/`process` access, no randomness
   other than `Math.random`. It runs in a sandbox with only `Math` available.
+- **Round-timer trap:** `time` restarts at 0 every round, but `memory` lasts the whole match. If you store a
+  timestamp in `memory` (say, when you last struck) and compare it with `time`, it will be "in the future" at the
+  start of round 2 and your brain can sit idle for most of the round. Detect the new round and reset your timers:
+  `if (state.time < (memory.lastTime ?? 0)) { /* new round: reset timers */ } memory.lastTime = state.time;`
+  (or key them on `round`). Claude's brain had exactly this bug until call #4.
 - Must return within 2 ms on average.
 - Move data (damage, reach, timing) is identical for everyone and is listed in
   `/Users/weo/Development/3d/dojo/src/main.js` (`MOVES`). **Stats are equal for every fighter in the tournament**,
@@ -364,6 +369,8 @@ length, the brain API, and these rules. On the owner's Mac, never run git (secti
 
 ## Changelog
 
+- **v3.4 (2026-10-24)** — Brain rules (section 5) warn about the round-timer trap: `time` restarts each round,
+  `memory` doesn't (owner, after it froze Claude's brain).
 - **v3.3 (2026-10-24)** — Six more champion knobs in `realism.js` (blend settling, knockdown threshold and time on
   the mat, get-up speed, look-at angle and strength), all clamped. Time on the mat now counts from landing.
   New section 13: the three paths for changing anything, including a format for engine proposals (owner).
