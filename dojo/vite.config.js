@@ -286,6 +286,14 @@ function arenaApi() {
             spawnDetached('bell.mjs');
             return json(res, JSON.parse(fs.readFileSync(path.join(COMPETITION, 'calls', 'current.json'), 'utf8')));
           }
+          // The Weigh-In announcer's lines and recordings (competition/announce.mjs).
+          const line = url.pathname.match(/^\/announcements\/(intro|\d+)\.(json|m4a)$/);
+          if (line && req.method === 'GET') {
+            const f = path.join(COMPETITION, 'announcements', `${line[1]}.${line[2]}`);
+            if (!fs.existsSync(f)) return json(res, { error: 'not found' }, 404);
+            res.setHeader('Content-Type', line[2] === 'm4a' ? 'audio/mp4' : 'application/json');
+            return fs.createReadStream(f).pipe(res);
+          }
           // Owner's bench (RULES.md §8): { "<id>": { "tournaments": [7] } } keeps a fighter out of those tournaments.
           if (url.pathname === '/api/bench' && req.method === 'GET') {
             const f = path.join(COMPETITION, 'bench.json');

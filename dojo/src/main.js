@@ -311,12 +311,38 @@ function renderBroadcast(t) {
   renderHeader(t);
 }
 
-/** The Weigh-In card: tale of the tape, what changed, realism score and the judge's verdict. */
-function showWeighIn(card) {
+/** Plays an announcer recording; resolves when it's over, or after its length if the browser blocks sound. */
+let soundBlocked = null;
+function speak(line) {
+  const audio = new Audio(`/announcements/${line.audio}`);
+  audio.play().then(() => { $('t-sound').classList.add('hidden'); }).catch(() => {
+    soundBlocked = audio;
+    $('t-sound').classList.remove('hidden');
+  });
+  return new Promise((r) => setTimeout(r, (line.seconds + 1.5) * 1000));
+}
+
+/** The announcer's opening, on the weigh-in card. */
+function announce(line, head) {
+  showWeighIn({ intro: true, head, text: line.text });
+  return speak(line);
+}
+
+/** The Weigh-In card: tale of the tape, what changed, realism score, the judge's verdict and the announcer's call. */
+function showWeighIn(card, def, said) {
   const el = $('t-weighin');
   document.body.classList.toggle('weighin', !!card);
+  const caption = $('t-caption');
+  caption.textContent = card?.intro ? card.text : said?.text ?? '';
+  caption.classList.toggle('hidden', !caption.textContent);
   if (!card) { el.classList.add('hidden'); ui.hud.classList.remove('hidden'); return; }
   ui.hud.classList.add('hidden');
+  if (card.intro) {
+    el.innerHTML = `<div class="w-head">${esc(card.head)}</div><div class="w-name">Ladies and gentlemen…</div>`
+      + `<div class="w-style">The ring announcer introduces every fighter who stepped on the scale.</div>`;
+    el.classList.remove('hidden');
+    return;
+  }
   const t = card.tape ?? {};
   const delta = card.realismBefore !== null && card.realism !== null && card.realism !== card.realismBefore
     ? ` <em>(${card.realism > card.realismBefore ? '+' : ''}${card.realism - card.realismBefore})</em>` : '';
@@ -378,9 +404,15 @@ async function startTournament() {
     ui.tiles.appendChild(el);
     tileEls.push(el);
   }
-  tournament = new Tournament(arenas, { flash, champion: announceChampion, weighIn: showWeighIn, waiting: showWaiting });
+  tournament = new Tournament(arenas, { flash, champion: announceChampion, weighIn: showWeighIn, waiting: showWaiting, announce, speak });
   if (import.meta.env.DEV) { window.__tournament = tournament; window.__arenas = arenas; }
   tournament.onChange(renderBroadcast);
+  // Browsers block sound until someone taps the page; this button is that tap.
+  $('t-sound').addEventListener('click', () => {
+    $('t-sound').classList.add('hidden');
+    soundBlocked?.play().catch(() => {});
+    soundBlocked = null;
+  });
   await tournament.init();
   ui.loading.classList.add('hidden');
   await tournament.start();

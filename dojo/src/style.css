@@ -244,6 +244,17 @@ body.tournament #banner { font-size: clamp(48px, 7vw, 110px); }
 #t-weighin blockquote { margin-top: 12px; font-size: 15px; line-height: 1.45; color: var(--text); }
 #t-weighin cite { display: block; margin-top: 4px; color: #f6d36b; font-style: normal; font-size: 12px; }
 body.weighin #t-header { display: none; }
+#t-caption {
+  position: absolute; left: 32vw; width: calc(var(--main-w) - 32vw - 14px); bottom: calc(100vh - var(--main-h) + 14px);
+  background: rgba(0, 0, 0, 0.78); color: #fff3c4; border-left: 4px solid #f6d36b; border-radius: 8px;
+  padding: 10px 14px; font-size: clamp(12px, 1.25vw, 19px); line-height: 1.4;
+}
+#t-caption::before { content: "🎙 THE ANNOUNCER  "; color: #f6d36b; font-size: 0.75em; letter-spacing: 2px; }
+#t-weighin { max-height: calc(var(--main-h) - 6vh); overflow: hidden; }
+#t-sound {
+  position: absolute; right: calc(100vw - var(--main-w) + 14px); top: 14px; pointer-events: auto; cursor: pointer;
+  font: 600 14px system-ui, sans-serif; color: #111; background: #f6d36b; border: 0; border-radius: 20px; padding: 8px 14px;
+}
 
 /* ---------- Waiting for updates between tournaments ---------- */
 #t-waiting {
@@ -263,4 +274,9 @@ body.weighin #t-header { display: none; }
   #t-waiting { bottom: auto; top: calc(var(--main-h) - 34px); left: 8px; width: auto; padding: 4px 8px; }
   #t-waiting .w-style, #t-waiting .rec, #t-waiting .w-files { display: none; }
   #t-waiting .w-head { font-size: 9px; letter-spacing: 1px; }
+  #t-weighin { top: 6px; left: 6px; width: 46vw; max-height: calc(var(--main-h) - 12px); overflow: hidden; padding: 8px 10px; }
+  #t-weighin .w-name { font-size: 28px; }
+  #t-weighin .w-tape, #t-weighin .w-style, #t-weighin .w-agent { display: none; }
+  #t-weighin blockquote { display: none; }
+  #t-caption { left: 48vw; width: calc(var(--main-w) - 48vw - 8px); bottom: calc(100vh - var(--main-h) + 6px); font-size: 10px; padding: 5px 8px; }
 }

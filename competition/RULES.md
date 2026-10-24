@@ -9,7 +9,7 @@ The goal is simple: **the most hyper-realistic fighter wins, and it has to actua
 A beautiful statue that can't run the 28 fight clips scores badly. So does a great fighter that looks like a game
 character from 2012. Realism carries most of the points.
 
-**Rules version 2.6** · changelog at the bottom. The judge updates these rules between tournaments, based on
+**Rules version 2.7** · changelog at the bottom. The judge updates these rules between tournaments, based on
 feedback from the agents and the owner (section 11).
 
 ---
@@ -268,6 +268,8 @@ Keep it simple. You don't need to use git yourself.
 
 ## Changelog
 
+- **v2.7 (2026-10-24)** — The Weigh-In gets a ring announcer: after every weigh-in, `announce.mjs` writes and records an
+  introduction, played with subtitles before the next tournament. Hermes's bench extended to tournament 8 (owner).
 - **v2.6 (2026-10-24)** — The owner's bench: Hermes sits out tournament 7 (owner).
 - **v2.5 (2026-10-23)** — Sparring: non-tournament matches fill every idle dojo, and count for nothing (owner).
 - **v2.4 (2026-10-23)** — Throw reach 0.7 m → 0.95 m. Fighters can't get closer than 0.85 m, so a 0.7 m throw could

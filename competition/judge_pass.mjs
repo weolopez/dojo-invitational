@@ -14,6 +14,7 @@ import fs from 'node:fs';
 import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { cleanEnv } from './bell.mjs';
+import { announce } from './announce.mjs';
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 const ROOT = path.resolve(HERE, '..');
@@ -66,13 +67,23 @@ Then do exactly two things, and nothing else:
 Don't edit any other file, don't commit or push, and be fair: the same rubric for everyone.`;
 }
 
+/** The ring announcer's introduction for the card this pass just made (announce.mjs). */
+function announceNew(id, cardsBefore) {
+  const cards = readJson(path.join(HERE, 'weighins.json'), []);
+  const card = cards.slice(cardsBefore).filter((c) => c.id === id).pop();
+  if (!card) return;
+  try { log(id, 'announced:', announce(card.no).text.slice(0, 80)); } catch (err) { log(id, 'announcer failed:', err.message); }
+}
+
 function judge(id) {
+  const cardsBefore = readJson(path.join(HERE, 'weighins.json'), []).length;
   const dir = path.join(HERE, 'entries', id);
   const ready = readJson(path.join(dir, 'READY.json'), null);
   const v = spawnSync(process.execPath, [path.join(HERE, 'validate_entry.mjs'), id], { encoding: 'utf8' });
   if (v.status !== 0) {
     const fails = v.stdout.split('\n').filter((l) => l.startsWith('FAIL')).map((l) => l.slice(6)).join('; ');
     weighIn('reject', id, `Validator failed: ${fails.slice(0, 300)}. Fix these and write READY.json again.`);
+    announceNew(id, cardsBefore);
     return;
   }
   const rendered = harness(id);
@@ -84,9 +95,10 @@ function judge(id) {
       { cwd: ROOT, encoding: 'utf8', timeout: 20 * 60 * 1000, env: cleanEnv() });
     log(id, 'judge run exit', r.status, (r.stdout ?? '').trim().split('\n').slice(-2).join(' | '));
   }
+  announceNew(id, cardsBefore);
   const git = (...a) => execFileSync('git', a, { cwd: ROOT, encoding: 'utf8' }).trim();
   try {
-    git('add', '--', 'competition/scores.json', `competition/judging/${id}`);
+    git('add', '--', 'competition/scores.json', `competition/judging/${id}`, 'competition/announcements');
     if (git('diff', '--cached', '--name-only')) git('commit', '-q', '-m', `Judge's scorecard: ${id}\n\nCo-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>`);
     git('-c', 'credential.helper=', '-c', 'credential.helper=!gh auth git-credential', 'push', '-q', 'origin', 'main', `entry/${id}`);
     log(id, 'pushed');

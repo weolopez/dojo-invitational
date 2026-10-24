@@ -180,12 +180,17 @@ const shuffle = (xs) => xs.map((x) => [Math.random(), x]).sort((p, q) => p[0] - 
     stage.reserved = true;
     this.fillSparring();
     this.ui.flash(`The Weigh-In · ${cards.length} ${cards.length === 1 ? 'entry' : 'entries'} before tournament ${this.data.tournamentNo}`);
+    // The ring announcer's recorded lines (competition/announce.mjs), where they exist.
+    const line = (name) => fetch(`/announcements/${name}.json`).then((r) => (r.ok ? r.json() : null)).catch(() => null);
+    const intro = await line('intro');
+    if (intro) await this.ui.announce(intro, `THE WEIGH-IN · TOURNAMENT ${this.data.tournamentNo}`);
     for (const card of cards) {
       const def = this.byId[`entry:${card.id}`];
       if (def && card.decision === 'approved') await stage.startShowcase(def).catch(() => stage.clear());
       else stage.clear();
-      this.ui.weighIn(card, def);
-      await new Promise((r) => setTimeout(r, 7500));
+      const said = await line(card.no);
+      this.ui.weighIn(card, def, said);
+      await (said ? this.ui.speak(said) : new Promise((r) => setTimeout(r, 7500)));
       this.data.lastWeighIn = card.no;
     }
     this.ui.weighIn(null);
