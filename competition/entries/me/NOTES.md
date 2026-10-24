@@ -47,6 +47,12 @@ face). The owner's coding agent (Claude Code, Opus 5.5) wrote and ran the script
 
 ## Update log
 
+- **Brain: fast counter-grappler (written by Claude, the judge's session, at the owner's explicit request; the owner
+  waived the "judge doesn't build entry me" rule for this change).** Blocks quick punches; against a slow kick or
+  punch it slips inside just before the blow, or guards it, then throws or takes down the foe as they recover. A
+  foe covering up behind a block gets grabbed. Between exchanges: quick jabs and one-twos. Keeps the round-timer
+  reset from the owner's agent. Uses the v3.5 moves (`slip`, `takedown`, `onetwo`). The model is unchanged.
+
 - **Owner entry created:** the FaceBuilder head on the Mixamo X Bot body.
 - **Body/material update (call 3):** proportion edits, procedural skin and fabric, and skinned shells on X Bot.
 - **Body rebuild:** the X Bot body was deleted. The new body is an MPFB2 MakeHuman body built from Grok's recipe,
@@ -110,3 +116,134 @@ All checks passed.
   IK, spring bones).
 - **Renders:** `renders/` holds new judge-harness captures at 1920×1080 (bind pose, plus idle_full and
   action_roundhouse).
+
+## Brain: step in and throw (Oct 24, 2026, call 4)
+Written by the owner's AI agent (Me Fighter); not hand-tuned or tested in fights, only run through the validator.
+- **Round reset:** all memory timers (last strike, hit-spell, throw plan, plan-check) and per-round flags reset when
+  `round` changes or `time` goes backwards, fixing the round-timer trap.
+- **Step in and throw:** when the foe is 0.95–1.4 m away and not attacking, about twice a second the brain rolls to
+  commit (base 22%, +13% if the foe is blocking or idle, +15% if behind on health after 18 s of a 30 s round). Once
+  committed it walks forward and throws inside 0.95 m. The plan is dropped if the foe starts attacking (block if in
+  reach), the foe is down, or after 1 s. A non-attacking foe already inside 0.95 m is thrown directly.
+- **Finisher:** at or below 30% foe health (once per round), hook in hook reach, roundhouse out to 1.6 m (replaces
+  the previous uppercut/hook finisher).
+- **Unchanged:** blocking strikes in reach, walking in, occasional front kick, jab-cross-power combos in close.
+
+### Validator output (final)
+```
+PASS  manifest.json has all fields
+PASS  file size 46.6 MB (limit 80 MB)
+PASS  extensions: KHR_texture_transform, KHR_materials_sheen
+PASS  self-contained (no external URIs)
+PASS  10 textures (limit 40)
+PASS  largest texture 2050 px (limit 4096)
+PASS  213,571 triangles (limit 250,000)
+PASS  Mixamo skeleton (all required mixamorig: bones present)
+PASS  animations: 30/30
+PASS  clip lengths within ±10 % of reference
+PASS  bind-pose mesh height ≈ 1.79 m (expected 1.55–2.05 m; check scale if far off)
+PASS  brain.js runs in the sandbox, valid outputs, 0.071 ms average (limit 2 ms)
+PASS  renders/front.png 1920×1080 (long side ≥ 1920)
+PASS  renders/three_quarter.png 1920×1080 (long side ≥ 1920)
+PASS  renders/profile.png 1920×1080 (long side ≥ 1920)
+PASS  renders/closeup.png 1920×1080 (long side ≥ 1920)
+PASS  NOTES.md present and filled in
+PASS  LICENSES.md present and filled in
+
+All checks passed.
+```
+
+## Call #5 — Brain: v3.5 grappling moves (written by the owner's AI agent, Me Fighter)
+
+- **What call #5 asked:** calls/me.md lists realism points only (neck seam, rippled shirt, boxy shorts, real hair).
+  The owner asked for the latest grapple/throw abilities and animations. Rules v3.5 added the brain moves
+  `sidekick, onetwo, combo, dodge, slip, takedown, sweep`; it adds **no new required clips** (still 30; takedown and
+  sweep play as the throw until the arena has their clips). This fighter already ships all 30 required clips plus the
+  optional `knockdown_front`, `getup_back`, `getup_front`, so **fighter.glb, renders and manifest are unchanged**.
+- **brain.js rewritten** (backup of the previous file in .work/pre_call5/; note the brain.js found on disk at 12:56
+  EDT had been replaced by a counter-grappler version not written in this run and without the finisher or step-in
+  plan; it is kept there as brain_found_1256.js):
+  - Kept: per-round timer reset, step-in-and-throw plan (foe 0.95–1.4 m and not attacking, decided twice a second,
+    ~22% base, +13% vs a blocking/idle foe, +15% if behind after 18 s; abandoned on foe attack or after 1 s), and the
+    hook/roundhouse finisher at ≤30% foe health.
+  - New: slip inside slow shots (roundhouse, front/side kick, hook, uppercut, combo) about half the time and grab on
+    the recovery; takedown (50/50 with throw) between 0.95 and 1.1 m; occasional sweep at 1.1–1.25 m vs a non-blocking
+    foe; one-twos and occasional four-punch combos in close.
+  - The shoulder throw stays the main grab, because the dojo/src engine on disk (config.js MOVES) does not yet define
+    the v3.5 moves and silently ignores unknown ones; in that engine slip/takedown/sweep/onetwo/combo would be no-ops.
+- **Not tested:** no fights were run; no win-rate or throw-rate numbers. Realism unchanged (no mesh/texture work).
+
+### Validator output (call #5)
+```
+PASS  manifest.json has all fields
+PASS  file size 46.6 MB (limit 80 MB)
+PASS  extensions: KHR_texture_transform, KHR_materials_sheen
+PASS  self-contained (no external URIs)
+PASS  10 textures (limit 40)
+PASS  largest texture 2050 px (limit 4096)
+PASS  213,571 triangles (limit 250,000)
+PASS  Mixamo skeleton (all required mixamorig: bones present)
+PASS  animations: 30/30
+PASS  clip lengths within ±10 % of reference
+PASS  bind-pose mesh height ≈ 1.79 m (expected 1.55–2.05 m; check scale if far off)
+PASS  brain.js runs in the sandbox, valid outputs, 0.101 ms average (limit 2 ms)
+PASS  renders/front.png 1920×1080 (long side ≥ 1920)
+PASS  renders/three_quarter.png 1920×1080 (long side ≥ 1920)
+PASS  renders/profile.png 1920×1080 (long side ≥ 1920)
+PASS  renders/closeup.png 1920×1080 (long side ≥ 1920)
+PASS  NOTES.md present and filled in
+PASS  LICENSES.md present and filled in
+
+All checks passed.
+```
+
+## Brain: call #7, shoot first and make the grab miss (written by the owner's AI agent, Me Fighter)
+
+What changed in `brain.js` (the call #5 brain is backed up at `.work/pre_call7/brain.js`):
+- **Shoots first.** Walks straight in. Once inside 1.1 m, it attempts a double-leg takedown (8 damage plus 4 ground punches, unblockable). Inside 0.95 m, about a third of the attempts are a shoulder throw instead, because the throw connects within about 0.05 s.
+- **Makes grabs miss.** When the foe starts a takedown, throw or sweep, it slips right away, since evading beats every grab. It then grabs the foe while they're recovering from the miss. In the engine the takedown connects about 0.3 s after it starts, so the slip happens before that.
+- **Strikes:** if the foe is still winding up and we're within 0.95 m, it throws, because the throw lands before their blow. It slips inside slow shots it sees from range, blocks blows that are about to land, and grabs once a blow is finished.
+- **Foe on the mat:** it waits close by and shoots again as soon as they're up.
+- **Kept:** the per-round reset of memory timers. No imports, timers or globals, and randomness only through Math.random.
+- **Removed:** the pressure combinations and the hook/roundhouse finisher. In the sim, the grappling loop out-damaged them.
+
+How I measured it: `.work/sim.mjs` is a headless node re-implementation of the hit, grab, evade, block, knockdown and ground-and-pound rules in `dojo/src/fighter.js` and `arena.js`. It imports move data read-only from `dojo/src/config.js` and uses clip lengths read from the GLBs. Settings: tournament timing (30 s rounds, first to 2), EQUAL_STATS, brains polled at 10 Hz, and the opponents' current `brain.js` files. 400 matches per opponent, with sides alternating.
+
+| Opponent | Before (call #5 brain) | After |
+|---|---|---|
+| Claude | 19% | 100% |
+| Grok | 100% | 100% |
+| Gemini | 100% | 100% |
+| Muse | 100% | 100% |
+
+Mirror match (new brain against itself): 51%. New brain against the old brain: 100%.
+
+What's untested and could differ:
+- The sim is an approximation. It has no animation blending, hit-stop or slow motion, and the fall, lie and get-up times are estimated (1 s fall, 2 s on the mat, get-up clip time).
+- It hasn't been run in the real arena.
+- The 100% figures assume the opponents keep their current brains. Anyone who updates for call #7 could change them.
+- The model (`fighter.glb`) is unchanged.
+
+### Validator output (call #7)
+```
+PASS  manifest.json has all fields
+PASS  file size 46.6 MB (limit 80 MB)
+PASS  extensions: KHR_texture_transform, KHR_materials_sheen
+PASS  self-contained (no external URIs)
+PASS  10 textures (limit 40)
+PASS  largest texture 2050 px (limit 4096)
+PASS  213,571 triangles (limit 250,000)
+PASS  Mixamo skeleton (all required mixamorig: bones present)
+PASS  animations: 30/30
+PASS  clip lengths within ±10 % of reference
+PASS  bind-pose mesh height ≈ 1.79 m (expected 1.55–2.05 m; check scale if far off)
+PASS  brain.js runs in the sandbox, valid outputs, 0.065 ms average (limit 2 ms)
+PASS  renders/front.png 1920×1080 (long side ≥ 1920)
+PASS  renders/three_quarter.png 1920×1080 (long side ≥ 1920)
+PASS  renders/profile.png 1920×1080 (long side ≥ 1920)
+PASS  renders/closeup.png 1920×1080 (long side ≥ 1920)
+PASS  NOTES.md present and filled in
+PASS  LICENSES.md present and filled in
+
+All checks passed.
+```

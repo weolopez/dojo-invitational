@@ -28,6 +28,36 @@ touched. MPFB 2.0.18 (from extensions.blender.org, sha256-checked) and the MakeH
    removed) and exports `fighter.glb` with the 30 clips as NLA tracks.
 6. Renders: `dojo/judge.html?id=claude`, the standardised Three.js harness, from the submitted `fighter.glb`.
 
+## Update for call #5: Claude becomes a judoka (owner's request)
+
+- **Brain:** a grappler now. It closes to grappling range behind a mid guard and works for the shot: a double-leg
+  takedown (with ground-and-pound) from 1.1 m, a sweep from a little further out, a shoulder throw from close.
+  Jabs and one-twos only set the shot up. Against a slow kick it slips inside just before the blow and shoots as
+  the leg comes back. Until the arena has Mixamo's takedown and sweep clips, both play as the shoulder throw.
+- The model and clothing are as in the call #5 clothing fix below; nothing else changed.
+
+## Update for call #5 (after tournament 11)
+
+The call had no specific notes (the owner scores this entry), so I went by the judge harness's
+`action_roundhouse.png`. Its worst fault was clothing: in the kick the skin poked through the leggings at the hip
+(a ragged skin-coloured notch), through the top at the collar and chest, and the top's shoulder made a spike.
+
+- **Clothes weighted from the skin (new):** MPFB weights the sportsuit with 17 coarse bone groups of its own, so in
+  big poses cloth and skin moved apart. `fit_clothes_weights()` in `source/04_export_and_render.py` (run before
+  export) now gives every suit vertex the bone weights of the nearest point on the body surface (barycentric blend
+  of that body triangle's corners; MPFB's hidden helper geometry is excluded), so the suit now has 18 groups that
+  match the skin. Mesh, materials, textures, clips and triangle count are unchanged (167,392).
+- **Checked in Three.js:** re-rendered with `dojo/judge.html?id=claude` (headless Chrome). In the roundhouse frame
+  the hip tear, the collar notch and the shoulder spike are gone. Before/after crops:
+  `.work/previews/call5/roundhouse_before.png` and `roundhouse_after.png`. I only checked that one action frame and
+  the idle/T-pose views, not every clip.
+- **Correction to my earlier notes:** I wrote that the top "rides up and shows midriff" in bent poses. The CC0
+  `female_sportsuit01` top is cut as a crop top (it ends above the navel in the T-pose renders too), so the bare
+  midriff is the garment's design, not a fault.
+- Still visible: a tiny light speck on the chest of the top in the kick frame (a few pixels at the harness
+  distance); I did not find its cause. Brain, face, hair and skin are unchanged this round. Previous build is in
+  `.work/call5b_backup/`.
+
 ## Update for call #4, second pass (owner's request)
 
 Done in the judge's session at the owner's request ("Update Claude fighter"); the realism score is still the owner's to give.
@@ -140,9 +170,8 @@ copies of the judge harness's output (`dojo/judge.html?id=claude`, run in headle
 - The painted scalp is baked into the 2048 px skin diffuse, so it is low-resolution and not hair-strand detail.
 - No hand wraps, although the concept had them; the CC0 pack has none.
 - The face is neutral with no expression changes; there are no facial animations.
-- Clothes are skinned, not simulated, so they don't move independently. In extreme poses (e.g. the roundhouse kick
-  in the harness's `action_roundhouse.png`) the top clips: a sliver of chest skin shows through near the collar, and
-  the shoulder of the top bulges. The leggings also crease sharply at the hip.
+- Clothes are skinned, not simulated, so they don't move or wrinkle independently. Since call #5 they use the
+  skin's own weights, which removed the poke-through I saw in the roundhouse; other extreme poses weren't all checked.
 - Retargeted hands use the X Bot finger poses, so fists aren't fully closed in every clip.
 
 ## Validator output
@@ -159,7 +188,7 @@ PASS  Mixamo skeleton (all required mixamorig: bones present)
 PASS  animations: 30/30
 PASS  clip lengths within ±10 % of reference
 PASS  bind-pose mesh height ≈ 1.73 m (expected 1.55–2.05 m; check scale if far off)
-PASS  brain.js runs in the sandbox, valid outputs, 0.068 ms average (limit 2 ms)
+PASS  brain.js runs in the sandbox, valid outputs, 0.067 ms average (limit 2 ms)
 PASS  renders/front.png 1920×1080 (long side ≥ 1920)
 PASS  renders/three_quarter.png 1920×1080 (long side ≥ 1920)
 PASS  renders/profile.png 1920×1080 (long side ≥ 1920)

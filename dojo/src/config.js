@@ -47,21 +47,28 @@ export const MOVES = {
     hits: [{ from: 0.25, to: 0.35, dmg: 4 }, { from: 0.37, to: 0.46, dmg: 4 }, { from: 0.47, to: 0.56, dmg: 5 }, { from: 0.58, to: 0.68, dmg: 7 }] },
   // Footwork, played from each fighter's own step clips in place while the arena moves them: `shift` metres along the
   // way they face (minus = back) over the window `move`, and strikes miss them during `evade`. Throws miss too.
-  dodge: { clip: 'slip_back', dmg: 0, footwork: true, shift: -0.55, move: [0.05, 0.7], evade: [0.0, 0.8], timeScale: 1.2 },
-  slip: { clip: 'slip_in', dmg: 0, footwork: true, shift: 0.6, move: [0.05, 0.55], evade: [0.0, 0.85], timeScale: 1.2 },
+  dodge: { clip: 'dodge_back', alt: 'slip_back', dmg: 0, footwork: true, shift: -0.55, move: [0.05, 0.7], evade: [0.0, 0.8], timeScale: 1.2 },
+  slip: { clip: 'dodge_in', alt: 'slip_in', dmg: 0, footwork: true, shift: 0.6, move: [0.05, 0.55], evade: [0.0, 0.85], timeScale: 1.2 },
+  // Mixamo's MMA low kick, Muay Thai knee (close range only) and spinning back kick (lent.js); until a fighter
+  // has them they play as the front kick, uppercut and roundhouse.
+  lowkick: { clip: 'low_kick', dmg: 9, reach: 1.45, from: 0.32, to: 0.47, react: 'hit_reaction', needs: 'low_kick', fallback: 'frontkick' },
+  knee: { clip: 'knee', dmg: 12, reach: 0.95, from: 0.66, to: 0.8, react: 'hit_reaction', needs: 'knee', fallback: 'uppercut' },
+  spinkick: { clip: 'spin_kick', dmg: 17, reach: 1.6, from: 0.42, to: 0.56, react: 'hit_head_big', needs: 'spin_kick', fallback: 'roundhouse' },
   // (A kick that lands from closer than JAM metres is smothered: half damage, and it can't knock anyone down.)
   // Grappling with Mixamo's sweep and double-leg takedown (lent.js). A sweep is a low kick that drops a foe who
   // isn't blocking; a takedown is unblockable like a throw, ends in ground-and-pound, and whiffs on a foe mid-strike.
   // Until the clips are in the lending library, both fall back to the throw.
-  sweep: { clip: 'sweep', dmg: 9, reach: 1.25, from: 0.3, to: 0.5, react: 'sweep_fall', knockdown: true, needs: 'sweep', fallback: 'throw' },
-  takedown: { clip: 'takedown', dmg: 8, reach: 1.1, from: 0.1, to: 0.22, react: 'takedown_victim', grab: true, needs: 'takedown',
-    fallback: 'throw', ground: [{ at: 0.55, dmg: 4 }, { at: 0.65, dmg: 4 }, { at: 0.75, dmg: 5 }] },
+  // (Timings measured on Mixamo's clips: the sweep's foot connects at about half-way; the takedown makes contact at
+  // 8–16% of its window, and its four ground punches land at 51, 71, 84 and 96%.)
+  sweep: { clip: 'sweep', dmg: 9, reach: 1.25, from: 0.42, to: 0.56, react: 'sweep_fall', knockdown: true, needs: 'sweep', fallback: 'throw' },
+  takedown: { clip: 'takedown', dmg: 8, reach: 1.1, from: 0.08, to: 0.16, react: 'takedown_victim', grab: true, needs: 'takedown',
+    fallback: 'throw', timeScale: 1.2, ground: [{ at: 0.51, dmg: 4 }, { at: 0.71, dmg: 4 }, { at: 0.84, dmg: 5 }, { at: 0.96, dmg: 5 }] },
 };
 // Knockdowns: which power shots can drop a fighter, and which of them drop you on your front (the others: your back).
 // You get up the way you landed. The health threshold and time on the mat are champion-tunable (realism.js).
-export const KICKS = ['roundhouse', 'frontkick', 'sidekick'];
+export const KICKS = ['roundhouse', 'frontkick', 'sidekick', 'lowkick', 'spinkick'];
 export const JAM = 1.0;
-export const KNOCKDOWN = { moves: ['hook', 'uppercut', 'roundhouse', 'frontkick'], front: ['hook', 'roundhouse'] };
+export const KNOCKDOWN = { moves: ['hook', 'uppercut', 'roundhouse', 'frontkick', 'spinkick', 'knee'], front: ['hook', 'roundhouse', 'spinkick'] };
 
 export const MOVE_LABELS = { jab: 'Jab', cross: 'Cross', hook: 'Hook', uppercut: 'Uppercut', roundhouse: 'Roundhouse', frontkick: 'Front kick', throw: 'Throw' };
 

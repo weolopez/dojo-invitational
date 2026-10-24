@@ -128,9 +128,17 @@ function main() {
     const judged = readJson(STATE_FILE, {});
     for (const id of COMPETITORS) {
       const ready = readJson(path.join(HERE, 'entries', id, 'READY.json'), null);
-      if (!ready || ready.call < call.call) continue;
+      if (!ready) continue;
       const stamp = `${ready.call}:${ready.at}`;
       if (judged[id] === stamp) continue;
+      // A filing for the previous call still counts: a new call can open while an entrant is finishing (Muse filed
+      // for call 4 twelve minutes after call 5 opened and was silently skipped). Older filings are skipped, loudly.
+      if (ready.call < call.call - 1) {
+        log(id, `READY answers call ${ready.call}, but call ${call.call} is open: not judged (write READY.json again for call ${call.call})`);
+        judged[id] = stamp;
+        fs.writeFileSync(STATE_FILE, JSON.stringify(judged, null, 2));
+        continue;
+      }
       log(id, `READY for call ${ready.call}: judging`);
       judge(id);
       judged[id] = stamp;

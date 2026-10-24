@@ -13,6 +13,45 @@ GLB = os.path.join(ENTRY, "fighter.glb")
 HDRI = "/Users/weo/Development/3d/assets/polyhaven/hdri/basement_boxing_ring_2k.hdr"
 
 
+def fit_clothes_weights(body_name="Human", cloth_name="Human.female_sportsuit01"):
+    """Call #5: give the skin-tight sportsuit the skin's own bone weights. MPFB weights the suit with 17 coarse
+    groups, so in big poses (the roundhouse) the top rode up into a crop top and the skin poked through the
+    leggings at the hip and the top at the chest. Each suit vertex now takes the weights of the nearest point on the
+    body surface (barycentric blend of that triangle's corners), so cloth and skin move together."""
+    from mathutils.bvhtree import BVHTree
+    from mathutils.geometry import barycentric_transform
+    body, cloth = bpy.data.objects[body_name], bpy.data.objects[cloth_name]
+    me = body.data
+    me.calc_loop_triangles()
+    gi = body.vertex_groups["body"].index
+    on_body = {v.index for v in me.vertices if any(g.group == gi and g.weight > 0 for g in v.groups)}
+    tris = [t.vertices[:] for t in me.loop_triangles if all(i in on_body for i in t.vertices)]
+    co = [v.co.copy() for v in me.vertices]
+    bvh = BVHTree.FromPolygons(co, tris)
+    bones = {g.index: g.name for g in body.vertex_groups if g.name.startswith("mixamorig:")}
+    vw = [{bones[g.group]: g.weight for g in v.groups if g.group in bones and g.weight > 0} for v in me.vertices]
+    to_body = body.matrix_world.inverted() @ cloth.matrix_world
+    new = []
+    for v in cloth.data.vertices:
+        p, _n, ti, _d = bvh.find_nearest(to_body @ v.co)
+        a, b, c = (co[i] for i in tris[ti])
+        w = barycentric_transform(p, a, b, c, Vector((1, 0, 0)), Vector((0, 1, 0)), Vector((0, 0, 1)))
+        acc = {}
+        for k, idx in enumerate(tris[ti]):
+            for name, x in vw[idx].items():
+                acc[name] = acc.get(name, 0.0) + max(w[k], 0.0) * x
+        total = sum(acc.values()) or 1.0
+        new.append({n: x / total for n, x in acc.items() if x / total > 1e-3})
+    for g in list(cloth.vertex_groups):
+        cloth.vertex_groups.remove(g)
+    groups = {}
+    for i, ws in enumerate(new):
+        for name, x in ws.items():
+            g = groups.get(name) or groups.setdefault(name, cloth.vertex_groups.new(name=name))
+            g.add([i], x, "REPLACE")
+    print(f"[export] {cloth.name}: weights from the skin, {len(groups)} bone groups")
+
+
 def bake_modifiers():
     """Apply every modifier except the armature on each mesh (MPFB's helper masks and subdivision), so hidden
     helper geometry is really removed before export. The armature modifier is moved last first, because MPFB puts it
@@ -39,6 +78,7 @@ def bake_modifiers():
 
 def export():
     bpy.ops.wm.open_mainfile(filepath=os.path.join(WORK, "claude_rigged.blend"))
+    fit_clothes_weights()
     bake_modifiers()
     for o in bpy.data.objects:
         o.hide_set(False)

@@ -49,7 +49,8 @@ export class CpuBrain {
     else if (gap < 0.95 && Math.random() < 0.4) this.plan.back = true;
     else if (Math.random() < p.aggression) {
       let pick;
-      if (gap > 1.3 || Math.random() < p.kicks) pick = pickOne(['roundhouse', 'frontkick', 'sidekick']);
+      if (gap < 1.0 && Math.random() < 0.3) pick = 'knee';
+      else if (gap > 1.3 || Math.random() < p.kicks) pick = pickOne(['roundhouse', 'frontkick', 'sidekick', 'lowkick', 'lowkick', 'spinkick']);
       else if (Math.random() < p.power) pick = pickOne(['hook', 'uppercut', 'combo']);
       else pick = pickOne(['jab', 'cross', 'onetwo', 'onetwo']);
       me.attack(pick);

@@ -13,13 +13,19 @@ import { gltfLoader } from './assets.js';
 
 export const THROW_WINDOW = [1.85, 4.0];
 const FPS = 30;
-const SOURCE_URL = '/fighters/lent.glb'; // Mixamo's X Bot with the clips above (build_lent_clips.py)
-const EXTRAS = ['knockdown_front', 'getup_back', 'getup_front', 'sweep', 'sweep_fall', 'takedown', 'takedown_victim'];
+// Mixamo's X Bot with the clips above (build_lent_clips.py). ?lent=<file> tries another build, for testing.
+const SOURCE_URL = `/fighters/${new URLSearchParams(location.search).get('lent') ?? 'lent.glb'}`;
+const EXTRAS = ['knockdown_front', 'getup_back', 'getup_front', 'sweep', 'sweep_fall', 'takedown', 'takedown_victim',
+  'dodge_in', 'dodge_back', 'low_kick', 'knee', 'spin_kick'];
+// Paired clips play the same window for both fighters, owned or lent: the takedown's shot, fall and four ground
+// punches (the full clip runs 7.3 s of punching).
+const PAIRED_WINDOWS = { throw: THROW_WINDOW, thrown: THROW_WINDOW, takedown: [0.5, 5.4], takedown_victim: [0.5, 5.4] };
 // Footwork made from clips every fighter already has, played in place (the arena moves them).
 const OWN_DERIVED = { slip_in: 'step_forward', slip_back: 'step_backward' };
 // Mixamo's get-ups lie still for 2–3 s before rising, and stand for 2 s after: lend just the rise (measured on the
 // hips height).
-const LENT_WINDOWS = { getup_back: [3.2, 6.3], getup_front: [1.9, 6.3] };
+// The boxing dodges hold two motions each: lend only the first.
+const LENT_WINDOWS = { getup_back: [3.2, 6.3], getup_front: [1.9, 6.3], dodge_in: [0, 1.1], dodge_back: [0, 1.2], ...PAIRED_WINDOWS };
 const UP = new THREE.Vector3(0, 1, 0);
 
 const boneKey = (name) => name.match(/(Hips|Spine\d?|Neck|Head(?:Top_End)?|(?:Left|Right)[A-Za-z]+\d*)$/)?.[1] ?? null;
@@ -143,7 +149,7 @@ export async function fightClips(gltf) {
   const src = needed.some((n) => !own[n]) && own.fighting_idle ? await loadSource() : null;
   for (const name of needed) {
     const turn = turns[name] ?? 0;
-    const window = name === 'throw' || name === 'thrown' ? THROW_WINDOW : null;
+    const window = PAIRED_WINDOWS[name] ?? null;
     if (own[name]) clips[name] = ownWindow(root, own[name], turn, window ?? [0, own[name].duration]);
     else if (src?.[name]) { clips[name] = lent(src, name, root, turn); lentNames.push(name); }
   }

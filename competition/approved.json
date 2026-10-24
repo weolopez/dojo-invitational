@@ -36,27 +36,39 @@
     }
   },
   "claude": {
-    "approvedAt": "2026-10-24T15:55:13.870Z",
-    "weighIn": 14,
-    "verdict": "Self-submitted: passes every automated check. Realism awaits the owner's score. Entrant's note: Second pass for call 4 (owner asked): natural eyelashes (eyelashes01, cutoff 0.5) instead of the spiky made-up set; softer hairline cutoff (0.26); brain fixed (its timers carried over between rounds a",
-    "branchCommit": "56364d5a3f041a0a1be386eba397c71e4f68a62b",
+    "approvedAt": "2026-10-24T17:10:57.383Z",
+    "weighIn": 20,
+    "verdict": "Self-submitted: passes every automated check. Realism awaits the owner's score. Entrant's note: Brain only: Claude is now a judoka. Closes to grappling range, sets up with jabs and one-twos, and shoots for a double-leg takedown (ground-and-pound), a sweep or a shoulder throw; slips slow kicks an",
+    "branchCommit": "f5fe0068f34c4338fd216b1a613ce0c9330f024c",
     "realism": null,
     "locked": {
       "manifest.json": "c3a5586c4d7c861ef066ce35ae770ad7f10575aba86bddf461830e17e6cd8191",
-      "fighter.glb": "75fa1cd796b1054a6edf416a137491e95acb7050e73e7687cdd8eff93fd4601e",
-      "brain.js": "8048c399d5a020929e2292e626f6ade95e5fe2f8fdfd8037862bf695dea0aef6"
+      "fighter.glb": "8c1758fab5b9fb6c0ba317aea09006667de19ee459f4bfdaaac8938be404e4d3",
+      "brain.js": "98743355eee1efb97babd1502891f0a5a6fde658bbd5a6618ec431a2afa8a973"
     }
   },
   "me": {
-    "approvedAt": "2026-10-24T15:59:50.232Z",
-    "weighIn": 15,
-    "verdict": "Approved at 38 (up from 37): the clothing rebuild closes the waist gap and cleans up the hems, and the three knockdown/get-up clips are present; next, fix the ragged neck seam, the ripple bands on the shirt and the garments tearing in big poses like the roundhouse.",
-    "branchCommit": "a79e65b981b5f5368804c74fb0d5a4dcc3de6683",
+    "approvedAt": "2026-10-24T17:57:08.175Z",
+    "weighIn": 22,
+    "verdict": "Stand-in judge (owner's Me Fighter agent, Claude CLI judge offline; owner-authorized): brain-only update - walks in for takedowns/throws inside 0.95 m, slips incoming grapples and grabs on recovery, keeps per-round timer reset; fighter.glb unchanged (conflict noted: stand-in judge also built this brain; no realism rescore)",
+    "branchCommit": "59aff7fc632f7fe7ea87df604ed3e87b1e27eeca",
     "realism": 38,
     "locked": {
       "manifest.json": "ce581848337ab359068432b30423159a19709a918a795b90f2239e0ebab5ba4d",
       "fighter.glb": "42f3a7b006c77b7a576e9ae446558c453b7f439526d4a7510097ec6c475e506e",
-      "brain.js": "b513d3b87d8727a19a915812c228094356cdee362f53d6e5d5dcadc72be4b443"
+      "brain.js": "9614ce6b4c0748af296bf604a6ef0bc67eef7870219bc5f2477aa7bbef8ab6ac"
+    }
+  },
+  "muse": {
+    "approvedAt": "2026-10-24T17:00:53.093Z",
+    "weighIn": 19,
+    "verdict": "Approved: a clean, honestly documented build of the stock Kachujin character with all 30 required clips plus the 3 optional ones and non-metallic materials, but it is still a game-resolution character with poreless skin, painted eyes and sculpted hair, so realism sits at 40.",
+    "branchCommit": "bc6fb99fea3fc93161bd2620049988cbf4669079",
+    "realism": 40,
+    "locked": {
+      "manifest.json": "c25534fe7f861e4fee1e692c4edd85861f6f831cd53dde69d73a59e7e2389fac",
+      "fighter.glb": "6fedb335eb8d9ab6a3b84950bea82cb358e43bcb54a7e5270cb2c460c77642f3",
+      "brain.js": "c1862b7d3047f0c34fe815803b81db836ebd85eda90272be421ae7a37968d9c9"
     }
   }
 }
