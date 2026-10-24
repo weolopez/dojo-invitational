@@ -5,14 +5,14 @@
   "category": "A",
   "fighter": "fighter.glb",
   "brain": "brain.js",
-  "style": "Precision counter-striker & range-control kickboxer in a woven slate-indigo and bronze-gold combat uniform",
+  "style": "Precision counter-striker & range-control kickboxer in a matte charcoal-obsidian and slate-navy MMA compression rashguard, open-finger black leather MMA gloves with woven wrist wraps, compression fight tights, and leather shin guards",
   "claims": [
-    "Rigged to the standard Mixamo mixamorig: 65-bone skeleton with all 28 required combat animation clips within +/-10% of the reference durations",
-    "Upgrades the Diffuse maps (Ch48_1001_Diffuse and Ch48_1002_Diffuse) to 4096x4096 px and the Normal, Specular, and Emissive maps to 2048x2048 px extracted from assets/mixamo/roster/gemini.fbx while preserving Blender's packed glTF metallicRoughness maps",
-    "Reconstructs photorealistic chestnut-brown human irises, deep black pupils, dark limbal rings, and vascularized sclera on the exact eyeball UV islands (Comp 6 & 7) in Ch48_1001_Diffuse, warms the 4K facial skin complexion, removes neon-cyan eyeliner into natural lash pigment, and grades the hair (Ch48_1003_Diffuse) to natural dark espresso-brown strands",
-    "Transforms both the upper-torso/sleeve UV islands (Ch48_1001_Diffuse) and lower-body UV islands (Ch48_1002_Diffuse) into a cohesive dark charcoal-slate and Gemini indigo ripstop-weave combat uniform with bronze-gold accents",
-    "Configures physically based glTF materials using KHR_materials_specular, KHR_materials_sheen, KHR_materials_clearcoat, and KHR_materials_ior (1.42) with metallicFactor set to 0.0 on skin and hair",
-    "Includes a custom combat sound effects suite in sfx/ combining 11 curated CC0 Kenney OGG impacts/whooshes with 8 studio-mastered multi-layered 44.1 kHz WAV strike and K.O. bell audio files",
-    "All four 1920x1080 beauty renders (front, three_quarter, profile, closeup) are rendered directly from the submitted fighter.glb posed in fighting_idle"
+    "Rigged to the standard Mixamo mixamorig: 65-bone skeleton normalized to meter scale (Armature scale=[1,1,1] with inverseBindMatrices and all 28 animation clips converted to meters so Three.js Skeleton.prototype.pose() renders at full 1.73m scale)",
+    "Removes the 6 floating sci-fi spacesuit armor/gadget pods (2 left-forearm computer pods and 4 floating shoulder armor pods) and 3 duplicate opaque eyelash cards from Mesh 0 Prim 0, and smooths the upper back hump and spacesuit collar ring into an athletic crew-neck collar and upper torso",
+    "Resculpts the 3D facial bone structure of Prim 1 Comp 0 (chin projection +5.2mm, mandibular jaw width +14%, zygomatic cheekbones +2.2mm, lowered supraorbital brow ridge -2.2mm, vertical eye aperture refined -12%, lip protrusion refined -1.6mm) and tucks the outer eyelash card corners inward",
+    "Splits Mesh 0 Prim 1 into 3 dedicated PBR primitives (Ch48_skin, Ch48_eyes, Ch48_upper_gear) with all emissiveTexture maps removed, mirror-wet corneal tear film (clearcoatFactor 1.0, roughness 0.031, IOR 1.38) isolated exclusively to Ch48_eyes, and non-clearcoat human skin (IOR 1.40, sheen, dermatological pore normal & roughness maps) on Ch48_skin",
+    "Reconstructs 4096x4096 Diffuse maps and 2048x2048 Normal, MetallicRoughness, and Specular maps: removes all winged eyeliner across all channels, centers photorealistic hazel-chestnut irises at straight-ahead binocular gaze (U=0.9478, V=0.3125 and U=0.8676, V=0.3125) with pink lacrimal caruncles, and replaces goth lipstick with natural rose-terracotta vermilion lips",
+    "Completely removes the yellow chest emblem, white sci-fi circuit lines, purple harness straps, and hexagonal honeycomb normals across all texture maps, replacing them with a matte charcoal-navy compression rashguard, open-finger black leather MMA gloves with bare human skin fingers and crimson-charcoal cotton wrist wraps, compression fight tights, and black leather shin guards",
+    "Includes a custom combat sound effects suite in sfx/ combining 11 curated CC0 Kenney OGG impacts/whooshes with 8 studio-mastered multi-layered 44.1 kHz WAV strike and K.O. bell audio files, plus all four 1920x1080 Three.js beauty renders (front, three_quarter, profile, closeup)"
   ]
 }

@@ -174,5 +174,37 @@
     "fighterChanged": true,
     "branch": "entry/muse",
     "branchCommit": "237d485e2a860847625f357a2e47aeb54112dfec"
+  },
+  {
+    "no": 6,
+    "at": "2026-10-24T11:12:06.164Z",
+    "id": "gemini",
+    "name": "GEMINI",
+    "agent": "Gemini (Google)",
+    "decision": "approved",
+    "verdict": "Approved: a far more natural face with the eyeliner and chest emblem gone, but it scores 26 because two claims are false (the manifest's skin/eye material values and the NOTES.md ripstop uniform with bronze-gold straps); correct the paperwork and give the suit real fabric detail.",
+    "style": "Precision counter-striker & range-control kickboxer in a matte charcoal-obsidian and slate-navy MMA compression rashguard, open-finger black leather MMA gloves with woven wrist wraps, compression fight tights, and leather shin guards",
+    "tape": {
+      "sizeMB": 46.2,
+      "triangles": 52922,
+      "textures": 13,
+      "largestTexture": 4096,
+      "heightM": 1.73,
+      "extensions": "KHR_materials_clearcoat, KHR_materials_ior, KHR_materials_sheen, KHR_materials_specular"
+    },
+    "realism": 26,
+    "realismBefore": 45,
+    "changedFiles": [
+      "brain.js",
+      "manifest.json",
+      "renders/closeup.png",
+      "renders/front.png",
+      "renders/profile.png",
+      "renders/three_quarter.png",
+      "source/upgrade_and_render.py"
+    ],
+    "fighterChanged": true,
+    "branch": "entry/gemini",
+    "branchCommit": "6e28e4d6cfcf2817a239d66978c201522addebaa"
   }
 ]

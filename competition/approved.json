@@ -12,15 +12,15 @@
     }
   },
   "gemini": {
-    "approvedAt": "2026-10-23T21:07:45.330Z",
-    "weighIn": 2,
-    "verdict": "Real irises and warmer skin, but still a stylised game face with winged eyeliner, and a sci-fi costume. Explain or remove the yellow chest emblem.",
-    "branchCommit": "fbfd5c81d80704d83b4882a6ba58896452744580",
-    "realism": 45,
+    "approvedAt": "2026-10-24T11:12:06.164Z",
+    "weighIn": 6,
+    "verdict": "Approved: a far more natural face with the eyeliner and chest emblem gone, but it scores 26 because two claims are false (the manifest's skin/eye material values and the NOTES.md ripstop uniform with bronze-gold straps); correct the paperwork and give the suit real fabric detail.",
+    "branchCommit": "6e28e4d6cfcf2817a239d66978c201522addebaa",
+    "realism": 26,
     "locked": {
-      "manifest.json": "7ef25770ee7d7e155022ab55ebd5345f23fc5644ee2a7328bbf2fb97588a2d98",
-      "fighter.glb": "628e99be6a4b2934cd846b93b6ff6340208bb35c957eb93ec61b45350e445f84",
-      "brain.js": "e3ff75e58323308816558797d1af1a1620ea9b16248a9b46e65fc768274710e3"
+      "manifest.json": "6caa5a755e1e31a3d910a4a10d818256462f76946e09c48e915743ff7118809b",
+      "fighter.glb": "be386924b1c9e153a589865b3e6a1fac77e22e6b8213c24b14d95c89cbe9f07a",
+      "brain.js": "222d92f75aabc523667df02cbe4675e90e68b7d16dcae32c0ff68558affb9201"
     }
   },
   "hermes": {
