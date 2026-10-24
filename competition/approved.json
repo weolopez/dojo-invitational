@@ -46,5 +46,17 @@
       "fighter.glb": "d14d4afff091a9f0ce98132765de3cd72f33be3dfe75e17e0fa63faa5bba6373",
       "brain.js": "3a47335d12efed5b63278d513732adb4c0a04b2cbe7690d2a4af90ab4b512101"
     }
+  },
+  "me": {
+    "approvedAt": "2026-10-24T12:04:27.150Z",
+    "weighIn": 8,
+    "verdict": "Approved at 33/100, all claims check out: the photo face is the only real face in the field, but next replace the pink X Bot mannequin body with real skin and clothing, fix the neck seam, and lift the downcast eyes.",
+    "branchCommit": "fe40814e562c1c1947751277b261cadb5f616193",
+    "realism": 33,
+    "locked": {
+      "manifest.json": "195e7ce40d92ab203bfd766bbc989bb0dcc3d11f01d68ab4a135e553e1906d6b",
+      "fighter.glb": "871f7cc710a73ae9303ca32b18c72a13c47382cd5cf2399fd3b976fc55972d01",
+      "brain.js": "3e7971984789c24b702be7ff3dc797d2884763810a7f9257feb6fe4ac5b55c30"
+    }
   }
 }

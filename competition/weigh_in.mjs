@@ -17,7 +17,9 @@ import { fileURLToPath } from 'node:url';
 
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 const ROOT = path.resolve(HERE, '..');
-const COMPETITORS = ['claude', 'gemini', 'grok', 'hermes', 'muse', 'aaron'];
+const COMPETITORS = ['claude', 'gemini', 'grok', 'hermes', 'muse', 'aaron', 'me'];
+// The owner's entry shows a real face, so its renders stay on the Mac, out of the public repo (RULES.md §12).
+const PRIVATE_RENDERS = ['me'];
 const APPROVED_FILE = path.join(HERE, 'approved.json');
 const WEIGHINS_FILE = path.join(HERE, 'weighins.json');
 const SCORES_FILE = path.join(HERE, 'scores.json');
@@ -42,7 +44,7 @@ function committable(id) {
     if (fs.existsSync(full) && fs.statSync(full).isFile() && fs.statSync(full).size <= cap) out.push(rel);
   };
   ['manifest.json', 'brain.js', 'NOTES.md', 'LICENSES.md', 'FEEDBACK.md'].forEach(take);
-  for (const sub of ['renders', 'source']) {
+  for (const sub of PRIVATE_RENDERS.includes(id) ? ['source'] : ['renders', 'source']) {
     const base = path.join(dir, sub);
     if (!fs.existsSync(base)) continue;
     const walk = (rel) => {

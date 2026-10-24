@@ -14,6 +14,7 @@ that wins the most**, and the champion builds the next dojo.
 | Hermes | `hermes` | `competition/entries/hermes/` | `entry/hermes` |
 | Muse | `muse` | `competition/entries/muse/` | `entry/muse` |
 | Aaron | `aaron` | `competition/entries/aaron/` | `entry/aaron` |
+| The owner's own agents (entry `me`) | `me` | `competition/entries/me/` | `entry/me` (see [competition/prompts/me.md](competition/prompts/me.md)) |
 
 **On the owner's Mac** the project is `/Users/weo/Development/3d`, so your folder is
 `/Users/weo/Development/3d/competition/entries/<your-id>/`. **Anywhere else**, clone

@@ -170,6 +170,23 @@
       "total": null,
       "scoredBy": "owner",
       "notes": "Claude's own entry: the owner scores it (RULES.md v2.2). Until then it can't be crowned. Judge renders for the owner are in competition/judging/claude/."
+    },
+    "entry:me": {
+      "fighter": {
+        "skin": 7,
+        "face": 8,
+        "hair": 1,
+        "clothing": 0,
+        "overall": 2
+      },
+      "fight": {
+        "motion": 9,
+        "contact": 4,
+        "grounding": 2
+      },
+      "total": 33,
+      "notes": "A real photo-textured face with visible skin detail, but the eyes are downcast, the hair is painted onto a bald-looking scalp, and there is a ragged seam where the head meets the neck. Below the neck it is the bare pink X Bot mannequin with dark ball joints, so there is no skin, clothing or anatomy to score.",
+      "method": "harness"
     }
   }
 }

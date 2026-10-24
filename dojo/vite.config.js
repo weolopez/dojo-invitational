@@ -18,7 +18,7 @@ const WEIGHINS_FILE = path.join(COMPETITION, 'weighins.json');
 const START_NOW_FILE = path.join(COMPETITION, 'start_now.json');
 const sha256 = (f) => { try { return crypto.createHash('sha256').update(fs.readFileSync(f)).digest('hex'); } catch { return null; } };
 const COMMISSION_TEMPLATE = path.join(COMPETITION, 'prompts', 'dojo_commission_template.md');
-const BUILDERS = new Set(['claude', 'gemini', 'grok', 'hermes', 'muse', 'aaron']);
+const BUILDERS = new Set(['claude', 'gemini', 'grok', 'hermes', 'muse', 'aaron', 'me']);
 const DOJO_DIR = /^season-(\d+)-([a-z0-9_-]+)$/;
 
 const dojoChecks = new Map();
@@ -184,7 +184,7 @@ function arenaApi() {
               const intact = [...SERVED_FILES].every((f) => sha256(path.join(dir, f)) === a.locked?.[f]);
               if (!intact) continue;
               const manifest = JSON.parse(fs.readFileSync(path.join(dir, 'manifest.json'), 'utf8'));
-              if (manifest.category !== 'A') continue;
+              if (manifest.category !== 'A' && !(id === 'me' && manifest.category === 'O')) continue;
               entries.push({ id, name: manifest.displayName ?? id, agent: manifest.agent ?? id, style: manifest.style ?? '',
                 weighIn: a.weighIn });
             }

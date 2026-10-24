@@ -62,6 +62,10 @@ async function main() {
     if (o.isBone && /Head$/.test(o.name)) headBone = o;
     if (o.isBone && /Hips$/.test(o.name)) hipsBone = o;
   });
+  // The rest pose as loaded. (skeleton.pose() ignores a scaled armature above the bones, which Mixamo and Blender
+  // exports usually have, and blows such fighters up 100 times with the camera inside them.)
+  const rest = [];
+  model.traverse((o) => { if (o.isBone) rest.push([o, o.position.clone(), o.quaternion.clone(), o.scale.clone()]); });
   model.updateMatrixWorld(true);
   const headY = headBone ? headBone.getWorldPosition(new THREE.Vector3()).y : 1.6;
   const box = { min: { y: 0 } };
@@ -78,7 +82,7 @@ async function main() {
       }
     } else {
       // Bind pose for the beauty views, so every fighter is compared in the same neutral stance.
-      model.traverse((o) => { if (o.isSkinnedMesh) o.skeleton.pose(); });
+      for (const [bone, p, q, sc] of rest) { bone.position.copy(p); bone.quaternion.copy(q); bone.scale.copy(sc); }
     }
     model.updateMatrixWorld(true);
     const a = THREE.MathUtils.degToRad(v.az);

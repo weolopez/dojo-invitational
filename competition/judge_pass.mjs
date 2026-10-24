@@ -22,7 +22,7 @@ const STATE_DIR = path.join(HERE, '.bell');
 const STATE_FILE = path.join(STATE_DIR, 'judged.json');
 const LOCK = path.join(STATE_DIR, 'judge.lock');
 const CHROME = '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome';
-const COMPETITORS = ['claude', 'gemini', 'grok', 'hermes', 'muse', 'aaron'];
+const COMPETITORS = ['claude', 'gemini', 'grok', 'hermes', 'muse', 'aaron', 'me'];
 
 const readJson = (f, fallback) => { try { return JSON.parse(fs.readFileSync(f, 'utf8')); } catch { return fallback; } };
 const log = (...a) => console.log(new Date().toISOString(), '[judge]', ...a);
@@ -64,7 +64,8 @@ Then do exactly two things, and nothing else:
 2. Run: node competition/weigh_in.mjs approve ${id} "<one-sentence verdict>"   (or "reject" if the entry is broken, unusable
    or breaks a rule, with the verdict saying what to fix).
 
-Don't edit any other file, don't commit or push, and be fair: the same rubric for everyone.`;
+Don't edit any other file. Don't run any git command (no checkout, commit or push): the weigh-in script does the git work.
+Be fair: the same rubric for everyone.`;
 }
 
 /** The ring announcer's introduction for the card this pass just made (announce.mjs). */
@@ -94,11 +95,18 @@ function judge(id) {
     const r = spawnSync('claude', ['-p', judgePrompt(id, ready, rendered), '--dangerously-skip-permissions'],
       { cwd: ROOT, encoding: 'utf8', timeout: 20 * 60 * 1000, env: cleanEnv() });
     log(id, 'judge run exit', r.status, (r.stdout ?? '').trim().split('\n').slice(-2).join(' | '));
+    // The weigh-in merges into main; a judge that switched branches would strand it (it happened once, with entry/me).
+    const head = execFileSync('git', ['rev-parse', '--abbrev-ref', 'HEAD'], { cwd: ROOT, encoding: 'utf8' }).trim();
+    if (head !== 'main') {
+      log(id, `judge left the checkout on ${head}; switching back to main`);
+      execFileSync('git', ['checkout', '-q', 'main'], { cwd: ROOT });
+    }
   }
   announceNew(id, cardsBefore);
   const git = (...a) => execFileSync('git', a, { cwd: ROOT, encoding: 'utf8' }).trim();
   try {
-    git('add', '--', 'competition/scores.json', `competition/judging/${id}`, 'competition/announcements');
+    // The owner's renders show a real face: they stay on the Mac (competition/judging/me is git-ignored).
+    git('add', '--', 'competition/scores.json', ...(id === 'me' ? [] : [`competition/judging/${id}`]), 'competition/announcements');
     if (git('diff', '--cached', '--name-only')) git('commit', '-q', '-m', `Judge's scorecard: ${id}\n\nCo-Authored-By: Claude Opus 5.5 <noreply@anthropic.com>`);
     git('-c', 'credential.helper=', '-c', 'credential.helper=!gh auth git-credential', 'push', '-q', 'origin', 'main', `entry/${id}`);
     log(id, 'pushed');

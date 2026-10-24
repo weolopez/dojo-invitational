@@ -244,7 +244,8 @@ const shuffle = (xs) => xs.map((x) => [Math.random(), x]).sort((p, q) => p[0] - 
    */
   fillSparring() {
     const busy = new Set(this.arenas.flatMap((a) => a.lineup));
-    const house = ROSTER.map((d) => ({ ...d, stats: EQUAL_STATS }));
+    // The house "You" is the same person as the owner's entry, so it stays out once entry:me is in.
+    const house = ROSTER.filter((d) => !(d.id === 'me' && this.byId['entry:me'])).map((d) => ({ ...d, stats: EQUAL_STATS }));
     const pool = [...shuffle(this.sparDefs), ...shuffle(house)]
       .filter((d, i, all) => !busy.has(d.id) && all.findIndex((x) => x.id === d.id) === i);
     for (const arena of this.arenas) {

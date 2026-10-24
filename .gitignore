@@ -43,3 +43,5 @@ competition/entries/*
 competition/dojos/season-*/
 competition/start_now.json
 competition/.bell/
+# The owner's entry shows a real face: its judging renders stay on the Mac.
+competition/judging/me/

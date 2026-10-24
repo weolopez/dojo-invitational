@@ -267,7 +267,9 @@ function checkEntry(id) {
       const missing = ['id', 'displayName', 'agent', 'category', 'fighter', 'brain', 'style', 'claims'].filter((k) => !(k in manifest));
       (missing.length ? fail : pass)(`manifest.json${missing.length ? ` — missing fields: ${missing.join(', ')}` : ' has all fields'}`);
       if (manifest.id !== id) fail(`manifest id "${manifest.id}" does not match folder "${id}"`);
-      if (!['A', 'B'].includes(manifest.category)) fail('manifest category must be "A" or "B"');
+      if (!['A', 'B', 'O'].includes(manifest.category)) fail('manifest category must be "A", "B" or "O"');
+      // Category O is the owner's own entry (RULES.md §12), and only that one.
+      if ((manifest.category === 'O') !== (id === 'me')) fail('category "O" is only for entry "me", and entry "me" must be category "O"');
     } catch (err) { fail(`manifest.json is not valid JSON: ${err.message}`); }
   }
   checkGlb(path.join(dir, manifest?.fighter ?? 'fighter.glb'));
