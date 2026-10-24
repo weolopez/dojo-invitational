@@ -1,9 +1,12 @@
 #!/usr/bin/env node
-// The Weigh-In announcer (RULES.md §10): a ring-announcer introduction for each weigh-in card, voiced with macOS `say`.
+// The Weigh-In announcer (RULES.md §10): a ring-announcer introduction for each weigh-in card, voiced by Kokoro neural
+// text-to-speech running locally (competition/voice.py), with an arena echo from ffmpeg. Falls back to macOS `say`.
 //
 //   node competition/announce.mjs <card no>   announce one weigh-in (judge_pass.mjs runs this after every weigh-in)
 //   node competition/announce.mjs --intro     record the ceremony's opening line
+//   node competition/announce.mjs --redo      re-record every existing announcement (after changing the voice)
 //
+// The voice and speed are in competition/announcer.json.
 // Writes competition/announcements/<no>.json ({ no, id, text, audio, seconds }) and <no>.m4a. The arena plays them
 // at the weigh-in before each tournament, with the text as subtitles.
 
@@ -16,8 +19,8 @@ import { cleanEnv } from './bell.mjs';
 const HERE = path.dirname(fileURLToPath(import.meta.url));
 const ROOT = path.resolve(HERE, '..');
 const OUT = path.join(HERE, 'announcements');
-const VOICE = 'Daniel (Enhanced)';
-const RATE = '178';
+const PYTHON = path.join(ROOT, 'assets', 'tts', '.venv', 'bin', 'python');
+const ARENA = 'acompressor=threshold=-18dB:ratio=3:attack=5:release=120,aecho=0.85:0.6:70|140:0.22|0.12,loudnorm=I=-16:TP=-1.5';
 
 const INTRO = 'Ladies and gentlemen, boys and girls, bots of every model and parameter count! '
   + 'Welcome, to the weigh-in! Tonight, every fighter steps on the scale, and the judge tells you exactly how real they look. '
@@ -60,11 +63,16 @@ Reply with the introduction text only.`;
 
 function record(name, text) {
   fs.mkdirSync(OUT, { recursive: true });
-  const aiff = path.join(OUT, `${name}.aiff`);
+  const { voice = 'am_michael', speed = 0.95 } = JSON.parse(fs.readFileSync(path.join(HERE, 'announcer.json'), 'utf8'));
+  const txt = path.join(OUT, `${name}.txt`);
+  const wav = path.join(OUT, `${name}.wav`);
   const m4a = path.join(OUT, `${name}.m4a`);
-  spawnSync('say', ['-v', VOICE, '-r', RATE, '-o', aiff, text]);
-  spawnSync('afconvert', ['-f', 'm4af', '-d', 'aac', aiff, m4a]);
-  fs.rmSync(aiff, { force: true });
+  fs.writeFileSync(txt, text);
+  const tts = spawnSync(PYTHON, [path.join(HERE, 'voice.py'), voice, String(speed), txt, wav], { encoding: 'utf8' });
+  if (tts.status !== 0) spawnSync('say', ['-v', 'Daniel (Enhanced)', '-r', '178', '--file-format=WAVE', '--data-format=LEI16@24000', '-o', wav, text]);
+  spawnSync('ffmpeg', ['-loglevel', 'error', '-y', '-i', wav, '-af', ARENA, '-c:a', 'aac', '-b:a', '128k', m4a]);
+  fs.rmSync(txt, { force: true });
+  fs.rmSync(wav, { force: true });
   const info = spawnSync('afinfo', [m4a], { encoding: 'utf8' }).stdout ?? '';
   const seconds = Number(info.match(/estimated duration: ([\d.]+)/)?.[1] ?? 0);
   return { audio: `${name}.m4a`, seconds: +seconds.toFixed(1) };
@@ -82,7 +90,16 @@ export function announce(no) {
 
 if (process.argv[1] === fileURLToPath(import.meta.url)) {
   const arg = process.argv[2];
-  if (arg === '--intro') {
+  if (arg === '--redo') {
+    // Same words, new voice: re-record the intro and every saved announcement.
+    for (const f of fs.readdirSync(OUT).filter((x) => x.endsWith('.json'))) {
+      const file = path.join(OUT, f);
+      const a = JSON.parse(fs.readFileSync(file, 'utf8'));
+      Object.assign(a, record(f.replace(/\.json$/, ''), a.text));
+      fs.writeFileSync(file, `${JSON.stringify(a, null, 2)}\n`);
+      console.log(f, a.seconds, 's');
+    }
+  } else if (arg === '--intro') {
     const result = { text: INTRO, ...record('intro', INTRO) };
     fs.writeFileSync(path.join(OUT, 'intro.json'), `${JSON.stringify(result, null, 2)}\n`);
     console.log(result);

@@ -1,0 +1,5 @@
+{
+  "voice": "am_michael",
+  "speed": 0.95,
+  "note": "Kokoro voice for the ring announcer (competition/voice.py). Try am_fenrir (deeper) or bm_george (British)."
+}
