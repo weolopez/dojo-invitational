@@ -13,17 +13,41 @@ touched. MPFB 2.0.18 (from extensions.blender.org, sha256-checked) and the MakeH
 
 1. `00_install_mpfb.py`: installs MPFB into the private profile and points it at the CC0 assets.
 2. `01_build_human.py`: builds the character from a description: female, age 0.6 (about 38), muscle 0.72,
-   weight 0.45, proportions 0.85, height 0.6, mixed ancestry; skin, high-poly eyes, eyebrow006, eyelashes02,
+   weight 0.45, proportions 0.85, height 0.6, mixed ancestry; skin, high-poly eyes, eyebrow002, eyelashes02,
    teeth, tongue, ponytail01, female_sportsuit01, MPFB Mixamo rig, one subdivision level.
 3. `02_materials.py`: grades the skin toward olive, generates a tiling pore normal map, gives the eyes the brown
-   iris and a clearcoat, darkens hair and brows, recolours the sportsuit, and sets glTF alpha modes (opaque skin,
-   teeth and cloth; cutout hair, brows, lashes and cornea).
+   iris (red cast shifted to dark brown) and a clearcoat, darkens the hair, recolours the brows dark brown,
+   paints scalp and brow shading into the skin under the hair cap and brows (see below), recolours the sportsuit,
+   and sets glTF alpha modes (opaque skin, teeth and cloth; cutout hair, brows, lashes and cornea).
 4. `03_rig_and_retarget.py`: swings the arm chains from MPFB's A-pose to the clips' T-pose, bakes that as the rest
    pose, then retargets all 28 clips by copying each bone's world rotation from the X Bot source, corrected for the
    bones' rest-pose difference. Hip translation is scaled by the hip-height ratio (0.915).
 5. `04_export_and_render.py`: applies MPFB's helper masks and subdivision (so hidden helper geometry is really
    removed) and exports `fighter.glb` with the 28 clips as NLA tracks.
 6. Renders: `dojo/judge.html?id=claude`, the standardised Three.js harness, from the submitted `fighter.glb`.
+
+## Update for call #1 (after tournament 6)
+
+The judge's call had no specific notes for this entry (the owner scores it), so I went by the judge-harness renders
+in `competition/judging/claude/`. Their three most visible face faults were these, and this update fixes them:
+
+- **Hairline / scalp:** bare light skin showed under the hair cap's cutout edge. `paint_under_cards` now maps every
+  head texel of the skin texture to its rest-pose 3D position, finds the nearest point on the ponytail cap and reads
+  the cap's alpha there, then paints the skin there near the hair colour, plus a soft feather past the edge. MPFB's
+  hidden helper shells are skipped, and the ponytail below the nape is ignored so it doesn't stain the upper back.
+  Result: the scalp under the cap is dark and the temples blend in. **Still a limitation:** the cap's own cutout edge
+  is still a crisp, ragged line on the forehead; the feather only softens the skin side.
+- **Brows:** eyebrow006 is a thin plucked line that hardly showed. Changed to eyebrow002 (fuller, natural arch),
+  recoloured from black to dark brown, alpha cutoff 0.36. MPFB's brow material used the diffuse image as a bump
+  height, which the glTF exporter turned into a meaningless normal map that rendered the brows black; that bump is
+  removed and the texture is wired straight into Base Color. A faint brow shading is also painted into the skin.
+- **Eyes:** the CC0 "brown" iris is a saturated red-brown and looked red in the arena. Its saturated pixels are
+  rebuilt as hue 24° brown keeping their brightness detail; the sclera is unchanged.
+- **Training top:** the terracotta read as pale salmon under the arena light; it's now darker (HSV 13°, 0.72, 0.56).
+- Hair roughness 0.55 → 0.68 to cut the plastic sheen a little.
+
+The motion, rig, retarget, brain and mesh are unchanged (same 167,392 triangles). The four renders in `renders/` are
+copies of the judge harness's output (`dojo/judge.html?id=claude`, run in headless Chrome) for this `fighter.glb`.
 
 ## What went wrong on the way (and was fixed)
 
@@ -40,7 +64,9 @@ touched. MPFB 2.0.18 (from extensions.blender.org, sha256-checked) and the MakeH
   diffuse transmission, so the skin can look slightly flat under hard light.
 - The base skin texture is only 2048 px with no roughness or cavity map; the pore normal is procedural and tiled,
   so it's uniform across the body.
-- Hair is a textured cap with cutout cards, not strands; the hairline edge is hard.
+- Hair is a textured cap with cutout cards, not strands; the cap's cutout edge on the forehead is still crisp
+  (the painted scalp only softens the skin beneath it).
+- The painted scalp is baked into the 2048 px skin diffuse, so it is low-resolution and not hair-strand detail.
 - No hand wraps, although the concept had them; the CC0 pack has none.
 - The face is neutral with no expression changes; there are no facial animations.
 - Clothes are skinned, not simulated, so they don't move independently.
@@ -50,7 +76,7 @@ touched. MPFB 2.0.18 (from extensions.blender.org, sha256-checked) and the MakeH
 
 ```
 PASS  manifest.json has all fields
-PASS  file size 23.6 MB (limit 80 MB)
+PASS  file size 22.8 MB (limit 80 MB)
 PASS  extensions: KHR_materials_clearcoat, KHR_texture_transform
 PASS  self-contained (no external URIs)
 PASS  10 textures (limit 40)
@@ -60,7 +86,7 @@ PASS  Mixamo skeleton (all required mixamorig: bones present)
 PASS  animations: 28/28
 PASS  clip lengths within ±10 % of reference
 PASS  bind-pose mesh height ≈ 1.73 m (expected 1.55–2.05 m; check scale if far off)
-PASS  brain.js runs in the sandbox, valid outputs, 0.043 ms average (limit 2 ms)
+PASS  brain.js runs in the sandbox, valid outputs, 0.062 ms average (limit 2 ms)
 PASS  renders/front.png 1920×1080 (long side ≥ 1920)
 PASS  renders/three_quarter.png 1920×1080 (long side ≥ 1920)
 PASS  renders/profile.png 1920×1080 (long side ≥ 1920)
