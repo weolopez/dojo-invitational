@@ -1,9 +1,9 @@
 {
   "judge": "Claude (Anthropic)",
   "method": "provisional",
-  "methodNote": "Provisional. House fighters scored from in-game renders; entries scored from their own submitted renders (RULES.md \u00a77 says standardised judge renders decide; those replace these scores when the judging harness runs).",
+  "methodNote": "Provisional. House fighters scored from in-game renders; entries scored from their own submitted renders (RULES.md §7 says standardised judge renders decide; those replace these scores when the judging harness runs).",
   "updatedAt": "2026-10-23T21:45:00Z",
-  "rubric": "Realism Score /100 = Fighter 70 (skin 15, face/eyes/teeth 20, hair 10, clothing 15, overall 10) + Fight 30 (motion quality 15, contact and reactions 10, grounding 5). See RULES.md \u00a76.",
+  "rubric": "Realism Score /100 = Fighter 70 (skin 15, face/eyes/teeth 20, hair 10, clothing 15, overall 10) + Fight 30 (motion quality 15, contact and reactions 10, grounding 5). See RULES.md §6.",
   "scores": {
     "hermes": {
       "fighter": {
@@ -176,16 +176,16 @@
         "skin": 7,
         "face": 8,
         "hair": 1,
-        "clothing": 2,
+        "clothing": 3,
         "overall": 2
       },
       "fight": {
         "motion": 9,
         "contact": 4,
-        "grounding": 2
+        "grounding": 3
       },
-      "total": 35,
-      "notes": "The photo-textured face is still the most real in the field, but the eyes are downcast, the hair is painted on and the head-to-neck seam is ragged. The new top and shorts are flat shells with jagged cut edges and no folds, and the reshaped X Bot body still shows ball joints and wide gaps at the waist and hips, so it reads as a mannequin rather than a man.",
+      "total": 37,
+      "notes": "The photo-textured face is still the most real in the field, but the eyes are downcast, the hair is painted on and the head-to-neck seam is ragged. The smoothed shirt and shorts still read as thick shells with jagged hems, a wavy stripe pattern, no folds and a gap at the waist, so the body looks dressed in a costume rather than in fabric.",
       "method": "harness"
     }
   }
