@@ -4,6 +4,7 @@ import { clipRate, crossFadeFor, getUpRate, hasClipRate, knockdownBelow, knockdo
 import * as SkeletonUtils from 'three/addons/utils/SkeletonUtils.js';
 import { JAM, KICKS, KNOCKDOWN, MOVES } from './config.js';
 import { Inertializer, LookAt, PhysicalLayer } from './motion.js';
+import { Ragdoll } from './physics.js';
 
 // Body physics: a shove is a velocity that friction slows down (it glides the given distance), and walking speeds up
 // and slows down over a few frames, instead of the body jumping from one frame to the next.
@@ -86,6 +87,8 @@ export class Fighter {
     this.inertia = new Inertializer(this.model);
     this.physical = new PhysicalLayer(this.model);
     this.lookAt = new LookAt(this.model);
+    // Physics layering (PHYSICS.md): a ragdoll when the arena has a physics world. Visual only.
+    this.ragdoll = arena.physics && side !== undefined ? new Ragdoll(arena.physics, this) : null;
     this.reset();
   }
 
@@ -118,11 +121,13 @@ export class Fighter {
     this.physical?.forget();
     this.vel = 0;
     this.walkV = 0;
+    this.ragdoll?.reset();
     this.current = null;
     this.playLoop('fighting_idle');
   }
 
   dispose() {
+    if (this.ragdoll) this.arena.physics?.remove(this.ragdoll);
     this.arena.scene.remove(this.root);
   }
 
@@ -227,7 +232,9 @@ export class Fighter {
   faceUp() {
     if (!this.hipsFront) return true;
     this.root.updateMatrixWorld(true);
-    return this.hipsFront.clone().applyQuaternion(this.bones.hips.getWorldQuaternion(new THREE.Quaternion())).y > 0;
+    // The clip's hips orientation (physics is visual only and must not change which get-up plays).
+    const hips = this.ragdoll?.animHips()?.rot ?? this.bones.hips.getWorldQuaternion(new THREE.Quaternion());
+    return this.hipsFront.clone().applyQuaternion(hips).y > 0;
   }
 
   /** Fall onto your front or your back, depending on what hit you. Returns the clip playing. */
@@ -387,6 +394,7 @@ export class Fighter {
           const jammed = KICKS.includes(this.move.name) && gap < JAM;
           const hit = { ...this.move, dmg: jammed ? Math.ceil(blow.dmg / 2) : blow.dmg, ...(jammed ? { name: 'jammed' } : {}) };
           opponent.takeHit({ ...hit, ...(sync ? { sync } : {}) }, blocked);
+          if (!blocked && !this.move.grab) opponent.ragdoll?.hit(this, hit, this.move.high);
           this.tally.damage += hpBefore - opponent.hp;
           if (this.move.grab && opponent.downed) {
             this.grabbed = opponent;
@@ -446,7 +454,9 @@ export class Fighter {
     // Down: get up once the hips have been on the mat for the tuned time (realism.js knockdown.lie).
     if (this.downed && !this.gettingUp && this.state === 'hit' && this.bones.hips) {
       this.downSince ??= this.arena.clock;
-      const low = this.bones.hips.getWorldPosition(new THREE.Vector3()).y < this.standHips * 0.4;
+      // (The clip's hips, not the physics layer's: physics is visual only.)
+      const hipsY = this.ragdoll?.animHips()?.pos.y ?? this.bones.hips.getWorldPosition(new THREE.Vector3()).y;
+      const low = hipsY < this.standHips * 0.4;
       // (A fall that never reaches the mat, say a badly lent clip, still ends after 4 s.)
       if (this.landedAt === null && (low || this.arena.clock - this.downSince > 4)) this.landedAt = this.arena.clock;
       // (Not while someone is on top of you after a takedown.)

@@ -105,3 +105,18 @@ export const TIMING = {
 // How many fights (tournament bouts + sparring) may run at once across all dojos. 1 = one fight at a time: bracket
 // matches are fought one after another in a single dojo and no sparring runs beside a bout (RULES.md §8).
 export const SCHEDULE = { maxConcurrentFights: 1 };
+
+// Physics-based animation layering (dojo/PHYSICS.md, src/physics.js). Visual only: hits, damage, knockdown rules,
+// stats and the brain API are unchanged. Off by default; ?physics=1 in the URL turns it on (?physics=0 off).
+// These knobs live here, not in realism.js: realism.js is the champion's file and only holds the RULES.md §9a knobs.
+export const PHYSICS = {
+  enabled: false,
+  hz: 60, // fixed physics rate (deterministic: same inputs, same steps)
+  maxSubsteps: 4, // most physics steps per frame; a long frame drops the rest rather than spiralling
+  gain: 30, // motor gain (1/s): how hard a fully stiff body chases its clip pose
+  maxDeviation: 70, // degrees a bone may stray from its clip rotation (stands in for cone joint limits)
+  weight: { core: 0, upper: 0, lower: 0 }, // resting physics blend per group (0 = the clip wins)
+  impulsePerDamage: 0.9, // N·s of impulse per damage point at the struck bone (head for high blows, chest otherwise)
+  hit: { soft: 0.3, recover: 0.3, stiffness: 0.08, weight: 1 }, // partial ragdoll: upper body soft for `soft` s
+  knockdown: { enabled: true, stiffness: 0.04, weight: 0.85, rampUp: 0.8 }, // fall loose, springs ramp back on get-up
+};
