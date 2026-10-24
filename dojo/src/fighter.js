@@ -2,13 +2,13 @@
 import * as THREE from 'three';
 import { clipRate, crossFadeFor, getUpRate, hasClipRate, knockdownBelow, knockdownLie } from './realism.js';
 import * as SkeletonUtils from 'three/addons/utils/SkeletonUtils.js';
-import { KNOCKDOWN, MOVES } from './config.js';
+import { JAM, KICKS, KNOCKDOWN, MOVES } from './config.js';
 import { Inertializer, LookAt } from './motion.js';
 
 // Clips that travel along the floor: switching into or out of them keeps the body where it lies.
-const GROUND = new Set(['knocked_out', 'knockdown_front', 'thrown', 'getting_up', 'getup_back', 'getup_front']);
+const GROUND = new Set(['knocked_out', 'knockdown_front', 'thrown', 'getting_up', 'getup_back', 'getup_front', 'sweep_fall', 'takedown_victim']);
 // The clips prepared or lent at load time (lent.js).
-const PREPARED = ['throw', 'thrown', 'knockdown_front', 'getup_back', 'getup_front'];
+const PREPARED = ['throw', 'thrown', 'knockdown_front', 'getup_back', 'getup_front', 'sweep', 'sweep_fall', 'takedown', 'takedown_victim'];
 
 export function newTally() {
   return { thrown: 0, hits: 0, damage: 0, blocks: 0, bestCombo: 0, kos: 0, moves: {} };
@@ -96,6 +96,7 @@ export class Fighter {
     this.move = null;
     this.hitLanded = false;
     this.whiffAt = null;
+    this.clinch = false;
     this.downed = false;
     this.landedAt = null;
     this.downSince = null;
@@ -146,12 +147,23 @@ export class Fighter {
     this.moveName = moveName;
     this.tally.thrown++;
     this.tally.moves[moveName] = (this.tally.moves[moveName] ?? 0) + 1;
+    // A move whose clip nobody has yet (the sweep and takedown before the library has them) becomes its fallback.
+    let def = MOVES[moveName];
+    // (The fallback keeps the requested move's reach, so a takedown shot from 1.1 m still connects as a throw.)
+    if (def.needs && !this.actions[def.needs]) { const reach = def.reach; moveName = def.fallback; def = { ...MOVES[moveName], reach }; }
     // A move with a paired animation uses it when this fighter has the clip (the throw).
-    const base = MOVES[moveName].paired && this.actions[MOVES[moveName].paired.clip]
-      ? { ...MOVES[moveName], ...MOVES[moveName].paired } : MOVES[moveName];
-    this.move = { ...base, name: moveName, dmg: Math.round(base.dmg * this.stats.power), reach: base.reach * this.stats.reach,
-                  heavy: base.dmg >= 12, high: base.react !== 'hit_reaction', grab: !!base.grab };
+    const base = def.paired && this.actions[def.paired.clip] ? { ...def, ...def.paired } : def;
+    const power = this.stats.power;
+    const hits = (base.hits ?? (base.footwork ? [] : [{ from: base.from, to: base.to, dmg: base.dmg }]))
+      .map((h) => ({ ...h, dmg: Math.round(h.dmg * power) }));
+    const top = Math.max(0, ...hits.map((h) => h.dmg));
+    this.move = { ...base, name: moveName, hits, dmg: top, reach: (base.reach ?? 0) * this.stats.reach,
+                  heavy: top >= Math.round(12 * power), high: base.react !== 'hit_reaction' && !base.knockdown,
+                  grab: !!base.grab, paired: ['thrown', 'takedown_victim'].includes(base.react) };
+    this.hitsDone = 0;
     this.hitLanded = false;
+    this.grabbed = null;
+    this.groundDone = 0;
     this.whiffAt = null;
     const action = this.fade(this.move.clip, true);
     if (action) action.timeScale = (0.85 + 0.25 * this.stats.speed) * (base.timeScale ?? 1) * clipRate(this.move.clip);
@@ -162,6 +174,33 @@ export class Fighter {
     if (this.busy) return;
     this.state = 'taunt';
     this.fade('taunt', true);
+  }
+
+  /** In the striking part of an attack: from the first blow's window to the last one's. Grabs miss you here. */
+  striking() {
+    if (this.state !== 'attack' || !this.move?.hits?.length || !this.current) return false;
+    const t = this.current.time / this.current.getClip().duration;
+    return t >= this.move.hits[0].from - 0.05 && t <= this.move.hits.at(-1).to;
+  }
+
+  /** In the part of a dodge or slip where strikes (and grabs) miss. */
+  evading() {
+    if (this.state !== 'attack' || !this.move?.evade || !this.current) return false;
+    const t = this.current.time / this.current.getClip().duration;
+    return t >= this.move.evade[0] && t <= this.move.evade[1];
+  }
+
+  /** Ground-and-pound: a blow to a fighter you've taken down. Bypasses the rule that you can't hit a downed fighter. */
+  groundHit(dmg, from) {
+    if (this.state === 'ko') return 0;
+    const before = this.hp;
+    this.hp = Math.max(0, this.hp - dmg);
+    const fx = this.arena.effects;
+    fx.sparks(this.hitPoint(true), 0xffe9a8, 18, 1.6);
+    fx.shake(0.04);
+    this.arena.sound('hit', 0.8);
+    if (this.hp === 0) { this.state = 'ko'; this.lastHitBy = from; }
+    return before - this.hp;
   }
 
   /** Lying face up (belly to the sky) rather than face down. */
@@ -203,13 +242,14 @@ export class Fighter {
     }
     this.combo = 0;
     this.state = 'hit';
-    // The paired fall plays in step with the thrower's clip; fighters without it fall back to the knock-down.
-    const react = move.react === 'thrown' && !this.actions.thrown ? 'knocked_out' : move.react;
+    // The paired fall plays in step with the thrower's clip; fighters without the clip fall back to the knock-down.
+    const react = this.actions[move.react] ? move.react : (move.grab || move.knockdown ? 'knocked_out' : 'hit_reaction');
     const reaction = this.fade(react, true);
     if (reaction && move.sync) { reaction.time = move.sync.time; reaction.timeScale = move.sync.timeScale; }
-    if (move.grab) {
-      // Thrown: knockdown, then get up (chained in onClipFinished). Pushed further than a strike.
+    if (move.grab || move.knockdown) {
+      // Thrown, taken down or swept: on the mat, then get up (see animate). Pushed further than a strike.
       this.downed = true;
+      this.lastHitBy = move.name;
       this.root.position.x += this.side * (move.sync ? 0.2 : 0.45);
       this.arena.sound('heavy', 0.9);
       fx.sparks(where, 0xffb347, 30, 2.2);
@@ -265,8 +305,10 @@ export class Fighter {
     if (!this.busy) {
       const facing = -this.side; // +1 when facing +x
       if (input.block) {
+        // Guard up for punches and kicks to the head, mid guard for body shots and before anything is thrown.
         this.state = 'block';
-        this.playLoop('block');
+        const high = opponent?.state === 'attack' && opponent.move?.high;
+        this.playLoop(high && this.actions.block_high ? 'block_high' : 'block');
       } else if (input.fwd || input.back) {
         const dir = input.fwd ? facing : -facing;
         this.root.position.x += dir * (input.fwd ? 1.7 : 1.3) * this.stats.speed * dt;
@@ -278,40 +320,87 @@ export class Fighter {
       }
     }
 
-    // Hit check during the move's active window.
-    if (this.state === 'attack' && !this.hitLanded && this.current) {
+    // Footwork: move along the way you face during the move's window (the clip plays in place).
+    if (this.state === 'attack' && this.move.footwork && this.current) {
       const t = this.current.time / this.current.getClip().duration;
+      const [a, b] = this.move.move;
+      if (t >= a && t <= b) {
+        const rate = this.current.timeScale / (this.current.getClip().duration * (b - a));
+        this.root.position.x += -this.side * this.move.shift * rate * dt;
+      }
+    }
+
+    // Hit check: each blow of the move during its own window.
+    if (this.state === 'attack' && this.current && this.hitsDone < this.move.hits.length) {
+      const t = this.current.time / this.current.getClip().duration;
+      const blow = this.move.hits[this.hitsDone];
       const gap = Math.abs(this.root.position.x - opponent.root.position.x);
-      if (t >= this.move.from && t <= this.move.to && gap <= this.move.reach && opponent.state !== 'ko' && !(opponent.downed && !this.move.grab)) {
+      if (t > blow.to) this.hitsDone++; // this blow missed its window
+      else if (t >= blow.from && gap <= this.move.reach && opponent.state !== 'ko' && !(opponent.downed && !this.move.grab)) {
+        this.hitsDone++;
         this.hitLanded = true;
-        // Throws can't be blocked, but a foe who is mid-strike (or already down) slips the grab.
-        if (this.move.grab && (opponent.state === 'attack' || opponent.downed)) {
+        // Throws and takedowns can't be blocked, but a foe in the middle of a blow, dodging or already down slips
+        // them. A foe winding up or recovering from a strike can be grabbed: that's how a caught kick gets thrown.
+        if (this.move.grab && (opponent.striking() || opponent.evading() || opponent.downed)) {
           this.arena.sound('swing', 0.2);
-          // A paired throw that grabs nothing shouldn't play the whole throw on thin air.
-          if (this.move.react === 'thrown') this.whiffAt = this.arena.clock + 0.25;
+          // A paired grab that catches nothing shouldn't play the whole move on thin air.
+          if (this.move.paired) this.whiffAt = this.arena.clock + 0.25;
           this.animate(dt, opponent);
           return;
         }
-        const blocked = !this.move.grab && opponent.state === 'block';
-        const hpBefore = opponent.hp;
-        const sync = this.move.react === 'thrown' ? { time: this.current.time, timeScale: this.current.timeScale } : null;
-        opponent.takeHit(sync ? { ...this.move, sync } : this.move, blocked);
-        this.tally.damage += hpBefore - opponent.hp;
-        if (blocked) {
-          opponent.tally.blocks++;
+        if (!this.move.grab && opponent.evading()) {
+          this.arena.sound('swing', 0.3); // slipped
         } else {
-          this.tally.hits++;
-          // A combo is a run of clean hits, each within 1.5 s of the last, without getting hit back.
-          if (this.arena.clock - (this.lastHitAt ?? -10) > 1.5) this.combo = 0;
-          this.lastHitAt = this.arena.clock;
-          this.combo++;
-          this.tally.bestCombo = Math.max(this.tally.bestCombo, this.combo);
+          const blocked = !this.move.grab && opponent.state === 'block';
+          const hpBefore = opponent.hp;
+          const sync = this.move.paired ? { time: this.current.time, timeScale: this.current.timeScale } : null;
+          // A kick from too close is smothered: half damage, and no knockdown.
+          const jammed = KICKS.includes(this.move.name) && gap < JAM;
+          const hit = { ...this.move, dmg: jammed ? Math.ceil(blow.dmg / 2) : blow.dmg, ...(jammed ? { name: 'jammed' } : {}) };
+          opponent.takeHit({ ...hit, ...(sync ? { sync } : {}) }, blocked);
+          this.tally.damage += hpBefore - opponent.hp;
+          if (this.move.grab && opponent.downed) {
+            this.grabbed = opponent;
+            // A takedown ends on top of the opponent: the two may tangle closer than the usual minimum gap.
+            if (this.move.ground) this.clinch = true;
+          }
+          if (blocked) {
+            opponent.tally.blocks++;
+          } else {
+            this.tally.hits++;
+            // A combo is a run of clean hits, each within 1.5 s of the last, without getting hit back.
+            if (this.arena.clock - (this.lastHitAt ?? -10) > 1.5) this.combo = 0;
+            this.lastHitAt = this.arena.clock;
+            this.combo++;
+            this.tally.bestCombo = Math.max(this.tally.bestCombo, this.combo);
+          }
+          if (opponent.hp === 0) this.tally.kos++;
         }
-        if (opponent.hp === 0) this.tally.kos++;
       }
     }
-    if (this.state === 'attack' && this.move?.react === 'thrown' && !this.hitLanded && this.whiffAt === null && this.current
-      && this.current.time / this.current.getClip().duration > this.move.to) this.whiffAt = this.arena.clock;
+    // On top after a takedown: close in to the opponent on the mat.
+    if (this.clinch) {
+      if (this.state !== 'attack') this.clinch = false;
+      else {
+        const gap = opponent.root.position.x - this.root.position.x;
+        const want = Math.sign(gap) * (Math.abs(gap) - 0.45);
+        this.root.position.x += Math.sign(want) * Math.min(Math.abs(want), 1.8 * dt);
+      }
+    }
+    // Ground-and-pound after a takedown: the blows in the clip land on the fighter underneath.
+    if (this.state === 'attack' && this.grabbed && this.move.ground && this.current) {
+      const t = this.current.time / this.current.getClip().duration;
+      const g = this.move.ground[this.groundDone];
+      if (g && t >= g.at) {
+        this.groundDone++;
+        const dealt = this.grabbed.groundHit(Math.round(g.dmg * this.stats.power), this.move.name);
+        this.tally.damage += dealt;
+        this.tally.hits++;
+        if (this.grabbed.hp === 0) this.tally.kos++;
+      }
+    }
+    if (this.state === 'attack' && this.move?.paired && !this.hitLanded && this.whiffAt === null && this.current
+      && this.current.time / this.current.getClip().duration > this.move.hits[0].to) this.whiffAt = this.arena.clock;
     if (this.whiffAt !== null && this.arena.clock >= this.whiffAt && this.state === 'attack') {
       this.whiffAt = null;
       this.state = 'idle';

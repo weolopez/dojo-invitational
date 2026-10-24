@@ -38,9 +38,29 @@ export const MOVES = {
   // to the slowed hook (attacker) and knocked_out then getting_up (defender).
   throw: { clip: 'hook', dmg: 13, reach: 0.95, from: 0.3, to: 0.55, react: 'knocked_out', grab: true, timeScale: 0.7,
     paired: { clip: 'throw', react: 'thrown', from: 0.03, to: 0.14, timeScale: 1.25 } },
+  // More strikes from the shared clips. `hits` lists every blow of a combination (fractions of the clip, measured
+  // from when each hand or foot is furthest forward); each blow can be blocked or land on its own.
+  sidekick: { clip: 'side_kick', dmg: 13, reach: 1.55, from: 0.3, to: 0.45, react: 'hit_reaction' },
+  onetwo: { clip: 'jab_cross', reach: 1.25, react: 'hit_head_light', timeScale: 1.15,
+    hits: [{ from: 0.17, to: 0.28, dmg: 5 }, { from: 0.29, to: 0.42, dmg: 7 }] },
+  combo: { clip: 'punch_combo', reach: 1.2, react: 'hit_head_light', timeScale: 1.1,
+    hits: [{ from: 0.25, to: 0.35, dmg: 4 }, { from: 0.37, to: 0.46, dmg: 4 }, { from: 0.47, to: 0.56, dmg: 5 }, { from: 0.58, to: 0.68, dmg: 7 }] },
+  // Footwork, played from each fighter's own step clips in place while the arena moves them: `shift` metres along the
+  // way they face (minus = back) over the window `move`, and strikes miss them during `evade`. Throws miss too.
+  dodge: { clip: 'slip_back', dmg: 0, footwork: true, shift: -0.55, move: [0.05, 0.7], evade: [0.0, 0.8], timeScale: 1.2 },
+  slip: { clip: 'slip_in', dmg: 0, footwork: true, shift: 0.6, move: [0.05, 0.55], evade: [0.0, 0.85], timeScale: 1.2 },
+  // (A kick that lands from closer than JAM metres is smothered: half damage, and it can't knock anyone down.)
+  // Grappling with Mixamo's sweep and double-leg takedown (lent.js). A sweep is a low kick that drops a foe who
+  // isn't blocking; a takedown is unblockable like a throw, ends in ground-and-pound, and whiffs on a foe mid-strike.
+  // Until the clips are in the lending library, both fall back to the throw.
+  sweep: { clip: 'sweep', dmg: 9, reach: 1.25, from: 0.3, to: 0.5, react: 'sweep_fall', knockdown: true, needs: 'sweep', fallback: 'throw' },
+  takedown: { clip: 'takedown', dmg: 8, reach: 1.1, from: 0.1, to: 0.22, react: 'takedown_victim', grab: true, needs: 'takedown',
+    fallback: 'throw', ground: [{ at: 0.55, dmg: 4 }, { at: 0.65, dmg: 4 }, { at: 0.75, dmg: 5 }] },
 };
 // Knockdowns: which power shots can drop a fighter, and which of them drop you on your front (the others: your back).
 // You get up the way you landed. The health threshold and time on the mat are champion-tunable (realism.js).
+export const KICKS = ['roundhouse', 'frontkick', 'sidekick'];
+export const JAM = 1.0;
 export const KNOCKDOWN = { moves: ['hook', 'uppercut', 'roundhouse', 'frontkick'], front: ['hook', 'roundhouse'] };
 
 export const MOVE_LABELS = { jab: 'Jab', cross: 'Cross', hook: 'Hook', uppercut: 'Uppercut', roundhouse: 'Roundhouse', frontkick: 'Front kick', throw: 'Throw' };

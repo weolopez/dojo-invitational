@@ -190,9 +190,10 @@ export class Arena {
 
     // Keep fighters apart and inside the mat.
     for (const f of this.fighters) f.root.position.x = THREE.MathUtils.clamp(f.root.position.x, -ARENA_HALF, ARENA_HALF);
+    // Keep the minimum gap, except while a takedown has them tangled; separate smoothly afterwards.
     const gap = p2.root.position.x - p1.root.position.x;
-    if (gap < MIN_GAP) {
-      const push = (MIN_GAP - gap) / 2;
+    if (gap < MIN_GAP && !p1.clinch && !p2.clinch) {
+      const push = Math.min((MIN_GAP - gap) / 2, gap > MIN_GAP - 0.1 ? Infinity : 1.2 * dt);
       p1.root.position.x -= push;
       p2.root.position.x += push;
     }

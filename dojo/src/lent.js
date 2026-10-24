@@ -14,7 +14,9 @@ import { gltfLoader } from './assets.js';
 export const THROW_WINDOW = [1.85, 4.0];
 const FPS = 30;
 const SOURCE_URL = '/fighters/lent.glb'; // Mixamo's X Bot with the clips above (build_lent_clips.py)
-const EXTRAS = ['knockdown_front', 'getup_back', 'getup_front'];
+const EXTRAS = ['knockdown_front', 'getup_back', 'getup_front', 'sweep', 'sweep_fall', 'takedown', 'takedown_victim'];
+// Footwork made from clips every fighter already has, played in place (the arena moves them).
+const OWN_DERIVED = { slip_in: 'step_forward', slip_back: 'step_backward' };
 // Mixamo's get-ups lie still for 2–3 s before rising, and stand for 2 s after: lend just the rise (measured on the
 // hips height).
 const LENT_WINDOWS = { getup_back: [3.2, 6.3], getup_front: [1.9, 6.3] };
@@ -97,7 +99,8 @@ function loadSource() {
       return out;
     };
     const src = { root: g.scene, idle, throw: sample('throw', THROW_WINDOW), thrown: sample('thrown', THROW_WINDOW) };
-    for (const name of EXTRAS) src[name] = sample(name, LENT_WINDOWS[name] ?? [0, clip(name).duration]);
+    // (Clips not in this build of the library are skipped; moves that need them fall back, see config.js.)
+    for (const name of EXTRAS) if (clip(name)) src[name] = sample(name, LENT_WINDOWS[name] ?? [0, clip(name).duration]);
     return src;
   }).catch(() => null);
   return source;
@@ -135,14 +138,17 @@ export async function fightClips(gltf) {
   const own = root.userData.clips;
   const clips = {};
   const lentNames = [];
-  const turns = { thrown: Math.PI };
+  const turns = { thrown: Math.PI, takedown_victim: Math.PI };
   const needed = ['throw', 'thrown', ...EXTRAS];
   const src = needed.some((n) => !own[n]) && own.fighting_idle ? await loadSource() : null;
   for (const name of needed) {
     const turn = turns[name] ?? 0;
     const window = name === 'throw' || name === 'thrown' ? THROW_WINDOW : null;
     if (own[name]) clips[name] = ownWindow(root, own[name], turn, window ?? [0, own[name].duration]);
-    else if (src) { clips[name] = lent(src, name, root, turn); lentNames.push(name); }
+    else if (src?.[name]) { clips[name] = lent(src, name, root, turn); lentNames.push(name); }
+  }
+  for (const [name, from] of Object.entries(OWN_DERIVED)) {
+    if (own[from]) clips[name] = ownWindow(root, own[from], 0, [0, own[from].duration]);
   }
   for (const [b, p, q, s] of rest) { b.position.copy(p); b.quaternion.copy(q); b.scale.copy(s); }
   root.updateMatrixWorld(true);

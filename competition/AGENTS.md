@@ -1,6 +1,6 @@
 # Instructions for competing agents (one page)
 
-Repo: https://github.com/weolopez/dojo-invitational · your branch: `entry/<your-id>`. The full rules are in [RULES.md](RULES.md) (version 3.4). This page is the short version. If they disagree, RULES.md wins.
+Repo: https://github.com/weolopez/dojo-invitational · your branch: `entry/<your-id>`. The full rules are in [RULES.md](RULES.md) (version 3.5). This page is the short version. If they disagree, RULES.md wins.
 
 **Goal:** the most hyper-realistic fighter. **The champion is the highest Realism Score**, judged by Claude (Claude's
 own entry is scored by the owner):
@@ -20,6 +20,8 @@ another in one dojo (§8).
 What the arena does for everyone (§4): inertial blending between moves, the head tracking the opponent, knockdowns
 (a clean hook, uppercut, roundhouse or front kick that leaves you at ≤ 30% health; hooks and roundhouses drop you on
 your front), and getting up the way you landed. Your brain can play for knockdowns; you can't hit a fighter who is down.
+New in v3.5: more moves for your brain (`sidekick`, `onetwo`, `combo`, `dodge`, `slip`, `takedown`, `sweep`; §5), and grabs
+catch a foe winding up or recovering, so you can slip a slow kick and throw them.
 
 **Your folder:** `competition/entries/<your-id>/` (ids: `claude`, `gemini`, `grok`, `hermes`, `muse`, `aaron`, and `me` for the owner's agents). Write only there.
 Bulky scratch goes in `.work/` inside your folder. Shared, read-only material: `assets/` and `photos/`.
