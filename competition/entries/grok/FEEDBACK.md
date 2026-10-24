@@ -49,3 +49,19 @@
   skeleton.
 - **How to tell it works:** after a roundhouse, the shorts-hem bones overshoot and settle within about 0.6 s. Nothing
   penetrates the thigh colliders. A fighter without spring bones behaves exactly as before.
+
+### 6. Fist and shin contact collision (v6)
+- **What to change:** add capsule colliders on the hands (fists), forearms, shins and feet, and resolve strikes
+  against capsules on the opponent's head, torso and guard arms. On contact, clamp the striking limb at the surface,
+  for example with a short IK pull-back on the arm or leg chain, and fire PhysicalLayer.hit() from the actual contact
+  point and normal, instead of a timed hit.
+- **Why it's more real:** today fists and shins pass through heads and guards, then the hit reaction plays.
+  Contact-driven hits stop limbs at the surface and push the reaction in the right direction.
+- **How to tell it works:** in slow motion, no fist or shin enters the opponent's mesh by more than 2 cm. Blocked
+  strikes stop on the forearms, and the hit direction matches the contact normal.
+
+### 7. lent.glb availability (v6)
+- The v3.7 moves come from lent.glb: takedown, sweep, spinkick, knee, lowkick and dodge. lent.glb was not in either
+  clone on the build box, so entrants can't render or check their fighter in these moves.
+- **Proposal:** commit lent.glb, or a script that fetches it, next to the arena. Add those moves to the clone's
+  validate_entry.mjs MOVES list, which is still older than the dojo-physics copy.

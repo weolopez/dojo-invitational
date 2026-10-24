@@ -34,6 +34,7 @@ The deterministic brain blocks if the opponent attacks within 1.85 m, advances i
 **Local combat check:** `sim/sim.mjs` recorded 400/400 round wins against its simple random-aggressive baseline, with Grok starting on either side. This is an approximate local simulation, not the official arena; its baseline self-play favors player 1, so the result is not evidence of tournament performance.
 
 ## Known limitations (honest)
+- v6: see "v6 changes" below for what is still open (collar lip line, sternum patch, shorts hem, lent moves not tested).
 - This is a parametric MakeHuman digital human, not a scan. Up close the face reads as a good CG human, not a photograph.
 - Hair is a short buzz cut made of shells; it has no volume beyond about 7 mm and its silhouette edge is smooth. There are no longer hair styles.
 - Stubble is painted into the albedo; it has no geometric depth, and the dots can read slightly coarse up close.
@@ -45,6 +46,105 @@ The deterministic brain blocks if the opponent attacks within 1.85 m, advances i
 
 ## Bonus: voice pack (unscored)
 `voice/` contains 10 short PG-13 lines generated with macOS `say -v Daniel`, about 456 KB total in AAC .m4a. `voice/lines.json` maps the events taunt, round_start, got_hit, ko_foe and victory to the files. **The arena does not play these files**; they are an unscored extra and no required file depends on them.
+
+## v6 changes (v3.7 rules, spring layer)
+The v5 glb was spliced with numpy (`source/glbio.py`), and nothing was re-exported from Blender. The face, eyes, eyebrows, lashes, teeth, tongue, all 6 hair shells and all 17 textures are byte-identical to v5 (checked with an md5 per mesh and per image). Only the body mesh, the rash guard mesh, one material value and the fighting_idle leg keys changed.
+
+I ran a stress pass of 21 shots in the v3.7 arena code with the PhysicalLayer springs and a simulated ±40° look-at: idle feet, head snap, uppercut, body fold, kicks, slip and dodge, throw and thrown, knockdown, KO, get-ups, punches and hooks. The renders are in `/workspace/grok_renders/v6/before_stress` (v5) and `after_stress` (v6).
+
+- **Collar and shoulder seam** (`source/fix_collar_v6.py`, args `4 1.0`):
+  - The v5 collar was 8,704 loose quad vertices with flat normals and a separate 0..1 UV square per quad. That gave faceting, per-quad knit tiling and gaps.
+  - It is now welded to 2,304 vertices with 4 Laplacian passes of skin-weight smoothing (top 4 influences), smooth normals and cylindrical UVs.
+  - Shirt triangles under the collar were deleted.
+  - The rash guard went from 31,416 to 31,267 tris.
+- **Skin poke-through** (`source/cull_hidden_v6.py`, `RING=1 SINK=0`):
+  - Body triangles lying fully under the rash guard or shorts were deleted, keeping 1 vertex ring under every garment edge.
+  - The body went from 89,232 to 87,607 tris.
+  - This removed the orange skin spots that showed at the collar and shoulders when the neck springs or look-at moved the head.
+  - I also tried sinking hidden vertices and a dropped collar skirt. Both opened gaps, so neither ships.
+- **fighting_idle front foot** (`source/fix_heel_v6.py fighting_idle Left`):
+  - I used the same two-bone IK as the v5 rear-foot fix, changing rotation keys only.
+  - Before: 20° mean toe-down with the ankle 5.9 cm up. After: 2.8° with the ankle 1.7 cm up.
+  - Key times and clip length are unchanged.
+- **Material:** the rash guard knit normal scale went from 0.6 to 0.38, to soften the diamond-shaped knit patches seen at grazing angles. There is still no SSS, because three r160 has no diffuse transmission, so it was skipped.
+- **Size:** the bin was compacted to drop data that earlier splices left unreferenced (`source/compact_v6.py`). The file went from 62.0 MB to 45.7 MB. Total tris went from 245,644 to 243,870.
+
+**Not fixed or not tested:**
+- **Collar lip:** a faint stepped line is still visible where the collar band meets the shirt at the shoulders in the closeup.
+- **Sternum patch:** a lighter triangle on the shirt below the collar V comes from the shirt's own UVs and is unchanged.
+- **Knit diamonds:** they are weaker but still visible on the chest in the extreme head-snap view.
+- **Shorts hem:** not changed in v6.
+- **Moving clips:** the other stance clips are not foot-planted, so crouch, step and side_step still briefly go up on the ball.
+- **Neck:** no neck weight smoothing beyond the collar band, and no separate neck-tearing fix. The stress shots showed no neck tearing.
+- **lent clips:** the new lent.glb moves (takedown, sweep, spinkick, knee, lowkick, dodge) could not be rendered or checked, because lent.glb is not on the build box.
+
+## Validator output (`node validate_entry.mjs grok`, v6)
+```
+PASS  manifest.json has all fields
+PASS  file size 45.7 MB (limit 80 MB)
+PASS  extensions: KHR_materials_transmission, KHR_materials_ior, KHR_materials_sheen, KHR_texture_transform
+PASS  self-contained (no external URIs)
+PASS  17 textures (limit 40)
+PASS  largest texture 2050 px (limit 4096)
+PASS  243,870 triangles (limit 250,000)
+PASS  Mixamo skeleton (all required mixamorig: bones present)
+PASS  animations: 30/30
+PASS  clip lengths within ±10 % of reference
+PASS  bind-pose mesh height ≈ 1.79 m (expected 1.55–2.05 m; check scale if far off)
+PASS  brain.js runs in the sandbox, valid outputs, 0.141 ms average (limit 2 ms)
+PASS  renders/front.png 1920×1080 (long side ≥ 1920)
+PASS  renders/three_quarter.png 1920×1080 (long side ≥ 1920)
+PASS  renders/profile.png 1920×1080 (long side ≥ 1920)
+PASS  renders/closeup.png 1920×1080 (long side ≥ 1920)
+PASS  NOTES.md present and filled in
+PASS  LICENSES.md present and filled in
+
+All checks passed.
+```
+The newer `dojo-physics/competition/validate_entry.mjs` also prints "All checks passed." for this entry (45.7 MB, 243,870 tris, 30/30 clips).
+
+## v5 changes (call #5) – judge notes
+Built by splicing new garment meshes and materials into the call #4 GLB (`source/garments_v5.py`, `source/splice_mesh.py`,
+`source/materials_v5.py`, `source/weave_tex.py`, `source/fix_heel.py`). Face, eyes, pores, hair and skin textures are byte-identical;
+animations were not re-exported (only the fighting_idle right-leg rotation keys were rewritten, same times).
+1. **Rash guard**: the Bi-Stretch rib normal map (the source of the ripple bands) is replaced by a fine procedural knit; the
+   body is Taubin-smoothed; a new snug crew-neck collar band (128x16 grid, rolled top edge, skin weights from nearest body
+   vertex) covers the old flat off-shoulder cut. It is lower at the front and higher at the nape.
+2. **Shorts**: the marble blotches were removed (Taubin plus smoothing of the distance-to-body field); the leg hems are
+   snapped to planar edge loops with a turned 2 cm hem and a stitch groove. Colour is charcoal via baseColorFactor.
+3. **Red line under the jaw**: caused by the reddish skin sheen (0.55,0.36,0.28) at grazing angles; it is now a faint
+   neutral sheen (0.09,0.075,0.065).
+4. **fighting_idle rear heel**: the rear (right) foot was raised about 5 cm on its ball. Two-bone IK drops the ankle and
+   flattens the foot (pitch now about 3 deg toe-down); the average ankle height above rest is 1.7 cm (it was 5.1 cm). Clip lengths are unchanged.
+5. **Skin SSS**: skipped. three r160 has no diffuse transmission/SSS, and faking it with transmission breaks the skin.
+
+Remaining limitations: the collar's overlap edge on the shoulders reads as a faint yoke seam; the shorts keep some broad
+fold shapes and the hem silhouette is not perfectly even; the front (left) foot in fighting_idle is still on its ball (by design for the stance);
+a very faint warm rim can remain under the jaw.
+
+## Validator output (`node validate_entry.mjs grok`, v5)
+```
+PASS  manifest.json has all fields
+PASS  file size 62.0 MB (limit 80 MB)
+PASS  extensions: KHR_materials_transmission, KHR_materials_ior, KHR_materials_sheen, KHR_texture_transform
+PASS  self-contained (no external URIs)
+PASS  17 textures (limit 40)
+PASS  largest texture 2050 px (limit 4096)
+PASS  245,644 triangles (limit 250,000)
+PASS  Mixamo skeleton (all required mixamorig: bones present)
+PASS  animations: 30/30
+PASS  clip lengths within ±10 % of reference
+PASS  bind-pose mesh height ≈ 1.79 m (expected 1.55–2.05 m; check scale if far off)
+PASS  brain.js runs in the sandbox, valid outputs, 0.137 ms average (limit 2 ms)
+PASS  renders/front.png 1920×1080 (long side ≥ 1920)
+PASS  renders/three_quarter.png 1920×1080 (long side ≥ 1920)
+PASS  renders/profile.png 1920×1080 (long side ≥ 1920)
+PASS  renders/closeup.png 1920×1080 (long side ≥ 1920)
+PASS  NOTES.md present and filled in
+PASS  LICENSES.md present and filled in
+
+All checks passed.
+```
 
 ## v3 changes (call #4)
 Everything below was spliced into the v2 GLB at the glTF JSON/binary level (`source/glbio.py`, `source/splice.py`, `source/splice_mesh.py`). The face, eyes, cornea transmission, hair shells, skin textures and sheen were not re-exported, so they are byte-identical to v2. The original is backed up as `.work/fighter_orig.glb` (not shipped).
