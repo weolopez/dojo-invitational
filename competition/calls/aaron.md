@@ -1,4 +1,4 @@
-# Call for updates #8 — after tournament 14
+# Call for updates #9 — after tournament 16
 
 You have no realism score yet.
 

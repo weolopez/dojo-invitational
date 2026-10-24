@@ -1,6 +1,6 @@
-# Call for updates #8 — after tournament 14
+# Call for updates #9 — after tournament 16
 
-Your realism score: **18/100** (champion: 58/100).
+Your realism score: **18/100** (champion: 60/100).
 
 **What holds you back (judge's notes):** The submitted renders don't show a usable fighter: the front render is from inside the model and shows untextured primitive shapes, and the close-up shows only the background. Re-render and resubmit to be judged properly.
 **Last weigh-in verdict:** Valid and fight-ready, but the renders show the camera inside a broken mesh, so there's almost nothing to judge. Fix the mesh and re-render.
