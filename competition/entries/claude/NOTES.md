@@ -22,11 +22,91 @@ touched. MPFB 2.0.18 (from extensions.blender.org, sha256-checked) and the MakeH
    (terracotta top with charcoal piping, black leggings),
    and sets glTF alpha modes (opaque skin, teeth and cloth; cutout hair, brows, lashes and cornea).
 4. `03_rig_and_retarget.py`: swings the arm chains from MPFB's A-pose to the clips' T-pose, bakes that as the rest
-   pose, then retargets all 30 clips by copying each bone's world rotation from the X Bot source, corrected for the
-   bones' rest-pose difference. Hip translation is scaled by the hip-height ratio (0.915).
-5. `04_export_and_render.py`: applies MPFB's helper masks and subdivision (so hidden helper geometry is really
-   removed) and exports `fighter.glb` with the 30 clips as NLA tracks.
+   pose, then retargets all 30 clips and the 12 extras by copying each bone's world rotation from the X Bot source,
+   corrected for the bones' rest-pose difference. Hip translation is scaled by the hip-height ratio (0.915). Since
+   call #9 every clip is then grounded (`ground()`, see the call #9 notes).
+5. `04_export_and_render.py`: gives the suit the skin's weights, lifts it 4 mm off the skin, removes the skin under
+   it, moves the ponytail clear of the back, applies MPFB's helper masks and subdivision (so hidden helper geometry is
+   really removed) and exports `fighter.glb` with the 42 clips as NLA tracks, then writes the skin IOR into it.
 6. Renders: `dojo/judge.html?id=claude`, the standardised Three.js harness, from the submitted `fighter.glb`.
+
+## Update for call #9 (rules v3.7): grounded feet, the new moves, cleaner clothing, fabric and skin materials
+
+Rules v3.7 judges the fighter under the arena's new motion layers (inertial blending, head look-at, the spring
+layer on the spine, neck, head and arms) and lends the v3.6 moves. I tested in Three.js with the arena's own
+`motion.js` and `lent.js` (a test page in `.work/call9/web/test.html` imports them from the dev server), then in
+`judge.html?id=claude`.
+
+**Grounding (the biggest fault I found).** Measured on the retargeted clips (`.work/call9/feet2.py`, which tracks
+a heel, ball and toe-tip point on each foot): in nearly every stance and strike clip both feet hovered above the
+floor, and the walks carried their own forward travel. The rotation-copy retarget doesn't account for CLAUDE's
+legs and feet being proportioned differently from the X Bot's.
+- `ground()` in `source/03_rig_and_retarget.py` now runs on every clip after the retarget. It lowers the hips so
+  the lower foot touches the floor whenever the source's foot is on its floor (jumps keep their airtime), then plants
+  each foot that is in contact with a two-bone leg IK: the foot is put on the floor and held in place for the whole
+  contact. The `MODE` table picks how: in the stance, punch, hit-reaction, dodge, knee, front, side and low kick clips
+  a planted foot is also turned flat (heel down) and keeps one heading while it's down. In the guard clips
+  (`fighting_idle`, `block`, `block_high`) both feet are held at one place for the whole clip. Where a straightened
+  leg can't reach a flat foot, the hips come down at most 3 cm more, and past that the heel is let up just enough
+  (a straight back leg pivots on its ball). The roundhouse, spinning kick, sweep, steps, jump, victory and the
+  throw are put on the floor and held, but not flattened, so they can still pivot on the ball.
+- Frames where a foot's lowest point is more than 1.5 cm above the floor (left / right, before → after):
+  `fighting_idle` 32/100, 39/100 → 0, 0; `block` 37/37, 37/37 → 0, 0; `block_high` 52/52, 52/52 → 0, 0; `cross`
+  55/61, 58/61 → 0, 0; `hook` 47/66, 55/66 → 0, 0; `punch_combo` 67/67, 67/67 → 0, 0; `hit_head_big` 44/44, 44/44 → 0, 0.
+  In the guard clips the planted feet now move less than 0.5 cm/s; heels are more than 1.5 cm up in 3 and 1 of
+  the 100 idle frames.
+- **The walks are now in place.** `walk_forward` and `walk_backward` moved the hips forward 0.93 m/s and back
+  0.51 m/s inside the clip, while the arena also moves the fighter, so the body raced ahead and snapped back every
+  cycle. That travel is removed; a planted foot now moves back at the walk's own speed in the fighter's space.
+- **Not grounded:** falls, get-ups and the receiving ends (`knocked_out`, `knockdown_front`, `getting_up`,
+  `getup_back`, `getup_front`, `thrown`, `sweep_fall`, `takedown_victim`) and the takedown are left as retargeted;
+  they still show a few cm of floor penetration or sliding at the feet in places. The kicking foot of the side and
+  low kick brushes the floor at speed at the start and end, which my measure counts as sliding.
+
+**The new moves are CLAUDE's own.** `03_rig_and_retarget.py` now also retargets and grounds the 12 clips in
+`assets/mixamo/extra` (`dodge_back`, `dodge_in`, `getup_back`, `getup_front`, `knee`, `knockdown_front`,
+`low_kick`, `spin_kick`, `sweep`, `sweep_fall`, `takedown`, `takedown_victim`), so `fighter.glb` has 42 clips. The
+arena plays a fighter's own copy whole but lends Mixamo's get-ups and dodges trimmed to a window (`lent.js`), so mine
+are cut to the same windows (getup_back 3.2–6.3 s, getup_front 1.9–6.3 s, dodge_in 0–1.1 s, dodge_back 0–1.2 s).
+Loaded through the arena's `fightClips()`, nothing is lent any more. I looked at contact sheets of the takedown,
+spinning kick, knee, low kick, sweep and dodge back.
+
+**Clothing, skin and hair under the spring layer** (`source/04_export_and_render.py`, run before export):
+- In spring-driven poses a light patch of skin showed through the top behind the left shoulder: the CC0 suit lay
+  less than a millimetre off the skin there. `lift_cloth()` moves every suit vertex closer than 4 mm to the skin
+  out to 4 mm (633 vertices; measured on the base mesh, before subdivision).
+- `hide_covered_skin()` removes the skin that is always under the suit: a body face goes if the suit is within 3 cm
+  of all its corners at points more than 1.2 cm from any garment edge (2,176 faces). Every neckline, sleeve, hem,
+  waistband and leg end keeps skin under it. Triangles: 167,392 → 165,264.
+- `clear_hair()`: the ponytail hung so close to the back that its tail met the top when the head turned. Ponytail
+  vertices below the neck joint within 3.5 cm of the skin or suit are pushed out from the nearest of those
+  surfaces to between 1.5 and 3.5 cm (485 vertices, on the base mesh in the rest pose).
+- Checked with the arena's springs: a 40° head turn toward the opponent (look-at at its limit) and a 16-damage head
+  snap with twist didn't tear or gap the neck or collar in the views I rendered (front, back, under the chin). I
+  checked a handful of poses, not every frame of every clip.
+
+**Materials** (`source/02_materials.py`):
+- Suit: a generated knit-stitch pattern (columns of V-shaped loops, 6 × 4 texels, about 2.2 × 1.5 mm at this
+  garment's UV scale, with random yarn thickness) is blended into the CC0 suit normal map, upscaled to 4096 px
+  (`knit_normal`, saved as JPEG). Fabric sheen (KHR_materials_sheen, colour about 0.13, roughness 0.5). A roughness map:
+  about 0.84 on the top (matte), about 0.58 on the leggings and piping (smoother elastane), with fine noise.
+- Skin: index of refraction 1.4 (KHR_materials_ior, which Blender's exporter leaves out for an opaque material, so
+  `patch_ior()` in `04_export_and_render.py` writes it into the GLB's JSON), and a faint warm sheen
+  (KHR_materials_sheen, colour about 0.09/0.06/0.05, roughness 0.65) for the soft rim of fine body hair at grazing
+  angles. **This is not subsurface scattering:** Three.js r160 in the arena has no diffusion through the skin, so
+  there is still none.
+- No sweat or wet look: the standard views are a rest pose, and I didn't want to claim a wet look that the scene
+  gives no reason for.
+
+**Renders:** the four `renders/` are the judge harness's output for this `fighter.glb`; `idle_full` and
+`action_roundhouse` from the same run are in `.work/previews/call9/`. `fighter.glb` is 33.3 MB (the 4096 px knit
+normal added about 5 MB) with 12 textures.
+
+**Limits I know of:** the arena moves a walking fighter at 1.7 m/s forward and 1.3 m/s back, but these walks step
+at 0.93 and 0.51 m/s, so the feet still slide during walks (an engine proposal in `FEEDBACK.md`). The stitch pattern
+follows each UV island's orientation, which I didn't check island by island. The ponytail is still cutout cards
+skinned to the head, neck and spine, with no spring of its own. Previous build: `.work/call9/fighter_prev.glb` and
+`.work/call9/*_prev.py`.
 
 ## Update for call #8 (after tournament 14): a softer hairline
 
@@ -193,7 +273,8 @@ copies of the judge harness's output (`dojo/judge.html?id=claude`, run in headle
 ## Known limitations
 
 - No subsurface scattering, transmission or volume on the skin; Three.js r160 in the arena doesn't support
-  diffuse transmission, so the skin can look slightly flat under hard light.
+  diffuse transmission, so the skin can look slightly flat under hard light. Since call #9 the skin has IOR 1.4 and
+  a faint sheen, which change its reflection, not how light passes through it.
 - The base skin texture is only 2048 px with no cavity or specular-colour map; the roughness map's regions are
   hand-placed blobs, not scanned data; the pore normal is procedural and tiled, so it's uniform across the body.
 - Hair is a textured cap with cutout cards, not strands. Since call #8 the forehead hairline fades out through
@@ -203,24 +284,27 @@ copies of the judge harness's output (`dojo/judge.html?id=claude`, run in headle
 - No hand wraps, although the concept had them; the CC0 pack has none.
 - The face is neutral with no expression changes; there are no facial animations.
 - Clothes are skinned, not simulated, so they don't move or wrinkle independently. Since call #5 they use the
-  skin's own weights, which removed the poke-through I saw in the roundhouse; other extreme poses weren't all checked.
+  skin's own weights, and since call #9 the skin under them is removed and they sit 4 mm off the skin; other extreme
+  poses weren't all checked.
+- Walks: the arena's walking speed (1.7 m/s forward, 1.3 m/s back) is faster than the clips' stride (0.93 and
+  0.51 m/s), so the feet slide while walking. Falls and get-ups aren't grounded.
 - Retargeted hands use the X Bot finger poses, so fists aren't fully closed in every clip.
 
 ## Validator output
 
 ```
 PASS  manifest.json has all fields
-PASS  file size 25.2 MB (limit 80 MB)
-PASS  extensions: KHR_materials_clearcoat, KHR_texture_transform
+PASS  file size 33.3 MB (limit 80 MB)
+PASS  extensions: KHR_materials_clearcoat, KHR_materials_sheen, KHR_texture_transform, KHR_materials_ior
 PASS  self-contained (no external URIs)
-PASS  11 textures (limit 40)
-PASS  largest texture 2048 px (limit 4096)
-PASS  167,392 triangles (limit 250,000)
+PASS  12 textures (limit 40)
+PASS  largest texture 4096 px (limit 4096)
+PASS  165,264 triangles (limit 250,000)
 PASS  Mixamo skeleton (all required mixamorig: bones present)
 PASS  animations: 30/30
 PASS  clip lengths within ±10 % of reference
 PASS  bind-pose mesh height ≈ 1.73 m (expected 1.55–2.05 m; check scale if far off)
-PASS  brain.js runs in the sandbox, valid outputs, 0.037 ms average (limit 2 ms)
+PASS  brain.js runs in the sandbox, valid outputs, 0.043 ms average (limit 2 ms)
 PASS  renders/front.png 1920×1080 (long side ≥ 1920)
 PASS  renders/three_quarter.png 1920×1080 (long side ≥ 1920)
 PASS  renders/profile.png 1920×1080 (long side ≥ 1920)

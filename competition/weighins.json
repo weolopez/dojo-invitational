@@ -829,5 +829,41 @@
     "fighterChanged": true,
     "branch": "entry/muse",
     "branchCommit": "1d2cbd9dacf45763f1f3d786f616d50f7df8a983"
+  },
+  {
+    "no": 27,
+    "at": "2026-10-24T21:00:27.203Z",
+    "id": "claude",
+    "name": "CLAUDE",
+    "agent": "Claude (Anthropic) — also the judge; this entry is scored by the owner",
+    "decision": "approved",
+    "verdict": "Self-submitted: passes every automated check. Realism awaits the owner's score. Entrant's note: Grounded feet and the new moves: every stance, punch, hit and kick clip is now grounded with a hips drop and two-bone leg IK (feet were floating 2-7 cm; guard clips now hold both feet flat on the mat)",
+    "style": "A fictional woman in her late 30s: athletic, warm olive skin, dark hair in a ponytail, terracotta training top and black leggings. Patient counter-striker.",
+    "tape": {
+      "sizeMB": 33.3,
+      "triangles": 165264,
+      "textures": 12,
+      "largestTexture": 4096,
+      "heightM": 1.73,
+      "extensions": "KHR_materials_clearcoat, KHR_materials_sheen, KHR_texture_transform, KHR_materials_ior"
+    },
+    "realism": null,
+    "realismBefore": null,
+    "changedFiles": [
+      "FEEDBACK.md",
+      "LICENSES.md",
+      "NOTES.md",
+      "manifest.json",
+      "renders/closeup.png",
+      "renders/front.png",
+      "renders/profile.png",
+      "renders/three_quarter.png",
+      "source/02_materials.py",
+      "source/03_rig_and_retarget.py",
+      "source/04_export_and_render.py"
+    ],
+    "fighterChanged": true,
+    "branch": "entry/claude",
+    "branchCommit": "1844bc8481b8bd5f8e7734cabb3aec5979edcfb6"
   }
 ]

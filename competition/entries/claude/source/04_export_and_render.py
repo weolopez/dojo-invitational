@@ -52,6 +52,116 @@ def fit_clothes_weights(body_name="Human", cloth_name="Human.female_sportsuit01"
     print(f"[export] {cloth.name}: weights from the skin, {len(groups)} bone groups")
 
 
+def lift_cloth(body_name="Human", cloth_name="Human.female_sportsuit01", gap=0.004):
+    """Call #9: in places the CC0 suit lay on the skin at under a millimetre (a light patch of skin showed through
+    the top behind the left shoulder). Each suit vertex closer than `gap` to the skin is moved out along the skin's
+    normal to `gap`, about the thickness of the fabric."""
+    from mathutils.bvhtree import BVHTree
+    body, cloth = bpy.data.objects[body_name], bpy.data.objects[cloth_name]
+    gi = body.vertex_groups["body"].index
+    me = body.data
+    on_body = {v.index for v in me.vertices if any(g.group == gi and g.weight > 0 for g in v.groups)}
+    co = [body.matrix_world @ v.co for v in me.vertices]
+    bvh = BVHTree.FromPolygons(co, [p.vertices[:] for p in me.polygons if all(i in on_body for i in p.vertices)])
+    inv = cloth.matrix_world.inverted()
+    moved = 0
+    for v in cloth.data.vertices:
+        p = cloth.matrix_world @ v.co
+        hit, n, _i, d = bvh.find_nearest(p)
+        if hit is None:
+            continue
+        side = (p - hit).dot(n)
+        if side < gap:
+            v.co = inv @ (hit + n.normalized() * gap)
+            moved += 1
+    print(f"[export] {cloth.name}: {moved} vertices lifted to {gap * 1000:.0f} mm off the skin")
+
+
+def hide_covered_skin(body_name="Human", cloth_name="Human.female_sportsuit01", margin=0.012, reach=0.03):
+    """Call #9: remove the skin that is always under the sportsuit. The suit has the skin's own weights (above), but
+    in the arena's spring-driven poses the skin still poked through at the shoulders and collar by a few millimetres.
+    A body vertex goes if the suit lies within `reach` of it and that point of the suit is more than `margin` from
+    any edge of the garment (neckline, sleeves, hem, waistband, leg ends), so every visible edge keeps skin under it."""
+    import bmesh
+    from mathutils.bvhtree import BVHTree
+    from mathutils.kdtree import KDTree
+    body, cloth = bpy.data.objects[body_name], bpy.data.objects[cloth_name]
+    cm = cloth.data
+    cco = [cloth.matrix_world @ v.co for v in cm.vertices]
+    bvh = BVHTree.FromPolygons(cco, [p.vertices[:] for p in cm.polygons])
+    count = {}
+    for p in cm.polygons:
+        for e in p.edge_keys:
+            count[e] = count.get(e, 0) + 1
+    edges = [e for e, c in count.items() if c == 1]
+    samples = []
+    for a, b in edges:
+        for k in range(5):
+            samples.append(cco[a].lerp(cco[b], k / 4))
+    kd = KDTree(len(samples))
+    for i, p in enumerate(samples):
+        kd.insert(p, i)
+    kd.balance()
+    gi = body.vertex_groups["body"].index
+    bm = bmesh.new()
+    bm.from_mesh(body.data)
+    dl = bm.verts.layers.deform.active
+    covered = set()
+    for v in bm.verts:
+        if dl is None or gi not in v[dl]:
+            continue
+        p = body.matrix_world @ v.co
+        hit, _n, _i, d = bvh.find_nearest(p)
+        if hit is None or d > reach:
+            continue
+        if kd.find(hit)[2] > margin:
+            covered.add(v.index)
+    faces = [f for f in bm.faces if all(v.index in covered for v in f.verts)]
+    bmesh.ops.delete(bm, geom=faces, context="FACES_ONLY")
+    loose = [v for v in bm.verts if not v.link_faces]
+    bmesh.ops.delete(bm, geom=loose, context="VERTS")
+    bm.to_mesh(body.data)
+    bm.free()
+    print(f"[export] {body.name}: removed {len(faces)} skin faces under the suit ({len(edges)} garment edges kept "
+          f"{margin * 100:.0f} cm of skin under them)")
+
+
+def clear_hair(hair_name="Human.ponytail01", others=("Human", "Human.female_sportsuit01"), gap=0.015, below=0.0):
+    """Call #9: the ponytail hung so close to the back that its tail sank into the top when the head turned or the
+    spine twisted. Hair vertices below the nape (`below` metres under the Neck joint) that lie within `gap` of the
+    skin or suit are pushed out from that surface: distances from 0 to `gap` + 2 cm are remapped to `gap` to
+    `gap` + 2 cm, so nothing sits closer than `gap` and the hair's layers keep their order."""
+    from mathutils.bvhtree import BVHTree
+    hair = bpy.data.objects[hair_name]
+    arm = next(m.object for m in hair.modifiers if m.type == "ARMATURE")
+    neck = (arm.matrix_world @ arm.data.bones["mixamorig:Neck"].head_local).z - below
+    trees = []
+    for name in others:
+        o = bpy.data.objects[name]
+        co = [o.matrix_world @ v.co for v in o.data.vertices]
+        trees.append(BVHTree.FromPolygons(co, [p.vertices[:] for p in o.data.polygons]))
+    inv = hair.matrix_world.inverted()
+    moved = 0
+    for v in hair.data.vertices:
+        p = hair.matrix_world @ v.co
+        if p.z > neck:
+            continue
+        best = None
+        for t in trees:
+            hit, n, _i, d = t.find_nearest(p)
+            if hit is not None and (best is None or d < best[2]):
+                best = (hit, n, d)
+        if best is None or best[2] >= gap + 0.02:
+            continue
+        hit, n, d = best
+        out = (p - hit).normalized() if (p - hit).length > 1e-6 and (p - hit).dot(n) > 0 else n.normalized()
+        # Distances 0 .. gap + 2 cm are remapped to gap .. gap + 2 cm (continuous, and the hair keeps its layering).
+        new = gap + d * 0.02 / (gap + 0.02)
+        v.co = inv @ (hit + out * new)
+        moved += 1
+    print(f"[export] {hair.name}: {moved} ponytail vertices moved clear of the back")
+
+
 def bake_modifiers():
     """Apply every modifier except the armature on each mesh (MPFB's helper masks and subdivision), so hidden
     helper geometry is really removed before export. The armature modifier is moved last first, because MPFB puts it
@@ -79,6 +189,9 @@ def bake_modifiers():
 def export():
     bpy.ops.wm.open_mainfile(filepath=os.path.join(WORK, "claude_rigged.blend"))
     fit_clothes_weights()
+    lift_cloth()
+    hide_covered_skin()
+    clear_hair()
     bake_modifiers()
     for o in bpy.data.objects:
         o.hide_set(False)
@@ -86,7 +199,30 @@ def export():
     bpy.ops.export_scene.gltf(filepath=GLB, export_format="GLB", use_selection=True, export_apply=False,
                               export_animations=True, export_animation_mode="NLA_TRACKS", export_force_sampling=True,
                               export_image_format="AUTO", export_yup=True)
+    patch_ior(GLB, {"Human.body": 1.4})
     print(f"[export] fighter.glb {os.path.getsize(GLB) / 1e6:.1f} MB")
+
+
+def patch_ior(path, iors):
+    """Call #9: Blender's glTF exporter leaves out KHR_materials_ior for an opaque material, so the skin's index of
+    refraction (1.4; glTF's default is 1.5) is written into the GLB's JSON chunk here. The binary chunk is untouched."""
+    import json
+    import struct
+    data = open(path, "rb").read()
+    jlen = struct.unpack("<I", data[12:16])[0]
+    doc = json.loads(data[20:20 + jlen])
+    for m in doc["materials"]:
+        if m["name"] in iors:
+            m.setdefault("extensions", {})["KHR_materials_ior"] = {"ior": iors[m["name"]]}
+    used = doc.setdefault("extensionsUsed", [])
+    if "KHR_materials_ior" not in used:
+        used.append("KHR_materials_ior")
+    js = json.dumps(doc, separators=(",", ":")).encode()
+    js += b" " * (-len(js) % 4)
+    rest = data[20 + jlen:]
+    out = struct.pack("<III", 0x46546C67, 2, 12 + 8 + len(js) + len(rest)) + struct.pack("<II", len(js), 0x4E4F534A) + js + rest
+    open(path, "wb").write(out)
+    print(f"[export] KHR_materials_ior set on {', '.join(iors)}")
 
 
 def setup_scene():
