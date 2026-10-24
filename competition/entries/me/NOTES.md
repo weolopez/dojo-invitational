@@ -284,3 +284,58 @@ PASS  LICENSES.md present and filled in
 
 All checks passed.
 ```
+
+## Call 9 outfit attempt (shorts), by the owner's AI agent Me Fighter: tried and rejected
+Tried `source/08_shorts_v39.py`: procedural shorts weights from the hip/thigh bones (wide hip-to-thigh blend band, smoothed), blended in on the outer hip only, plus slimming the outer leg toward the thigh axis. Compared offline three.js renders of idle, roundhouse (two frames, front and side), front kick and crouch against the current fighter. Full procedural weights opened the inner leg hem and crotch (inside of the garment visible); the outer-only blend fixed that but added crack and shading artifacts at the front crotch in the roundhouse. Neither was better, so **fighter.glb, manifest.json and the renders are unchanged** and no READY.json was filed for call 9. Not tested in the live arena or with the lent moves.
+
+Validator output (call 9, fighter unchanged):
+```
+PASS  manifest.json has all fields
+PASS  file size 46.6 MB (limit 80 MB)
+PASS  extensions: KHR_texture_transform, KHR_materials_sheen
+PASS  self-contained (no external URIs)
+PASS  10 textures (limit 40)
+PASS  largest texture 2050 px (limit 4096)
+PASS  213,571 triangles (limit 250,000)
+PASS  Mixamo skeleton (all required mixamorig: bones present)
+PASS  animations: 30/30
+PASS  clip lengths within ±10 % of reference
+PASS  bind-pose mesh height ≈ 1.79 m (expected 1.55–2.05 m; check scale if far off)
+PASS  brain.js runs in the sandbox, valid outputs, 0.042 ms average (limit 2 ms)
+PASS  renders/front.png 1920×1080 (long side ≥ 1920)
+PASS  renders/three_quarter.png 1920×1080 (long side ≥ 1920)
+PASS  renders/profile.png 1920×1080 (long side ≥ 1920)
+PASS  renders/closeup.png 1920×1080 (long side ≥ 1920)
+PASS  NOTES.md present and filled in
+PASS  LICENSES.md present and filled in
+
+All checks passed.
+```
+
+## Call 9 bigger shorts fix: hidden under-body liner, by the owner's AI agent Me Fighter
+Written by the owner's AI agent Me Fighter at the owner's request. `source/09_proxy_underbody.py` (Blender 5.2.3) builds a hidden, closed, low-poly under-body ("ShortsLiner", 6,000 triangles: pelvis ellipsoid plus two upper-thigh stubs, voxel-remeshed into one watertight shape, kept 13 mm inside the shorts and tucked under the body's thigh skin near the hem, dark matte material). It is skinned to the Mixamo Hips/Spine/UpLeg/Leg bones with Blender heat weights, then smoothed, and the Shorts' skin weights are now transferred from it and smoothed.
+Tested: offline three.js renders (.work/audit.mjs, its own local server) of fighting_idle, roundhouse_kick (t 0.4 and 0.6, front and side), front_kick and crouch, before vs after. In the roundhouse and crouch, the inner-leg and crotch openings now show the dark liner instead of the see-through pink inside of the shorts. Not fixed: the shorts are still boxy (silhouette not changed, no drawstring added), the front kick still shows the shorts' inside through the raised leg opening, and small crease dimples remain at the front crotch in the crouch. Not tested in the live arena, with the spring layer or with the lent moves (takedown, sweep, knee, spinkick). Rash guard, face, hair, brain.js and clips unchanged. Triangles go from 213,571 to 219,571.
+
+Validator output (call 9):
+```
+PASS  manifest.json has all fields
+PASS  file size 47.4 MB (limit 80 MB)
+PASS  extensions: KHR_texture_transform, KHR_materials_sheen
+PASS  self-contained (no external URIs)
+PASS  10 textures (limit 40)
+PASS  largest texture 2050 px (limit 4096)
+PASS  219,571 triangles (limit 250,000)
+PASS  Mixamo skeleton (all required mixamorig: bones present)
+PASS  animations: 30/30
+PASS  clip lengths within ±10 % of reference
+PASS  bind-pose mesh height ≈ 1.79 m (expected 1.55–2.05 m; check scale if far off)
+PASS  brain.js runs in the sandbox, valid outputs, 0.062 ms average (limit 2 ms)
+PASS  renders/front.png 1920×1080 (long side ≥ 1920)
+PASS  renders/three_quarter.png 1920×1080 (long side ≥ 1920)
+PASS  renders/profile.png 1920×1080 (long side ≥ 1920)
+PASS  renders/closeup.png 1920×1080 (long side ≥ 1920)
+PASS  NOTES.md present and filled in
+PASS  LICENSES.md present and filled in
+
+All checks passed.
+```
