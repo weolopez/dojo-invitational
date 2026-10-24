@@ -176,7 +176,7 @@
         "skin": 7,
         "face": 8,
         "hair": 1,
-        "clothing": 3,
+        "clothing": 4,
         "overall": 2
       },
       "fight": {
@@ -184,8 +184,8 @@
         "contact": 4,
         "grounding": 3
       },
-      "total": 37,
-      "notes": "The photo-textured face is still the most real in the field, but the eyes are downcast, the hair is painted on and the head-to-neck seam is ragged. The smoothed shirt and shorts still read as thick shells with jagged hems, a wavy stripe pattern, no folds and a gap at the waist, so the body looks dressed in a costume rather than in fabric.",
+      "total": 38,
+      "notes": "The photo-textured face is still the most real in the field, but the eyes are downcast, the hair is painted on and the head-to-neck seam is ragged. The rebuilt clothes close the waist gap and have cleaner hems, yet the shirt still shows horizontal ripple bands, the shorts are boxy shells, and in the roundhouse the shirt shoulder balloons out and the shorts split at the hip.",
       "method": "harness"
     }
   }
