@@ -160,7 +160,8 @@ function arenaApi() {
     configureServer(server) {
       // Every 5 minutes, weigh in any entry that wrote READY.json for the current call (judge_pass.mjs).
       // The Bell rings again on the same beat so failed or interrupted agents retry (it enforces its own caps).
-      setInterval(() => {
+      // DOJO_NO_JOBS=1 (a test copy of the arena) skips the automatic weigh-ins and the Bell.
+      if (!process.env.DOJO_NO_JOBS) setInterval(() => {
         spawnDetached('judge_pass.mjs', ['--pending']);
         spawnDetached('bell.mjs');
       }, 5 * 60 * 1000);

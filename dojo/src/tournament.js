@@ -1,7 +1,8 @@
-// Single-elimination tournaments, all matches of a bracket round fought at the same time in separate arenas.
+// Single-elimination tournaments. At most SCHEDULE.maxConcurrentFights bouts run at once (default 1: one after another in one dojo).
 // Fights are the show; the champion is the most realistic fighter by the judge's scores
 // (competition/scores.json, RULES.md §6), and the champion earns the right to build the next dojo (§9).
-import { DOJO_BUILDERS, ENTRY_COLORS, EQUAL_STATS, PERSONALITIES, ROSTER } from './config.js';
+import { DOJO_BUILDERS, ENTRY_COLORS, EQUAL_STATS, PERSONALITIES, ROSTER, SCHEDULE } from './config.js';
+const MAX_FIGHTS = Math.max(1, SCHEDULE.maxConcurrentFights ?? 1);
 import { CpuBrain, EntryBrain } from './brains.js';
 import { DOJO_PRESETS, championPreset } from './dojos.js';
 
@@ -220,8 +221,7 @@ const shuffle = (xs) => xs.map((x) => [Math.random(), x]).sort((p, q) => p[0] - 
     const live = round.filter((m) => m.a && m.b && !m.winner);
     this.arenas.forEach((a) => { a.clear(); a.match = null; a.sparring = false; });
     this.ui.flash(`${this.roundName(this.roundIdx)} · Tournament ${this.data.tournamentNo}`);
-    const starting = Promise.all(live.map(async (m, i) => {
-      const arena = this.arenas[i];
+    const startBout = async (arena, m) => {
       arena.match = m;
       arena.comebackLow = [100, 100];
       arena.onRoundEnd = (ar, winner, timeUp) => this.onRoundEnd(ar, winner, timeUp);
@@ -229,7 +229,11 @@ const shuffle = (xs) => xs.map((x) => [Math.random(), x]).sort((p, q) => p[0] - 
       const da = this.byId[m.a];
       const db = this.byId[m.b];
       await arena.startMatch(da, db, [brainFor(da), brainFor(db)]);
-    }));
+    };
+    this.startBout = startBout;
+    // Up to MAX_FIGHTS bouts at once; the rest wait in a queue and take over the first arena that frees up.
+    this.queue = live.slice(Math.min(MAX_FIGHTS, this.arenas.length));
+    const starting = Promise.all(live.slice(0, Math.min(MAX_FIGHTS, this.arenas.length)).map((m, i) => startBout(this.arenas[i], m)));
     // Dojos without a bout this round host sparring between the fighters who aren't fighting.
     this.fillSparring();
     await starting;
@@ -243,6 +247,10 @@ const shuffle = (xs) => xs.map((x) => [Math.random(), x]).sort((p, q) => p[0] - 
    * topped up with house fighters. It never counts toward standings, records, seeding or titles.
    */
   fillSparring() {
+    // One-fight-at-a-time cap: tournament bouts, the weigh-in stage and sparring all count toward MAX_FIGHTS,
+    // and no sparring starts while bracket bouts are still queued.
+    if (this.queue?.length) return;
+    let fights = this.arenas.filter((a) => a.lineup.length || a.reserved).length;
     const busy = new Set(this.arenas.flatMap((a) => a.lineup));
     // The house "You" is the same person as the owner's entry, so it stays out once entry:me is in.
     const house = ROSTER.filter((d) => !(d.id === 'me' && this.byId['entry:me'])).map((d) => ({ ...d, stats: EQUAL_STATS }));
@@ -250,6 +258,8 @@ const shuffle = (xs) => xs.map((x) => [Math.random(), x]).sort((p, q) => p[0] - 
       .filter((d, i, all) => !busy.has(d.id) && all.findIndex((x) => x.id === d.id) === i);
     for (const arena of this.arenas) {
       if (arena.lineup.length || arena.reserved || pool.length < 2) continue;
+      if (fights >= MAX_FIGHTS) break;
+      fights++;
       this.spar(arena, pool.shift(), pool.shift());
     }
   }
@@ -373,6 +383,10 @@ const shuffle = (xs) => xs.map((x) => [Math.random(), x]).sort((p, q) => p[0] - 
     const round = this.bracket[this.roundIdx];
     if (round.every((x) => x.winner || !(x.a && x.b))) {
       setTimeout(() => this.afterRound(), 3500);
+    } else if (this.queue?.length) {
+      // Next queued bout of this round, in the same dojo, after a short look at the result.
+      const next = this.queue.shift();
+      setTimeout(() => { arena.clear(); this.startBout(arena, next).then(() => this.emit()); }, 3500);
     }
   }
 

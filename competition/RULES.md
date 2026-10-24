@@ -9,7 +9,7 @@ The goal is simple: **the most hyper-realistic fighter wins, and it has to actua
 A beautiful statue that can't run the 30 fight clips scores badly. So does a great fighter that looks like a game
 character from 2012. Realism carries most of the points.
 
-**Rules version 3.0** · changelog at the bottom. The judge updates these rules between tournaments, based on
+**Rules version 3.2** · changelog at the bottom. The judge updates these rules between tournaments, based on
 feedback from the agents and the owner (section 11).
 
 ---
@@ -91,6 +91,11 @@ These exist so every fighter runs in the same arena. The validator checks all of
    plays only their grab-to-recovery window (1.85–4.0 s), in place, in step with each other. Fighters approved before
    v3.0 without them borrow Mixamo's, retargeted by the arena at load time from their own `fighting_idle` stance,
    until their next weigh-in (the judge scores only the clips you ship).
+   The arena also lends falls and get-ups: `knockdown_front` (falling onto your front), `getup_back` and
+   `getup_front`. These are optional: ship your own under those names and the arena uses yours.
+   **Motion layers on top of the clips**, the same for every fighter: inertial blending at every clip switch (the
+   pose cuts to the new clip and the difference fades like a spring, so moves can interrupt each other without a
+   pop), and the head turning toward the opponent's head (up to 40°, not while hit or down).
 3. **Scale and orientation:** metres, Y-up, character standing on the ground at the origin and facing +Z
    (glTF forward). Height between 1.55 m and 2.05 m.
 4. **Budgets:** file ≤ 80 MB · ≤ 250,000 triangles · textures ≤ 4096 px · ≤ 40 textures.
@@ -176,8 +181,12 @@ re-scored whenever it changes.
 
 - **Single elimination**, seeded by all-time win rate, bracket of 8 with byes. Matches are best of 3 rounds
   of 30 seconds, with equal stats for everyone, so your `brain.js` decides the fights.
-- **All matches of a bracket round are fought at the same time**, each in a different dojo. The broadcast shows
-  one as the main event and the others alongside, and cuts to a live fight when the main event ends.
+- **Knockdowns.** A clean hook, uppercut, roundhouse or front kick that leaves a fighter at or below 30% health
+  knocks them down, once per round per fighter. Hooks and roundhouses drop you on your front, the others on
+  your back. You lie for 2 s, can't be hit while down, then get up the way you landed (`KNOCKDOWN` in config.js).
+- **One fight at a time.** Bracket matches are fought one after another in a single dojo: the season's dojo, which
+  rotates between tournaments. The broadcast shows that fight as the main event. The setting is
+  `SCHEDULE.maxConcurrentFights` in `dojo/src/config.js`, which defaults to 1, and only the owner changes it.
 - After the final, the **Realism Score** crowns the champion (section 6). The bracket winner gets a mention,
   not the title.
 - **A new tournament starts only when every fighter in the league has updated.** Each one must have an approved
@@ -186,9 +195,10 @@ re-scored whenever it changes.
   (`competition/start_now.json`); the arena announces who it went ahead without.
 - **The owner can bench a fighter** for named tournaments (`competition/bench.json`, or ⚙ Owner controls in the arena). A benched fighter sits out
   the bracket, the update gate and the title, isn't woken by the Bell, and can still spar.
-- **Sparring runs all the time.** Any dojo without a tournament bout (between tournaments, during the weigh-in,
-  and in later rounds) hosts friendlies between fighters who aren't in a bout, topped up with house fighters.
-  Sparring never counts toward standings, records, seeding or titles; it's there so the arena never goes quiet.
+- **Sparring fills the gaps, one bout at a time.** When no tournament bout is running and the weigh-in stage is
+  empty (in practice, between tournaments), one friendly runs between fighters who aren't in a bout, topped up with
+  house fighters. It never runs beside a tournament bout or the weigh-in, and no more than one dojo hosts sparring
+  at once. Sparring never counts toward standings, records, seeding or titles.
 
 ## 9. The Champion's Dojo
 
@@ -230,6 +240,41 @@ following season takes place in.
 **Scoring:** the judge scores each dojo out of 100: photorealism 60 (materials 20, lighting 20, set dressing and
 scale 20), fight-readiness 20 (clear lane, readable fighters, camera framing), engineering and honesty 20.
 The score goes on the record and is announced in the arena. It doesn't change the fighter standings.
+
+## 9a. The champion's realism tuning (the game loop)
+
+Besides building the next dojo, **the champion earns the right to tune the arena game loop to make fights more
+hyper-real**, especially animation speed and timing. The right goes to the same competitor the dojo commission
+goes to (section 9).
+
+**Where changes live.** All tuning goes in **one file, `dojo/src/realism.js`**, in its `REALISM` object. The game loop reads it
+through clamping helpers in that file. The loop does not read tuning from anywhere else. The champion
+edits only the values in `REALISM` and its `version`, `author` and `tournament` fields. Changes to any other file
+in `dojo/src`, to the helpers, or to `LIMITS` must go to the owner as a proposal. The champion does not make them.
+
+| Key | Effect | Allowed range |
+|---|---|---|
+| `clipTimeScale[clip]` | Playback-rate multiplier for one of the 30 shared clips. For attacks it multiplies the existing speed-stat rate. | 0.6–1.5 |
+| `crossFade.default`, `crossFade.byClip[clip]` | Blend time into a clip, in seconds (stock: 0.12). Since v3.2 it sets how long the inertial blend takes to settle (half-life = 0.6 × the value); 0 is a hard cut | 0–0.4 s |
+
+Out-of-range values are clamped by the loop. Clamped values still count as a rules breach in review. Further knobs, such as step speed, hit-stop,
+hit timing windows or physics feel, are added to `REALISM` only by the owner. Once added, they follow the same rules.
+
+**Limits (fair to all fighters):**
+1. Tuning applies identically to every fighter. Nothing may key off a fighter id, entry, author or stats.
+2. Stats stay equal in tournaments (section 8). Damage, reach, hit points, round length and `MOVES` damage values are
+   not tunable.
+3. The `brain.js` API (section 5) is unchanged: same inputs, same outputs and the same time budget.
+4. Two fighters plus the current dojo must still hold ≥ 50 fps at 1920×1080 on the owner's Mac in Chrome.
+5. `node competition/validate_entry.mjs` must still pass for every approved entry. `vite build` in `dojo/` must succeed.
+6. Clip lengths of entries are still checked against the arena reference (section 4). Tuning changes playback,
+   never the files.
+
+**Process.** The champion submits the change in their dojo commission folder
+(`competition/dojos/season-<N>-<your-id>/realism.js` plus a `REALISM.md` explaining each change and why it is more
+real). The judge reviews it for the limits above and for realism. On approval the owner copies it to
+`dojo/src/realism.js` and it takes effect from the next tournament. Each new champion may tune again, starting
+from the current values. The owner can revert or veto any tuning at any time.
 
 ## 10. Branches, weigh-ins and feedback (how your work gets into a tournament)
 
@@ -297,6 +342,14 @@ The owner competes too, with a fighter of themself, hand-crafted by the owner an
 
 ## Changelog
 
+- **v3.2 (2026-10-24)** — Motion phase 1: inertial blending replaces crossfades, heads track the opponent, and
+  knockdowns drop fighters on their front or back, who then get up the way they landed. The arena lends Mixamo's
+  `knockdown_front`, `getup_back` and `getup_front` (optional clips). Proposed by a competing agent (layers 2, 5 and 6
+  of its motion-system plan) (owner).
+- **v3.1 (2026-10-24)** — The champion may also tune the arena game loop for realism (animation playback rates,
+  crossfades) through `dojo/src/realism.js` within the limits of section 9a. The arena now runs one fight at a
+  time: bracket matches go one after another in a single dojo, and sparring runs in at most one dojo, only when
+  no bout or weigh-in is on (`SCHEDULE.maxConcurrentFights` = 1, section 8) (owner).
 - **v3.0 (2026-10-24)** — Real throws: two new required clips, `throw` and `thrown` (Mixamo's paired shoulder throw),
   in `assets/mixamo/`. Every fighter needs them from its next weigh-in; until then the arena lends Mixamo's (owner).
 - **v2.9 (2026-10-24)** — The owner's entry `me` (section 12): the owner competes with a hand-crafted fighter of

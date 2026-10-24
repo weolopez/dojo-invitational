@@ -1,17 +1,23 @@
-// The paired Mixamo shoulder throw (clips 'throw' and 'thrown', RULES.md §4).
+// Clips the arena prepares or lends at load time (RULES.md §4).
 //
-// The full clips run 6 s, from a run-up to lying on the mat; the fight uses only the grab-to-recovery window, in
-// place (the arena moves fighters), with the victim turned to face the thrower as in the clip.
+// The paired Mixamo shoulder throw ('throw' and 'thrown'): the full clips run 6 s, from a run-up to lying on the mat;
+// the fight uses only the grab-to-recovery window, in place (the arena moves fighters), with the victim turned to
+// face the thrower as in the clip.
+// Falls and get-ups ('knockdown_front', 'getup_back', 'getup_front'): played in place, whole.
 //
-// Fighters approved before the clips were required don't have them, so the arena lends them Mixamo's, retargeted at
-// load time. Rigs orient their joints differently, so the retarget works from a pose every fighter shares: frame 0 of
-// its own fighting_idle. Each bone gets the source's rotation away from that stance, applied to the target's stance.
+// A fighter without one of these clips borrows Mixamo's from the lending library (build_lent_clips.py), retargeted.
+// Rigs orient their joints differently, so the retarget works from a pose every fighter shares: frame 0 of its own
+// fighting_idle. Each bone gets the source's rotation away from that stance, applied to the target's stance.
 import * as THREE from 'three';
 import { gltfLoader } from './assets.js';
 
 export const THROW_WINDOW = [1.85, 4.0];
 const FPS = 30;
-const SOURCE_URL = '/fighters/me.glb'; // the house X Bot fighter: Mixamo's own skeleton and clips, untouched
+const SOURCE_URL = '/fighters/lent.glb'; // Mixamo's X Bot with the clips above (build_lent_clips.py)
+const EXTRAS = ['knockdown_front', 'getup_back', 'getup_front'];
+// Mixamo's get-ups lie still for 2–3 s before rising, and stand for 2 s after: lend just the rise (measured on the
+// hips height).
+const LENT_WINDOWS = { getup_back: [3.2, 6.3], getup_front: [1.9, 6.3] };
 const UP = new THREE.Vector3(0, 1, 0);
 
 const boneKey = (name) => name.match(/(Hips|Spine\d?|Neck|Head(?:Top_End)?|(?:Left|Right)[A-Za-z]+\d*)$/)?.[1] ?? null;
@@ -69,10 +75,10 @@ function windowed(name, frames, target, turn) {
   return new THREE.AnimationClip(name, frames.length / FPS, tracks);
 }
 
-/** The window of a rig's own throw clip (rigs that have it). */
-function ownWindow(root, clip, turn) {
+/** A rig's own clip over a window (the whole clip by default), in place. */
+function ownWindow(root, clip, turn, window = THROW_WINDOW) {
   const frames = [];
-  for (let t = THROW_WINDOW[0]; t <= THROW_WINDOW[1] + 1e-6; t += 1 / FPS) {
+  for (let t = window[0]; t <= window[1] + 1e-6; t += 1 / FPS) {
     const p = poseAt(root, clip, t);
     frames.push({ rot: p.rot, hipsY: p.hips.y });
   }
@@ -85,12 +91,14 @@ function loadSource() {
     // (This copy is only ever sampled, never shown.)
     const clip = (n) => g.animations.find((c) => c.name === n);
     const idle = poseAt(g.scene, clip('fighting_idle'), 0);
-    const sample = (name) => {
+    const sample = (name, window) => {
       const out = [];
-      for (let t = THROW_WINDOW[0]; t <= THROW_WINDOW[1] + 1e-6; t += 1 / FPS) out.push(poseAt(g.scene, clip(name), t));
+      for (let t = window[0]; t <= window[1] + 1e-6; t += 1 / FPS) out.push(poseAt(g.scene, clip(name), t));
       return out;
     };
-    return { root: g.scene, idle, throw: sample('throw'), thrown: sample('thrown') };
+    const src = { root: g.scene, idle, throw: sample('throw', THROW_WINDOW), thrown: sample('thrown', THROW_WINDOW) };
+    for (const name of EXTRAS) src[name] = sample(name, LENT_WINDOWS[name] ?? [0, clip(name).duration]);
+    return src;
   }).catch(() => null);
   return source;
 }
@@ -115,25 +123,29 @@ function lent(src, name, target, turn) {
 }
 
 /**
- * The fight-ready throw clips for a loaded fighter: { throw, thrown, lent } (cached on the gltf).
- * Returns null if neither the fighter nor the shared source can provide them.
+ * The fight-ready prepared clips for a loaded fighter (cached on the gltf):
+ * { clips: { throw, thrown, knockdown_front, getup_back, getup_front }, lent: [names borrowed from the library] }.
  */
-export async function throwClips(gltf) {
-  if (gltf.userData.throwClips !== undefined) return gltf.userData.throwClips;
+export async function fightClips(gltf) {
+  if (gltf.userData.fightClips) return gltf.userData.fightClips;
   const root = gltf.scene;
   // Sampling poses moves the bones of this shared, cached model: put them back afterwards.
   const rest = bonesOf(root).map((b) => [b, b.position.clone(), b.quaternion.clone(), b.scale.clone()]);
   root.userData.clips = Object.fromEntries(gltf.animations.map((c) => [c.name, c]));
   const own = root.userData.clips;
-  let result = null;
-  if (own.throw && own.thrown) {
-    result = { throw: ownWindow(root, own.throw, 0), thrown: ownWindow(root, own.thrown, Math.PI), lent: false };
-  } else if (own.fighting_idle) {
-    const src = await loadSource();
-    if (src) result = { throw: lent(src, 'throw', root, 0), thrown: lent(src, 'thrown', root, Math.PI), lent: true };
+  const clips = {};
+  const lentNames = [];
+  const turns = { thrown: Math.PI };
+  const needed = ['throw', 'thrown', ...EXTRAS];
+  const src = needed.some((n) => !own[n]) && own.fighting_idle ? await loadSource() : null;
+  for (const name of needed) {
+    const turn = turns[name] ?? 0;
+    const window = name === 'throw' || name === 'thrown' ? THROW_WINDOW : null;
+    if (own[name]) clips[name] = ownWindow(root, own[name], turn, window ?? [0, own[name].duration]);
+    else if (src) { clips[name] = lent(src, name, root, turn); lentNames.push(name); }
   }
   for (const [b, p, q, s] of rest) { b.position.copy(p); b.quaternion.copy(q); b.scale.copy(s); }
   root.updateMatrixWorld(true);
-  gltf.userData.throwClips = result;
-  return result;
+  gltf.userData.fightClips = { clips, lent: lentNames };
+  return gltf.userData.fightClips;
 }

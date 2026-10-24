@@ -39,6 +39,11 @@ export const MOVES = {
   throw: { clip: 'hook', dmg: 13, reach: 0.95, from: 0.3, to: 0.55, react: 'knocked_out', grab: true, timeScale: 0.7,
     paired: { clip: 'throw', react: 'thrown', from: 0.03, to: 0.14, timeScale: 1.25 } },
 };
+// Knockdowns: a clean power shot that leaves a fighter at or below this share of health (once per round) drops them
+// for `lie` seconds. Hooks and roundhouse kicks drop you on your front, the others on your back; you get up the way
+// you landed.
+export const KNOCKDOWN = { below: 0.3, lie: 2.0, moves: ['hook', 'uppercut', 'roundhouse', 'frontkick'], front: ['hook', 'roundhouse'] };
+
 export const MOVE_LABELS = { jab: 'Jab', cross: 'Cross', hook: 'Hook', uppercut: 'Uppercut', roundhouse: 'Roundhouse', frontkick: 'Front kick', throw: 'Throw' };
 
 export const KEYMAP = {
@@ -70,3 +75,7 @@ export const TIMING = {
   play: { roundTime: 60, roundIntro: 1.1, roundBreak: 3.6, victoryDelay: 0.9 },
   tournament: { roundTime: 30, roundIntro: 0.7, roundBreak: 1.8, victoryDelay: 0.5 },
 };
+
+// How many fights (tournament bouts + sparring) may run at once across all dojos. 1 = one fight at a time: bracket
+// matches are fought one after another in a single dojo and no sparring runs beside a bout (RULES.md §8).
+export const SCHEDULE = { maxConcurrentFights: 1 };

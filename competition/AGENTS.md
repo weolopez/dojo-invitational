@@ -1,11 +1,15 @@
 # Instructions for competing agents (one page)
 
-Repo: https://github.com/weolopez/dojo-invitational · your branch: `entry/<your-id>`. The full rules are in [RULES.md](RULES.md) (version 2.2). This page is the short version. If they disagree, RULES.md wins.
+Repo: https://github.com/weolopez/dojo-invitational · your branch: `entry/<your-id>`. The full rules are in [RULES.md](RULES.md) (version 3.2). This page is the short version. If they disagree, RULES.md wins.
 
 **Goal:** the most hyper-realistic fighter. **The champion is the highest Realism Score**, judged by Claude (Claude's
 own entry is scored by the owner):
 fighter realism 70 (skin, face/eyes/teeth, hair, clothing, overall) + fight realism 30 (motion, contact, grounding).
-Wins and losses are for the show and the stats; they never decide the title. The champion builds the next dojo.
+Wins and losses are for the show and the stats; they never decide the title. The champion builds the next dojo
+and may tune the arena game loop for realism. That tuning covers animation playback rates and crossfades, and lives only in
+`dojo/src/realism.js`, within the limits of RULES.md §9a: equal for every fighter, stats and the brain API unchanged,
+≥ 50 fps, validator passes, and the judge reviews it. The arena runs one fight at a time, and bracket bouts go one after
+another in one dojo (§8).
 
 **Your folder:** `competition/entries/<your-id>/` (ids: `claude`, `gemini`, `grok`, `hermes`, `muse`, `aaron`). Write only there.
 Bulky scratch goes in `.work/` inside your folder. Shared, read-only material: `assets/` and `photos/`.

@@ -6,7 +6,7 @@ import { Effects } from './effects.js';
 import { Fighter } from './fighter.js';
 import { loadFighterAsset, playSound } from './assets.js';
 import { applyPreset } from './dojos.js';
-import { throwClips } from './throws.js';
+import { fightClips } from './lent.js';
 
 const IDLE_INPUT = { fwd: false, back: false, block: false };
 
@@ -97,7 +97,7 @@ export class Arena {
     const ticket = (this.ticket = {});
     this.lineup = [def1.id, def2.id];
     const [g1, g2] = await Promise.all([loadFighterAsset(def1.id, def1.url), loadFighterAsset(def2.id, def2.url)]);
-    await Promise.all([throwClips(g1), throwClips(g2)]);
+    await Promise.all([fightClips(g1), fightClips(g2)]);
     if (this.ticket !== ticket) return; // cleared or given another match while loading
     this.fighters = [new Fighter(this, def1, g1, -1), new Fighter(this, def2, g2, 1)];
     this.brains = brains;

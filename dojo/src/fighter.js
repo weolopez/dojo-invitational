@@ -1,7 +1,14 @@
 // A fighter in one arena: model, animation, moves, hit handling and per-match stats.
 import * as THREE from 'three';
+import { clipRate, crossFadeFor, hasClipRate } from './realism.js';
 import * as SkeletonUtils from 'three/addons/utils/SkeletonUtils.js';
-import { MOVES } from './config.js';
+import { KNOCKDOWN, MOVES } from './config.js';
+import { Inertializer, LookAt } from './motion.js';
+
+// Clips that travel along the floor: switching into or out of them keeps the body where it lies.
+const GROUND = new Set(['knocked_out', 'knockdown_front', 'thrown', 'getting_up', 'getup_back', 'getup_front']);
+// The clips prepared or lent at load time (lent.js).
+const PREPARED = ['throw', 'thrown', 'knockdown_front', 'getup_back', 'getup_front'];
 
 export function newTally() {
   return { thrown: 0, hits: 0, damage: 0, blocks: 0, bestCombo: 0, kos: 0, moves: {} };
@@ -43,15 +50,12 @@ export class Fighter {
     this.mixer = new THREE.AnimationMixer(this.model);
     this.actions = {};
     for (const clip of gltf.animations) {
-      if (clip.name !== 'throw' && clip.name !== 'thrown') this.actions[clip.name] = this.mixer.clipAction(clip);
+      if (!PREPARED.includes(clip.name)) this.actions[clip.name] = this.mixer.clipAction(clip);
     }
-    // The throw's fight-ready window: the fighter's own clips, or Mixamo's lent to it (throws.js, prepared on load).
-    const throws = gltf.userData.throwClips;
-    if (throws) {
-      this.actions.throw = this.mixer.clipAction(throws.throw);
-      this.actions.thrown = this.mixer.clipAction(throws.thrown);
-      this.lentThrow = throws.lent;
-    }
+    // The throw, falls and get-ups: the fighter's own clips, or Mixamo's lent to it (lent.js, prepared on load).
+    const prepared = gltf.userData.fightClips ?? { clips: {}, lent: [] };
+    for (const [name, clip] of Object.entries(prepared.clips)) this.actions[name] = this.mixer.clipAction(clip);
+    this.lent = prepared.lent;
     this.mixer.addEventListener('finished', () => this.onClipFinished());
 
     this.stats = def.stats;
@@ -62,7 +66,16 @@ export class Fighter {
       if (!o.isBone) return;
       if (/Head$/.test(o.name)) this.bones.head = o;
       if (/Spine2$/.test(o.name)) this.bones.chest = o;
+      if (/Hips$/.test(o.name)) this.bones.hips = o;
     });
+    // Measured in the rest pose (model space, facing +Z): which way the hips bone's front points, to tell face up
+    // from face down after a fall.
+    this.model.updateMatrixWorld(true);
+    if (this.bones.hips) {
+      this.hipsFront = new THREE.Vector3(0, 0, 1).applyQuaternion(this.bones.hips.getWorldQuaternion(new THREE.Quaternion()).invert());
+    }
+    this.inertia = new Inertializer(this.model);
+    this.lookAt = new LookAt(this.model);
     this.reset();
   }
 
@@ -81,11 +94,14 @@ export class Fighter {
     this.move = null;
     this.hitLanded = false;
     this.whiffAt = null;
+    this.downed = false;
+    this.knockedDown = false; // once per round
     this.cooldown = 0;
     this.combo = 0;
     this.root.position.set(this.side * 1.4, 0, 0);
     this.root.rotation.y = this.side < 0 ? Math.PI / 2 : -Math.PI / 2;
     this.mixer.stopAllAction();
+    this.inertia?.forget();
     this.current = null;
     this.playLoop('fighting_idle');
   }
@@ -97,12 +113,17 @@ export class Fighter {
   fade(name, once) {
     const next = this.actions[name];
     if (!next) return null;
+    // Inertial blending (motion.js) instead of a crossfade: cut straight to the new clip, and let the difference fade.
+    const was = this.current?.getClip().name;
+    if (this.current && this.current !== next) this.current.stop();
     next.reset();
     next.setLoop(once ? THREE.LoopOnce : THREE.LoopRepeat, Infinity);
     next.clampWhenFinished = !!once;
-    if (this.current && this.current !== next) next.crossFadeFrom(this.current, 0.12, false);
+    if (hasClipRate(name)) next.timeScale = clipRate(name);
     next.play();
     this.current = next;
+    // The champion's crossfade tuning (realism.js) sets how long the leftover takes to fade.
+    this.inertia?.switched(GROUND.has(was) || GROUND.has(name), crossFadeFor(name));
     return next;
   }
 
@@ -124,12 +145,12 @@ export class Fighter {
     // A move with a paired animation uses it when this fighter has the clip (the throw).
     const base = MOVES[moveName].paired && this.actions[MOVES[moveName].paired.clip]
       ? { ...MOVES[moveName], ...MOVES[moveName].paired } : MOVES[moveName];
-    this.move = { ...base, dmg: Math.round(base.dmg * this.stats.power), reach: base.reach * this.stats.reach,
+    this.move = { ...base, name: moveName, dmg: Math.round(base.dmg * this.stats.power), reach: base.reach * this.stats.reach,
                   heavy: base.dmg >= 12, high: base.react !== 'hit_reaction', grab: !!base.grab };
     this.hitLanded = false;
     this.whiffAt = null;
     const action = this.fade(this.move.clip, true);
-    if (action) action.timeScale = (0.85 + 0.25 * this.stats.speed) * (base.timeScale ?? 1);
+    if (action) action.timeScale = (0.85 + 0.25 * this.stats.speed) * (base.timeScale ?? 1) * clipRate(this.move.clip);
     this.arena.sound('swing', 0.35);
   }
 
@@ -139,8 +160,21 @@ export class Fighter {
     this.fade('taunt', true);
   }
 
+  /** Lying face up (belly to the sky) rather than face down. */
+  faceUp() {
+    if (!this.hipsFront) return true;
+    this.root.updateMatrixWorld(true);
+    return this.hipsFront.clone().applyQuaternion(this.bones.hips.getWorldQuaternion(new THREE.Quaternion())).y > 0;
+  }
+
+  /** Fall onto your front or your back, depending on what hit you. Returns the clip playing. */
+  fall(move) {
+    const front = KNOCKDOWN.front.includes(this.lastHitBy ?? move?.name) && this.actions.knockdown_front;
+    return this.fade(front ? 'knockdown_front' : 'knocked_out', true);
+  }
+
   takeHit(move, blocked) {
-    if (this.state === 'ko') return;
+    if (this.state === 'ko' || this.downed) return; // no hitting a fighter who is down
     const fx = this.arena.effects;
     const dmg = blocked ? Math.ceil(move.dmg * 0.15) : move.dmg;
     this.hp = Math.max(0, this.hp - dmg);
@@ -148,7 +182,8 @@ export class Fighter {
     if (this.hp === 0) {
       this.state = 'ko';
       // A throw that knocks you out ends the way the throw does: flat on the mat.
-      const fall = move.sync && this.actions.thrown ? this.fade('thrown', true) : this.fade('knocked_out', true);
+      this.lastHitBy = move.name;
+      const fall = move.sync && this.actions.thrown ? this.fade('thrown', true) : this.fall(move);
       if (fall && move.sync && this.actions.thrown) { fall.time = move.sync.time; fall.timeScale = move.sync.timeScale; }
       this.arena.sound('heavy', 0.9);
       fx.sparks(where, 0xfff2b0, 60, 3.2);
@@ -177,6 +212,19 @@ export class Fighter {
       fx.shake(0.12);
       return;
     }
+    if (KNOCKDOWN.moves.includes(move.name) && !this.knockedDown && this.hp / this.maxHp <= KNOCKDOWN.below) {
+      // Knockdown: down on the mat, then up again the way you landed (onClipFinished).
+      this.knockedDown = true;
+      this.downed = true;
+      this.lastHitBy = move.name;
+      this.fall(move);
+      this.arena.showBanner('KNOCKDOWN!', 1.2);
+      this.arena.sound('heavy', 0.9);
+      fx.sparks(where, 0xffb347, 40, 2.6);
+      fx.shake(0.12);
+      fx.hitStop(0.09);
+      return;
+    }
     this.root.position.x += this.side * (move.heavy ? 0.26 : 0.16);
     this.arena.sound(move.heavy ? 'heavy' : 'hit', 0.8);
     fx.sparks(where, move.heavy ? 0xffb347 : 0xffe9a8, move.heavy ? 36 : 20, move.heavy ? 2.6 : 1.8);
@@ -190,16 +238,23 @@ export class Fighter {
   }
 
   onClipFinished() {
-    if (this.state === 'hit' && this.downed) {
-      this.downed = false;
-      this.fade('getting_up', true);
+    if (this.state === 'hit' && this.downed && !this.gettingUp) {
+      this.getUp();
       return;
     }
+    if (this.gettingUp) { this.gettingUp = false; this.downed = false; }
     if (['attack', 'hit', 'taunt'].includes(this.state)) {
       this.state = 'idle';
       this.cooldown = 0.12;
       this.playLoop('fighting_idle');
     }
+  }
+
+  /** Start getting up: the way you're lying; fighters without the get-up clips use their own getting_up. */
+  getUp() {
+    this.gettingUp = true;
+    const clip = this.fade(this.faceUp() ? 'getup_back' : 'getup_front', true) ?? this.fade('getting_up', true);
+    if (clip) clip.timeScale = 1.3;
   }
 
   /** input: {fwd, back, block} booleans. */
@@ -225,14 +280,14 @@ export class Fighter {
     if (this.state === 'attack' && !this.hitLanded && this.current) {
       const t = this.current.time / this.current.getClip().duration;
       const gap = Math.abs(this.root.position.x - opponent.root.position.x);
-      if (t >= this.move.from && t <= this.move.to && gap <= this.move.reach && opponent.state !== 'ko') {
+      if (t >= this.move.from && t <= this.move.to && gap <= this.move.reach && opponent.state !== 'ko' && !(opponent.downed && !this.move.grab)) {
         this.hitLanded = true;
         // Throws can't be blocked, but a foe who is mid-strike (or already down) slips the grab.
         if (this.move.grab && (opponent.state === 'attack' || opponent.downed)) {
           this.arena.sound('swing', 0.2);
           // A paired throw that grabs nothing shouldn't play the whole throw on thin air.
           if (this.move.react === 'thrown') this.whiffAt = this.arena.clock + 0.25;
-          this.mixer.update(dt);
+          this.animate(dt, opponent);
           return;
         }
         const blocked = !this.move.grab && opponent.state === 'block';
@@ -261,6 +316,18 @@ export class Fighter {
       this.cooldown = 0.3;
       this.playLoop('fighting_idle');
     }
+    this.animate(dt, opponent);
+  }
+
+  /** Clips, then inertial blending, then the head turning to the opponent. */
+  animate(dt, opponent) {
+    // A knockdown fall keeps lying in its clip for a long time; get up after KNOCKDOWN.lie seconds on the mat.
+    if (this.downed && !this.gettingUp && this.state === 'hit' && ['knocked_out', 'knockdown_front'].includes(this.current?.getClip().name)
+      && this.current.time > KNOCKDOWN.lie) this.getUp();
     this.mixer.update(dt);
+    this.inertia.apply(dt, this.root);
+    this.inertia.record(this.root);
+    const looking = ['idle', 'walk_f', 'walk_b', 'block', 'attack'].includes(this.state) && !this.downed;
+    this.lookAt.apply(dt, looking, opponent?.bones.head?.getWorldPosition(new THREE.Vector3()), this.root);
   }
 }
