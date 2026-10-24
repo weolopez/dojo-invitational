@@ -15,9 +15,11 @@ touched. MPFB 2.0.18 (from extensions.blender.org, sha256-checked) and the MakeH
 2. `01_build_human.py`: builds the character from a description: female, age 0.6 (about 38), muscle 0.72,
    weight 0.45, proportions 0.85, height 0.6, mixed ancestry; skin, high-poly eyes, eyebrow002, eyelashes02,
    teeth, tongue, ponytail01, female_sportsuit01, MPFB Mixamo rig, one subdivision level.
-3. `02_materials.py`: grades the skin toward olive, generates a tiling pore normal map, gives the eyes the brown
+3. `02_materials.py`: grades the skin toward olive, adds a blood-flush tint and a roughness map placed from face
+   landmarks, generates a tiling pore normal map, gives the eyes the brown
    iris (red cast shifted to dark brown) and a clearcoat, darkens the hair, recolours the brows dark brown,
-   paints scalp and brow shading into the skin under the hair cap and brows (see below), recolours the sportsuit,
+   paints scalp and brow shading into the skin under the hair cap and brows (see below), recolours the sportsuit
+   (terracotta top with charcoal piping, black leggings),
    and sets glTF alpha modes (opaque skin, teeth and cloth; cutout hair, brows, lashes and cornea).
 4. `03_rig_and_retarget.py`: swings the arm chains from MPFB's A-pose to the clips' T-pose, bakes that as the rest
    pose, then retargets all 28 clips by copying each bone's world rotation from the X Bot source, corrected for the
@@ -25,6 +27,31 @@ touched. MPFB 2.0.18 (from extensions.blender.org, sha256-checked) and the MakeH
 5. `04_export_and_render.py`: applies MPFB's helper masks and subdivision (so hidden helper geometry is really
    removed) and exports `fighter.glb` with the 28 clips as NLA tracks.
 6. Renders: `dojo/judge.html?id=claude`, the standardised Three.js harness, from the submitted `fighter.glb`.
+
+## Update for call #3 (after tournament 8)
+
+The call again had no specific notes (the owner scores this entry), so I went by the judge-harness renders in
+`competition/judging/claude/`. This is a materials-only pass: the mesh, rig, retarget, clips and brain are unchanged
+(same 167,392 triangles, 28 clips).
+
+- **Skin roughness map (new):** the skin used to be one roughness value (0.48) everywhere. `position_map` now
+  rasterises the body's UV triangles to get each skin texel's rest-pose 3D position, and `skin_regions` places
+  masks from the face's own landmarks (nose tip = the most forward head point, ears = the widest). A generated
+  2048 px roughness map (`claude_skin_roughness`, exported as the glTF metallicRoughness texture) is about 0.52 on
+  the body, lower on the forehead/nose T-zone (down to about 0.36) and lips (down to about 0.30), with fine noise
+  of about ±0.03 so the highlight breaks up.
+- **Blood flush (new):** cheeks, nose tip and ears are tinted toward a deeper rose in the skin diffuse, so the face
+  isn't one flat tone. Honestly, the effect is subtle at the harness's distance.
+- **Training top:** the bright orange CC0 piping, which read like a costume on terracotta, is now charcoal (like
+  the leggings). The CC0 top's lighter and darker blue panels had become blotchy light/dark terracotta; only 40 % of
+  that contrast is kept now. The dye is also darker (HSV 12°, 0.76, 0.42), because the arena light rendered the old
+  one as salmon pink. It now renders as a muted brick-terracotta. The lighter band around the neckline is still
+  visible: it comes from the collar rib in the CC0 normal map and geometry, not the colour.
+- Not used: the CC0 sportsuit AO map. Its UV layout doesn't match the diffuse's, so baking it in would put the
+  shadows in the wrong places.
+
+The four renders in `renders/` are copies of the judge harness's output (`dojo/judge.html?id=claude`, headless
+Chrome) for this `fighter.glb`.
 
 ## Update for call #1 (after tournament 6)
 
@@ -62,31 +89,33 @@ copies of the judge harness's output (`dojo/judge.html?id=claude`, run in headle
 
 - No subsurface scattering, transmission or volume on the skin; Three.js r160 in the arena doesn't support
   diffuse transmission, so the skin can look slightly flat under hard light.
-- The base skin texture is only 2048 px with no roughness or cavity map; the pore normal is procedural and tiled,
-  so it's uniform across the body.
+- The base skin texture is only 2048 px with no cavity or specular-colour map; the roughness map's regions are
+  hand-placed blobs, not scanned data; the pore normal is procedural and tiled, so it's uniform across the body.
 - Hair is a textured cap with cutout cards, not strands; the cap's cutout edge on the forehead is still crisp
   (the painted scalp only softens the skin beneath it).
 - The painted scalp is baked into the 2048 px skin diffuse, so it is low-resolution and not hair-strand detail.
 - No hand wraps, although the concept had them; the CC0 pack has none.
 - The face is neutral with no expression changes; there are no facial animations.
-- Clothes are skinned, not simulated, so they don't move independently.
+- Clothes are skinned, not simulated, so they don't move independently. In extreme poses (e.g. the roundhouse kick
+  in the harness's `action_roundhouse.png`) the top clips: a sliver of chest skin shows through near the collar, and
+  the shoulder of the top bulges. The leggings also crease sharply at the hip.
 - Retargeted hands use the X Bot finger poses, so fists aren't fully closed in every clip.
 
 ## Validator output
 
 ```
 PASS  manifest.json has all fields
-PASS  file size 22.8 MB (limit 80 MB)
+PASS  file size 24.8 MB (limit 80 MB)
 PASS  extensions: KHR_materials_clearcoat, KHR_texture_transform
 PASS  self-contained (no external URIs)
-PASS  10 textures (limit 40)
+PASS  11 textures (limit 40)
 PASS  largest texture 2048 px (limit 4096)
 PASS  167,392 triangles (limit 250,000)
 PASS  Mixamo skeleton (all required mixamorig: bones present)
 PASS  animations: 28/28
 PASS  clip lengths within ±10 % of reference
 PASS  bind-pose mesh height ≈ 1.73 m (expected 1.55–2.05 m; check scale if far off)
-PASS  brain.js runs in the sandbox, valid outputs, 0.062 ms average (limit 2 ms)
+PASS  brain.js runs in the sandbox, valid outputs, 0.069 ms average (limit 2 ms)
 PASS  renders/front.png 1920×1080 (long side ≥ 1920)
 PASS  renders/three_quarter.png 1920×1080 (long side ≥ 1920)
 PASS  renders/profile.png 1920×1080 (long side ≥ 1920)
