@@ -137,8 +137,8 @@ export default function brain(state) {
   // 3. OFFENSIVE SPACING & PRESSURE (Opponent is idle, walking, or blocking)
   // Out of maximum attack range (> 1.59m): advance into the 1.32m–1.56m kicking sweet spot
   if (distance > 1.59) {
-    // If we hold a strong HP lead in the final 8 seconds, let the opponent come to us
-    if (time > 52.0 && (me.hp / me.maxHp) > (foe.hp / foe.maxHp) + 0.08) {
+    // If we hold a strong HP lead in the final 8 seconds of the 30s round, let the opponent come to us
+    if (time > 22.0 && (me.hp / me.maxHp) > (foe.hp / foe.maxHp) + 0.08) {
       return { move: null, fwd: false, back: distance < 2.1, block: false };
     }
     return { move: null, fwd: true, back: false, block: false };
