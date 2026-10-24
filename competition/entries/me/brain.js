@@ -8,6 +8,7 @@ export default function brain(state) {
   const { me, foe, distance, memory } = state;
   memory.lastMove ??= -10;
   memory.combo ??= 0;
+  if (memory.round !== undefined && memory.round !== state.round) memory.kdDone = false;
   if (me.state === 'ko' || foe.state === 'ko' || me.state === 'victory') return STAND;
 
   const foeReach = foe.move ? REACH[foe.move] ?? 1.3 : 1.3;
@@ -24,6 +25,16 @@ export default function brain(state) {
     return { ...STAND, fwd: true };
   }
   if (!ready) return STAND;
+  // Knockdown play: once the foe is at or below 30 % health, a clean hook (in reach) or uppercut can drop them,
+  // once per round. Track a long 'hit' spell as the knockdown so we stop chasing it for the rest of the round.
+  if (memory.round !== state.round) { memory.round = state.round; memory.kdDone = false; memory.hitSince = null; }
+  if (foe.state === 'hit') { memory.hitSince ??= state.time; if (state.time - memory.hitSince > 1.2) memory.kdDone = true; }
+  else memory.hitSince = null;
+  if (!memory.kdDone && foe.hp <= 0.3 * foe.maxHp && foe.state !== 'block') {
+    if (distance > REACH.hook) return { ...STAND, fwd: true };
+    memory.combo = 0;
+    return strike(distance <= REACH.uppercut ? 'uppercut' : 'hook');
+  }
   // In close: jab, cross, then a power shot; reset the combination after three.
   if (memory.combo >= 3) memory.combo = 0;
   return strike(['jab', 'cross', me.hp >= foe.hp ? 'hook' : 'uppercut'][memory.combo]);

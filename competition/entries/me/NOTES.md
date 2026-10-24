@@ -40,8 +40,8 @@ face). The owner's coding agent (Claude Code, Opus 5.5) wrote and ran the script
   noise, and a faint edge can show up close.
 - Skin match is a single per-channel gain from the cheeks. The body albedo is a different person's skin, so its pore
   and tone variation do not match the face exactly. Neither material has subsurface scattering.
-- The clothing has no cloth simulation, seams or waistband. The folds are fixed displacement, and the shorts are loose
-  and boxy.
+- The clothing has no cloth simulation or seams. The folds and waistband gathers are fixed procedural displacement
+  (v3.4), the shorts are still loose and boxy, and a few soft lumps remain on the shirt back and side.
 - The feet: in `fighting_idle` the retargeted feet point down onto the toes. This was not fixed, and Grok's renders
   show the same thing. Clips were not reviewed frame by frame.
 
@@ -53,26 +53,28 @@ face). The owner's coding agent (Claude Code, Opus 5.5) wrote and ran the script
   with the skin tinted to the owner's face, a conformed and repainted neck join, and a Poly Haven fabric rash guard,
   shorts and hand wraps. The previous build is kept in `.work/backup_xbot_v3/`.
 
-## Validator output (Oct 24, 2026, final)
+## Validator output (Oct 24, 2026, call 4 / v3.4)
 
 ```
 PASS  manifest.json has all fields
-PASS  file size 43.3 MB (limit 80 MB)
+PASS  file size 46.6 MB (limit 80 MB)
 PASS  extensions: KHR_texture_transform, KHR_materials_sheen
 PASS  self-contained (no external URIs)
 PASS  10 textures (limit 40)
 PASS  largest texture 2050 px (limit 4096)
-PASS  133,040 triangles (limit 250,000)
+PASS  213,571 triangles (limit 250,000)
 PASS  Mixamo skeleton (all required mixamorig: bones present)
 PASS  animations: 30/30
+PASS  clip lengths within ±10 % of reference
 PASS  bind-pose mesh height ≈ 1.79 m (expected 1.55–2.05 m; check scale if far off)
-PASS  brain.js runs in the sandbox, valid outputs, 0.163 ms average (limit 2 ms)
+PASS  brain.js runs in the sandbox, valid outputs, 0.130 ms average (limit 2 ms)
 PASS  renders/front.png 1920×1080 (long side ≥ 1920)
 PASS  renders/three_quarter.png 1920×1080 (long side ≥ 1920)
 PASS  renders/profile.png 1920×1080 (long side ≥ 1920)
 PASS  renders/closeup.png 1920×1080 (long side ≥ 1920)
 PASS  NOTES.md present and filled in
 PASS  LICENSES.md present and filled in
+
 All checks passed.
 ```
 
@@ -83,3 +85,28 @@ All checks passed.
 - **Renders:** `renders/` now holds the judge-harness output in the bind pose.
 - **Throw clips (30 total):** `throw` and `thrown` (201 frames at 30 fps) were retargeted with `source/addclips.py`. It uses the same per-bone retarget math as `02_retarget.py`, but runs on the rig imported from fighter.glb because the original .blend was not available. Both clips then got the same foot and hip fix: `fix_feet.py ... throw,thrown`. That fix corrected about 23° of foot pitch, and a second pass left less than 0.2° residual. The other 28 clips were not changed. The bind-pose mesh did not change either, so the renders were not regenerated.
 - **Timing fix:** the Blender re-export in `cloth.py` played the 28 original clips at 24 fps, which made them 0.8× their original length. `source/retime.py` multiplies their keyframe times by 1.25. It writes new time accessors with updated min/max and leaves throw/thrown alone. All 30 durations now match the reference list (for example fighting_idle 3.33 s, knocked_out 4.97 s, throw 6.70 s). After retiming, re-running the foot check gives a residual below 0.001° on every clip except thrown Right (0.16°), and a hip residual below 0.0001 cm. The roughly 10° fighting_idle residual came from the same timing error.
+
+## Update (Oct 24, 2026, call 4 / rules v3.3)
+- **Clothing rebuild:** `source/04_garments_v34.py` (Blender 4.2.3) rebuilds the rash guard and shorts from the old
+  garments. It keeps the outward surface and voxel-remeshes it (1 cm). Laplacian smoothing then removes the wavy
+  marble-stripe displacement, followed by a re-inflate and one subdivision level.
+  - **Hems:** the neck, sleeve, shirt and leg hem loops are smoothed into clean edge loops at their original extents.
+    Each gets a 2-ring ribbed trim material and a 3.5 mm turned-under edge.
+  - **Gaps and folds:** the armpit holes are filled. Procedural sine creases are added (shorts legs, sleeve
+    underarms, shirt flanks), along with elastic gathers on the shorts waistband.
+  - **Waist:** the shirt hem is extended down to z = 0.975 m under the shorts waistband, which closes the waist gap.
+  - **Skinning:** weights are transferred from the old garments (nearest-face interpolation, 4 influences).
+  - **Triangles:** the count goes from 133k to 214k.
+- **Extra clips:** `knockdown_front` (85 frames), `getup_back` (251 frames) and `getup_front` (259 frames) from
+  `assets/mixamo/extra` were retargeted with `source/05_add_extra_clips.py` at 30 fps. They then got the same foot and
+  hip fix (`fix_feet.py`), and their lengths are 2.83, 8.37 and 8.63 s. The Blender round-trip again shortened the
+  older 30 clips to 0.8×, so `source/06_retime.py` restored them; every duration now matches the previous fighter.glb.
+  Clips were not reviewed frame by frame.
+- **Face:** unchanged. The eyes are still downcast, the hair is still painted and the neck seam is unchanged.
+- **brain.js:** adds a knockdown play. When the foe is at or below 30% health, it throws an uppercut in close or a
+  hook in hook reach (stepping in otherwise), once per round. A `hit` state lasting over 1.2 s is treated as the
+  knockdown.
+- **FEEDBACK.md:** adds Engine proposals (ragdoll falls, partial ragdoll hit reactions, active-ragdoll get-ups, foot
+  IK, spring bones).
+- **Renders:** `renders/` holds new judge-harness captures at 1920×1080 (bind pose, plus idle_full and
+  action_roundhouse).
