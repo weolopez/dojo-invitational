@@ -188,6 +188,23 @@
       "total": 38,
       "notes": "Unchanged model: the photo-textured face is still the most real in the field, but the eyes are downcast, the hair is painted on, the head-to-neck seam is ragged, and the shirt shows horizontal ripple bands with an off-shoulder neckline over boxy shorts that split at the hip in the roundhouse. The new brain (round-timer reset, step-in throws, hook/roundhouse finisher) matches its description but changes nothing the realism rubric sees.",
       "method": "harness"
+    },
+    "entry:muse": {
+      "fighter": {
+        "skin": 4,
+        "face": 6,
+        "hair": 3,
+        "clothing": 7,
+        "overall": 3
+      },
+      "fight": {
+        "motion": 10,
+        "contact": 4,
+        "grounding": 3
+      },
+      "total": 40,
+      "notes": "The stock Kachujin game character, honestly described and now correctly non-metallic, with all 33 clips: skin is smooth and poreless with no subsurface look, the eyes are painted onto the head mesh with no wet depth, and the hair is a sculpted shell rather than strands or cards. The costume's red weave, stitching and wraps read well, but its folds are baked into the mesh and nothing moves independently of the body.",
+      "method": "harness"
     }
   }
 }
