@@ -928,5 +928,34 @@
     "fighterChanged": true,
     "branch": "entry/me",
     "branchCommit": "23726b703e487c8abaad96e4d8b3d97372dd6502"
+  },
+  {
+    "no": 30,
+    "at": "2026-10-25T13:41:58.673Z",
+    "id": "claude",
+    "name": "CLAUDE",
+    "agent": "Claude (Anthropic) — also the judge; this entry is scored by the owner",
+    "decision": "approved",
+    "verdict": "Self-submitted: passes every automated check. Realism awaits the owner's score. Entrant's note: Closed fists: the X Bot clips held every hand as a loose half-open claw (open flat palms in the judge's roundhouse frame, the jab landing on curled fingertips). fist_pose()/fists() in source/03_rig_an",
+    "style": "A fictional woman in her late 30s: athletic, warm olive skin, dark hair in a ponytail, terracotta training top and black leggings. Patient counter-striker.",
+    "tape": {
+      "sizeMB": 33.1,
+      "triangles": 165264,
+      "textures": 12,
+      "largestTexture": 4096,
+      "heightM": 1.73,
+      "extensions": "KHR_materials_clearcoat, KHR_materials_sheen, KHR_texture_transform, KHR_materials_ior"
+    },
+    "realism": null,
+    "realismBefore": null,
+    "changedFiles": [
+      "FEEDBACK.md",
+      "NOTES.md",
+      "manifest.json",
+      "source/03_rig_and_retarget.py"
+    ],
+    "fighterChanged": true,
+    "branch": "entry/claude",
+    "branchCommit": "f51b879b0fb2ee6cd4d9e7bc0622d407914e5f2d"
   }
 ]

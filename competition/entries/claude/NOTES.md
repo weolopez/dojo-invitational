@@ -25,10 +25,38 @@ touched. MPFB 2.0.18 (from extensions.blender.org, sha256-checked) and the MakeH
    pose, then retargets all 30 clips and the 12 extras by copying each bone's world rotation from the X Bot source,
    corrected for the bones' rest-pose difference. Hip translation is scaled by the hip-height ratio (0.915). Since
    call #9 every clip is then grounded (`ground()`, see the call #9 notes).
+   Since call #10 the fighting clips are also keyed with closed fists (`fists()`).
 5. `04_export_and_render.py`: gives the suit the skin's weights, lifts it 4 mm off the skin, removes the skin under
    it, moves the ponytail clear of the back, applies MPFB's helper masks and subdivision (so hidden helper geometry is
    really removed) and exports `fighter.glb` with the 42 clips as NLA tracks, then writes the skin IOR into it.
 6. Renders: `dojo/judge.html?id=claude`, the standardised Three.js harness, from the submitted `fighter.glb`.
+
+## Update for call #10: closed fists in the fighting clips
+
+The call had no specific notes (the owner scores this entry), so I went by the judge harness's renders. In
+`action_roundhouse.png` both guard hands were open, flat palms, and close up (`.work/call10/web/test.html`, which
+loads the arena's `motion.js` and `lent.js`) the X Bot clips hold every hand as a loose half-open claw: the jab
+landed on curled fingertips, not on knuckles.
+
+- **Fists (new):** `fist_pose()` and `fists()` in `source/03_rig_and_retarget.py`. On the rest pose (T-pose, palms
+  down) each joint of the index, middle, ring and pinky fingers is turned about the axis across its bone and the palm
+  normal (knuckle / middle / end joint: index 82/100/55°, middle 88/102/55°, ring 92/102/55°, pinky 96/100/55°), and the
+  thumb is solved with a Blender IK constraint so its tip lies 1.1 cm outside the middle finger's middle bone (across
+  the index and middle fingers). That pose is keyed on every frame of 29 clips (the `FIST` set: guard, blocks,
+  crouch, every punch, hit reaction, dodge, knee and kick, the jump, steps and walks), replacing the source's finger
+  rotations. Falls, get-ups, throws, takedown, sweep, taunt and victory keep the source's hands (grabs and pushing
+  off the floor).
+- **Checked:** in Blender (workbench renders of the rest-pose fist, `.work/call10/shots/bl_v2.png`) and in Three.js:
+  close-ups of the guard, jab and cross hands (`.work/call10/shots/v5_grid.png`; before/after jab crop:
+  `.work/call10/jab_hand_before_after.png`) and the judge harness (`judge.html?id=claude`): in
+  `action_roundhouse.png` both guard hands are now closed fists (copy: `.work/call10/action_roundhouse_after.png`).
+- **Limits:** one fixed fist for the whole clip; the hands don't open and close, and they switch between fist and
+  the source's hands only through the arena's blending between clips. Fingers are skinned, not collided: in the
+  tight fist the fingertips press into the palm, which is hidden inside the fist in the views I looked at. I looked
+  at a handful of frames, not every clip. The four standard renders are T-pose views, so they are unchanged
+  (byte-identical to the harness output for this `fighter.glb`). Mesh, materials, grounding, clothing and brain are
+  unchanged (165,264 triangles, 42 clips, 33.1 MB). Still visible in the roundhouse frame: the top bunches into a
+  bump at the left shoulder. Previous build: `.work/call10/fighter_prev.glb`.
 
 ## Update for call #9 (rules v3.7): grounded feet, the new moves, cleaner clothing, fabric and skin materials
 
@@ -288,13 +316,14 @@ copies of the judge harness's output (`dojo/judge.html?id=claude`, run in headle
   poses weren't all checked.
 - Walks: the arena's walking speed (1.7 m/s forward, 1.3 m/s back) is faster than the clips' stride (0.93 and
   0.51 m/s), so the feet slide while walking. Falls and get-ups aren't grounded.
-- Retargeted hands use the X Bot finger poses, so fists aren't fully closed in every clip.
+- Since call #10 the fighting clips hold one fixed closed fist; falls, get-ups, throws, taunt and victory still use the
+  X Bot finger poses.
 
 ## Validator output
 
 ```
 PASS  manifest.json has all fields
-PASS  file size 33.3 MB (limit 80 MB)
+PASS  file size 33.1 MB (limit 80 MB)
 PASS  extensions: KHR_materials_clearcoat, KHR_materials_sheen, KHR_texture_transform, KHR_materials_ior
 PASS  self-contained (no external URIs)
 PASS  12 textures (limit 40)
@@ -304,7 +333,7 @@ PASS  Mixamo skeleton (all required mixamorig: bones present)
 PASS  animations: 30/30
 PASS  clip lengths within ±10 % of reference
 PASS  bind-pose mesh height ≈ 1.73 m (expected 1.55–2.05 m; check scale if far off)
-PASS  brain.js runs in the sandbox, valid outputs, 0.043 ms average (limit 2 ms)
+PASS  brain.js runs in the sandbox, valid outputs, 0.062 ms average (limit 2 ms)
 PASS  renders/front.png 1920×1080 (long side ≥ 1920)
 PASS  renders/three_quarter.png 1920×1080 (long side ≥ 1920)
 PASS  renders/profile.png 1920×1080 (long side ≥ 1920)
