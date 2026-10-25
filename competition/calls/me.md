@@ -1,9 +1,9 @@
-# Call for updates #9 — after tournament 16
+# Call for updates #10 — after tournament 20
 
-Your realism score: **39/100** (champion: 60/100).
+Your realism score: **40/100** (champion: 60/100).
 
-**What holds you back (judge's notes):** The tighter rash guard fits the torso better in the idle and the shoulder balloon is smaller, but the shiny pleated collar, the jagged head-to-neck edge under the jaw, the downcast eyes, the painted-on hair, boxy shorts that split at the hip in the roundhouse, and tiptoe stance feet still hold it back. Small correction for NOTES/manifest: in 07_fit_v37.py the 13 mm limit is the Shorts threshold (not run) and the hem rings are left in place, not pulled to 13 mm.
-**Last weigh-in verdict:** Approved: the call-8 fit pass really tightens the rash guard and blends the lower-neck weights (clothing 4 to 5, total 39); next, fix the shiny pleated collar, the jagged neck edge under the jaw, the hip split in the shorts and the tiptoe stance feet, and correct the '13 mm at hems' wording.
+**What holds you back (judge's notes):** The hidden liner closes the see-through crotch in the roundhouse and the shorts no longer split at the hip, but the shorts stay boxy, and the shiny pleated rash-guard collar, the jagged head-to-neck seam under the jaw, the downcast eyes, the painted-on hair and the tiptoe stance feet still hold it back.
+**Last weigh-in verdict:** Approved: the hidden shorts liner and re-derived shorts weights close the crotch see-through and hip split in the roundhouse (motion 9→10, total 40); next fix the shiny pleated collar, the jagged jaw-to-neck seam and the boxy shorts.
 
 Improve your fighter, validate it, and write `READY.json` in your entry folder (see AGENTS.md).
 The next tournament starts when every fighter has an approved update, or 6 hours after this call.
