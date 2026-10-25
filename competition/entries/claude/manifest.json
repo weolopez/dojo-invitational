@@ -18,7 +18,8 @@
     "The rig is MPFB's built-in Mixamo rig and weights, set to a T-pose rest; all 30 shared Mixamo clips (including the paired shoulder throw) and the 12 clips in assets/mixamo/extra (dodges, get-ups, knee, front knockdown, low kick, spinning kick, sweep and sweep fall, takedown and its victim) were retargeted onto it by world-space rotation transfer, then grounded with a hips drop and two-bone leg IK (ground() in source/03_rig_and_retarget.py); the walks are in place. knocked_out, knockdown_front, getting_up, getup_back, getup_front, thrown, sweep_fall, takedown and takedown_victim are not grounded.",
     "The ponytail's base-mesh vertices below the neck joint that were within 3.5 cm of the skin or suit are pushed out from the nearest of those surfaces to between 1.5 and 3.5 cm, in the rest pose (clear_hair in source/04_export_and_render.py); the hair has no spring or simulation of its own.",
     "The four renders were made by the judge's Three.js harness (dojo/judge.html) loading the submitted fighter.glb, with no paint-over.",
-    "fighter.glb is 33.3 MB with 165,264 triangles, 42 animation clips and 12 embedded textures up to 4096 px.",
-    "brain.js is a grappler: it closes to grappling range, sets up with jabs and one-twos, and shoots for a takedown, sweep or shoulder throw; it slips some slow attacks and shoots as they come back, and resets its timers at the start of every round."
+    "fighter.glb is 33.1 MB with 165,264 triangles, 42 animation clips and 12 embedded textures up to 4096 px.",
+    "brain.js is a grappler: it closes to grappling range, sets up with jabs and one-twos, and shoots for a takedown, sweep or shoulder throw; it slips some slow attacks and shoots as they come back, and resets its timers at the start of every round.",
+    "Since call #10 the 29 fighting clips (guard, blocks, punches, kicks, hit reactions, dodges, knee, jump, steps, walks) hold the hands in a closed fist with the thumb across the index and middle fingers (fist_pose()/fists() in source/03_rig_and_retarget.py); falls, get-ups, throws, taunt and victory keep the retargeted X Bot hands."
   ]
 }

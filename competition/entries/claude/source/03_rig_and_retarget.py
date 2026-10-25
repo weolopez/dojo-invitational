@@ -11,6 +11,12 @@ legs and feet are proportioned differently from the X Bot's), with heels lifted.
 the lowest foot touches the floor whenever the source's foot does, then each foot in contact is planted with a
 two-bone leg IK: put on the floor, held in place while it's in contact, and in stance clips turned flat (heel down).
 The walks are made in place, since the arena moves the fighter itself.
+
+Fists (call #10, fist_pose() and fists()): the X Bot clips hold the hands half open (a loose claw, so the jab lands
+on curled fingertips). In the fighting clips listed in FIST the four fingers are now closed into a fist (knuckle,
+middle and end joints curled about each finger's own bend axis) and the thumb is laid across the index and middle
+fingers by an IK solve, all computed once on the rest pose and keyed over the whole clip. Falls, get-ups, throws,
+grabs, the taunt and the victory keep the source's hands.
 """
 import glob
 import math
@@ -47,6 +53,16 @@ MODE = {
     "throw": "plant",
     "walk_forward": "walk", "walk_backward": "walk",
 }
+
+# Clips whose hands are closed into fists (see fists()); the rest keep the source's open or gripping hands.
+FIST = {
+    "fighting_idle", "block", "block_high", "crouch", "jab", "cross", "jab_cross", "hook", "uppercut", "punch_combo",
+    "hit_head_light", "hit_head_big", "hit_reaction", "hit_by_uppercut", "dodge_in", "dodge_back", "knee",
+    "front_kick", "side_kick", "low_kick", "roundhouse_kick", "spin_kick", "jump",
+    "step_forward", "step_backward", "side_step_left", "side_step_right", "walk_forward", "walk_backward",
+}
+# Fist curl in degrees at the knuckle, middle and end joints of each finger.
+CURL = {"Index": (82, 100, 55), "Middle": (88, 102, 55), "Ring": (92, 102, 55), "Pinky": (96, 100, 55)}
 
 
 def import_clip(path):
@@ -489,6 +505,74 @@ def ground(target, action, floor, mode, feet, clip_name):
           + (f", in place (removed {tread.length * FPS:.2f} m/s of travel)" if mode == "walk" else ""))
 
 
+def fist_pose(target):
+    """Local rotations (bone name -> quaternion) that close both hands into fists. Computed on the rest pose (T-pose,
+    palms down): each finger joint turns about the axis across its bone and the palm normal, so the finger rolls into
+    the palm; then the thumb is solved with Blender's IK onto the outside of the curled index and middle fingers."""
+    W = target.matrix_world
+    P = target.pose.bones
+    target.animation_data_create()
+    target.animation_data.action = None
+    for pb in P:
+        pb.matrix_basis = Matrix.Identity(4)
+    palm = Vector((0, 0, -1))
+    pose = {}
+    for s in ("Left", "Right"):
+        for finger, angles in CURL.items():
+            for k, deg in enumerate(angles):
+                b = target.data.bones[f"mixamorig:{s}Hand{finger}{k + 1}"]
+                d = ((W @ b.tail_local) - (W @ b.head_local)).normalized()
+                axis = (W.to_3x3() @ b.matrix_local.to_3x3()).inverted() @ d.cross(palm)
+                q = Quaternion(axis.normalized(), math.radians(deg))
+                P[b.name].rotation_mode = "QUATERNION"
+                P[b.name].rotation_quaternion = q
+                pose[b.name] = q
+    bpy.context.view_layer.update()
+    for s in ("Left", "Right"):
+        mid2 = P[f"mixamorig:{s}HandMiddle2"]
+        centre = W @ ((mid2.head + mid2.tail) / 2)
+        goal = bpy.data.objects.new(f"fist_goal_{s}", None)
+        bpy.context.scene.collection.objects.link(goal)
+        goal.location = centre + palm * 0.011
+        tip = P[f"mixamorig:{s}HandThumb3"]
+        ik = tip.constraints.new("IK")
+        ik.target = goal
+        ik.chain_count = 3
+        ik.iterations = 2000
+        bpy.context.view_layer.update()
+        mats = {n: P[n].matrix.copy() for n in (f"mixamorig:{s}HandThumb{k}" for k in (1, 2, 3))}
+        miss = (W @ tip.tail - goal.location).length
+        print(f"[fist] {s} thumb tip {miss * 100:.1f} cm from its goal")
+        tip.constraints.remove(ik)
+        bpy.data.objects.remove(goal)
+        bpy.context.view_layer.update()
+        for k in (1, 2, 3):
+            n = f"mixamorig:{s}HandThumb{k}"
+            b = P[n].bone
+            par = P[n].parent.matrix if k == 1 else mats[f"mixamorig:{s}HandThumb{k - 1}"]
+            rest_rel = b.parent.matrix_local.inverted() @ b.matrix_local
+            pose[n] = ((par @ rest_rel).inverted() @ mats[n]).to_quaternion()
+    for pb in P:
+        pb.matrix_basis = Matrix.Identity(4)
+    bpy.context.view_layer.update()
+    print(f"[fist] pose for {len(pose)} finger bones")
+    return pose
+
+
+def fists(target, action, clip_name, pose, n):
+    """Key the fist pose on every frame of a FIST clip (replaces the source's finger rotations)."""
+    if clip_name not in FIST:
+        return
+    target.animation_data.action = action
+    for name, q in pose.items():
+        pb = target.pose.bones[name]
+        pb.rotation_mode = "QUATERNION"
+        for f in range(1, n + 1):
+            pb.rotation_quaternion = q
+            pb.keyframe_insert("rotation_quaternion", frame=f, group=name)
+    print(f"[fist] {clip_name}: fists keyed on {n} frames")
+
+
 def push(target, action, clip_name):
     target.animation_data.action = None
     track = target.animation_data.nla_tracks.new()
@@ -510,6 +594,7 @@ def main():
     remove(ref_objs)
     print(f"[rig] T-pose rest applied; hip ratio {ratio:.3f}")
     feet = Feet(target, bpy.data.objects["Human"])
+    fist = fist_pose(target)
     # The meshes don't need evaluating while clips are baked (much faster frame changes).
     hidden = [o for o in bpy.data.objects if o.type == "MESH" and not o.hide_viewport]
     for o in hidden:
@@ -526,6 +611,7 @@ def main():
         if src_action:
             bpy.data.actions.remove(src_action)
         ground(target, action, floor, MODE.get(name, "none"), feet, name)
+        fists(target, action, name, fist, len(floor))
         push(target, action, name)
         print(f"[rig] {name}: {len(floor)} frames")
     for o in hidden:
