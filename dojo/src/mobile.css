@@ -1,0 +1,66 @@
+/* Phone layout for mobile.html (landscape). Loaded after style.css. */
+body.phone {
+  touch-action: none;
+  -webkit-user-select: none; user-select: none;
+  -webkit-touch-callout: none;
+  -webkit-tap-highlight-color: transparent;
+  height: 100dvh;
+}
+body.phone #controls { display: none; }
+
+/* Fighter select: scroll the roster instead of shrinking it away. */
+body.phone #select { justify-content: flex-start; overflow-y: auto; touch-action: pan-y; padding-top: max(12px, env(safe-area-inset-top)); }
+body.phone h1 { font-size: clamp(36px, 8vh, 72px); }
+body.phone #roster { grid-template-columns: repeat(auto-fill, minmax(118px, 1fr)); gap: 8px; }
+body.phone .card { padding: 8px 6px; }
+body.phone .card .swatch { width: 38px; height: 38px; font-size: 22px; margin-bottom: 4px; }
+body.phone .card .cname { font-size: 20px; }
+body.phone .card .stats { display: none; }
+
+/* HUD: slimmer bars, clear of the notch. */
+body.phone .bar-row { padding: max(8px, env(safe-area-inset-top)) max(14px, env(safe-area-inset-right)) 0 max(14px, env(safe-area-inset-left)); gap: 10px; }
+body.phone .fighter-bar .name { font-size: 20px; }
+body.phone .bar { height: 14px; }
+body.phone .pip { width: 11px; height: 11px; }
+body.phone #timer { font-size: 34px; min-width: 52px; }
+body.phone #banner { top: 26%; font-size: clamp(48px, 14vh, 110px); }
+
+/* On-screen pad. */
+#touch { position: fixed; inset: 0; z-index: 6; pointer-events: none; }
+#touch button { pointer-events: auto; font: inherit; touch-action: none; }
+.tb {
+  border: 2px solid rgba(255, 255, 255, 0.35); border-radius: 50%;
+  background: rgba(14, 16, 20, 0.42); color: #f3efe6;
+  backdrop-filter: blur(4px); -webkit-backdrop-filter: blur(4px);
+  display: grid; place-items: center; line-height: 1.05; text-align: center;
+}
+.tb.down { background: rgba(246, 211, 107, 0.55); border-color: #f6d36b; color: #111; }
+#pad-left {
+  position: absolute; left: max(18px, env(safe-area-inset-left)); bottom: max(14px, env(safe-area-inset-bottom));
+  display: flex; flex-direction: column; align-items: center; gap: 10px;
+}
+.move-row { display: flex; gap: 14px; }
+.tb.dir { width: 72px; height: 72px; font-size: 28px; }
+.tb.block { width: 92px; height: 46px; border-radius: 23px; font-size: 14px; letter-spacing: 1px; }
+#pad-right {
+  position: absolute; right: max(14px, env(safe-area-inset-right)); bottom: max(12px, env(safe-area-inset-bottom));
+  display: flex; flex-direction: column; align-items: flex-end; gap: 8px;
+}
+.tabs { display: flex; gap: 6px; }
+.tab {
+  border: 1px solid rgba(255, 255, 255, 0.3); border-radius: 12px; padding: 4px 10px;
+  background: rgba(14, 16, 20, 0.5); color: #a8a39a; font-size: 11px; letter-spacing: 1px;
+}
+.tab.on { color: #111; background: #f6d36b; border-color: #f6d36b; }
+.set { display: grid; grid-template-columns: repeat(3, 60px); gap: 8px; }
+.tb.atk { width: 60px; height: 60px; font-size: 12px; hyphens: auto; }
+#pad-top {
+  position: absolute; top: calc(max(8px, env(safe-area-inset-top)) + 64px); left: 50%; transform: translateX(-50%);
+  display: flex; gap: 8px;
+}
+.tb.small { border-radius: 14px; padding: 4px 10px; font-size: 11px; width: auto; height: auto; opacity: 0.8; }
+
+/* Portrait: ask for landscape (the side-on fight camera needs the width). */
+#rotate { display: none; z-index: 40; text-align: center; }
+#rotate p { color: var(--muted); }
+@media (orientation: portrait) { #rotate { display: flex; } }

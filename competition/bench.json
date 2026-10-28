@@ -6,7 +6,28 @@
       9,
       10,
       11,
+      12,
+      13,
+      14,
+      15,
+      16,
+      19,
+      20
+    ],
+    "by": "owner",
+    "reason": "Benched with the owner controls."
+  },
+  "grok": {
+    "tournaments": [
       12
+    ],
+    "by": "owner",
+    "reason": "Benched with the owner controls."
+  },
+  "gemini": {
+    "tournaments": [
+      12,
+      16
     ],
     "by": "owner",
     "reason": "Benched with the owner controls."

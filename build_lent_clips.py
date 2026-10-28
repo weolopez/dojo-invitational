@@ -1,7 +1,8 @@
 """
 The arena's lending library: Mixamo's X Bot with the clips the arena lends to fighters that don't ship their own
 (dojo/src/lent.js): fighting_idle (the shared reference stance), the paired throw, and the extras in
-assets/mixamo/extra/ (get-ups, falls, the sweep and takedown pairs, dodges and extra strikes).
+assets/mixamo/extra/ (get-ups, falls, the sweep and takedown pairs, dodges and extra strikes) and the hit
+reactions in assets/mixamo/reactions/ (dojo/src/reactions.js).
 Run with:
   /Applications/Blender.app/Contents/MacOS/Blender --background --python build_lent_clips.py
 Writes dojo/public/fighters/lent.glb.
@@ -16,7 +17,8 @@ MIXAMO_DIR = os.path.join(PROJECT_DIR, "assets", "mixamo")
 # LENT_OUT=<path> builds a test copy without touching the live library.
 OUT = os.environ.get("LENT_OUT") or os.path.join(PROJECT_DIR, "dojo", "public", "fighters", "lent.glb")
 CLIPS = [os.path.join(MIXAMO_DIR, f"{n}.fbx") for n in ("throw", "thrown")] + sorted(
-    glob.glob(os.path.join(MIXAMO_DIR, "extra", "*.fbx")))
+    glob.glob(os.path.join(MIXAMO_DIR, "extra", "*.fbx"))) + sorted(
+    glob.glob(os.path.join(MIXAMO_DIR, "reactions", "*.fbx")))  # hit reactions chosen by where a blow lands
 
 
 def import_fbx(path):

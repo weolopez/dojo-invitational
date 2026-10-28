@@ -10,13 +10,14 @@
 // fighting_idle. Each bone gets the source's rotation away from that stance, applied to the target's stance.
 import * as THREE from 'three';
 import { gltfLoader } from './assets.js';
+import { LIBRARY, prepareReactions } from './reactions.js';
 
 export const THROW_WINDOW = [1.85, 4.0];
 const FPS = 30;
 // Mixamo's X Bot with the clips above (build_lent_clips.py). ?lent=<file> tries another build, for testing.
 const SOURCE_URL = `/fighters/${new URLSearchParams(location.search).get('lent') ?? 'lent.glb'}`;
 const EXTRAS = ['knockdown_front', 'getup_back', 'getup_front', 'sweep', 'sweep_fall', 'takedown', 'takedown_victim',
-  'dodge_in', 'dodge_back', 'low_kick', 'knee', 'spin_kick'];
+  'dodge_in', 'dodge_back', 'low_kick', 'knee', 'spin_kick', ...LIBRARY];
 // Paired clips play the same window for both fighters, owned or lent: the takedown's shot, fall and four ground
 // punches (the full clip runs 7.3 s of punching).
 const PAIRED_WINDOWS = { throw: THROW_WINDOW, thrown: THROW_WINDOW, takedown: [0.5, 5.4], takedown_victim: [0.5, 5.4] };
@@ -99,9 +100,25 @@ function loadSource() {
     // (This copy is only ever sampled, never shown.)
     const clip = (n) => g.animations.find((c) => c.name === n);
     const idle = poseAt(g.scene, clip('fighting_idle'), 0);
+    // (One mixer per clip: the library holds 46 clips, and a mixer per frame made loading take seconds.)
     const sample = (name, window) => {
       const out = [];
-      for (let t = window[0]; t <= window[1] + 1e-6; t += 1 / FPS) out.push(poseAt(g.scene, clip(name), t));
+      const mixer = new THREE.AnimationMixer(g.scene);
+      mixer.clipAction(clip(name)).play();
+      const bones = bonesOf(g.scene);
+      for (let t = window[0]; t <= window[1] + 1e-6; t += 1 / FPS) {
+        mixer.setTime(t);
+        g.scene.updateMatrixWorld(true);
+        const rot = new Map();
+        let hips = null;
+        for (const b of bones) {
+          rot.set(b, b.getWorldQuaternion(new THREE.Quaternion()));
+          if (/Hips$/.test(b.name)) hips = b.getWorldPosition(new THREE.Vector3());
+        }
+        out.push({ rot, hips });
+      }
+      mixer.stopAllAction();
+      mixer.uncacheRoot(g.scene);
       return out;
     };
     const src = { root: g.scene, idle, throw: sample('throw', THROW_WINDOW), thrown: sample('thrown', THROW_WINDOW) };
@@ -156,8 +173,15 @@ export async function fightClips(gltf) {
   for (const [name, from] of Object.entries(OWN_DERIVED)) {
     if (own[from]) clips[name] = ownWindow(root, own[from], 0, [0, own[from].duration]);
   }
-  for (const [b, p, q, s] of rest) { b.position.copy(p); b.quaternion.copy(q); b.scale.copy(s); }
-  root.updateMatrixWorld(true);
-  gltf.userData.fightClips = { clips, lent: lentNames };
+  const putBack = () => {
+    for (const [b, p, q, s] of rest) { b.position.copy(p); b.quaternion.copy(q); b.scale.copy(s); }
+    root.updateMatrixWorld(true);
+  };
+  // Mirror images of the strike reactions, chosen by where a blow lands (reactions.js). Measured from the rest pose.
+  putBack();
+  const reactions = prepareReactions(root, { ...own, ...clips });
+  Object.assign(clips, reactions.clips);
+  putBack();
+  gltf.userData.fightClips = { clips, lent: lentNames, reactSides: reactions.sides };
   return gltf.userData.fightClips;
 }

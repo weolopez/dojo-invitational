@@ -124,5 +124,75 @@
       "name": "GROK"
     },
     "record": "58/100 realism"
+  },
+  {
+    "at": "2026-10-24T17:34:37.396Z",
+    "league": "Dojo Invitational",
+    "season": 12,
+    "champion": {
+      "id": "entry:muse",
+      "name": "MUSE"
+    },
+    "builder": {
+      "id": "muse",
+      "name": "MUSE"
+    },
+    "record": "40/100 realism"
+  },
+  {
+    "at": "2026-10-24T17:41:25.233Z",
+    "league": "Dojo Invitational",
+    "season": 13,
+    "champion": {
+      "id": "entry:grok",
+      "name": "GROK"
+    },
+    "builder": {
+      "id": "grok",
+      "name": "GROK"
+    },
+    "record": "58/100 realism"
+  },
+  {
+    "at": "2026-10-24T18:30:16.649Z",
+    "league": "Dojo Invitational",
+    "season": 14,
+    "champion": {
+      "id": "entry:grok",
+      "name": "GROK"
+    },
+    "builder": {
+      "id": "grok",
+      "name": "GROK"
+    },
+    "record": "58/100 realism"
+  },
+  {
+    "at": "2026-10-24T20:42:14.844Z",
+    "league": "Dojo Invitational",
+    "season": 16,
+    "champion": {
+      "id": "entry:grok",
+      "name": "GROK"
+    },
+    "builder": {
+      "id": "grok",
+      "name": "GROK"
+    },
+    "record": "60/100 realism"
+  },
+  {
+    "at": "2026-10-25T13:28:12.442Z",
+    "league": "Dojo Invitational",
+    "season": 20,
+    "champion": {
+      "id": "entry:grok",
+      "name": "GROK"
+    },
+    "builder": {
+      "id": "grok",
+      "name": "GROK"
+    },
+    "record": "60/100 realism"
   }
 ]

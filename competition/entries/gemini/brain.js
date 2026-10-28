@@ -1,5 +1,45 @@
-// Gemini Tournament Fight Brain — Frame-Data Spacing, Whiff/Block Punish & Hit-Confirm AI
+// Gemini Tournament Fight Brain (Rules v3.7)
+// Frame-Data Spacing, Grapple/Takedown/Sweep Guard-Break, Slip/Dodge Evasion & Knockdown Hunter AI
 // Pure ES module function, zero external dependencies, < 0.05 ms per call.
+
+const FOE_REACH = {
+  jab: 1.25,
+  cross: 1.30,
+  hook: 1.15,
+  uppercut: 1.05,
+  onetwo: 1.30,
+  combo: 1.30,
+  knee: 0.95,
+  lowkick: 1.35,
+  frontkick: 1.50,
+  sidekick: 1.55,
+  roundhouse: 1.60,
+  spinkick: 1.65,
+  throw: 0.95,
+  takedown: 1.10,
+  sweep: 1.25
+};
+
+const FOE_ACTIVE_END = {
+  jab: 0.42,
+  cross: 0.50,
+  hook: 0.62,
+  uppercut: 0.65,
+  onetwo: 0.72,
+  combo: 1.15,
+  knee: 0.55,
+  lowkick: 0.54,
+  frontkick: 0.62,
+  sidekick: 0.65,
+  roundhouse: 0.72,
+  spinkick: 0.78,
+  throw: 0.48,
+  takedown: 0.52,
+  sweep: 0.62
+};
+
+const KICK_MOVES = new Set(['lowkick', 'frontkick', 'sidekick', 'roundhouse', 'spinkick']);
+const GRAPPLE_MOVES = new Set(['throw', 'takedown', 'sweep']);
 
 export default function brain(state) {
   const { time, me, foe, distance, memory } = state;
@@ -7,50 +47,40 @@ export default function brain(state) {
   // Initialize persistent match memory
   if (memory.init !== true) {
     memory.init = true;
+    memory.lastTime = time;
     memory.lastFoeState = 'idle';
     memory.foeAttackStart = -10;
     memory.foeAttackMove = null;
     memory.lastMeHp = me.hp;
     memory.lastFoeHp = foe.hp;
     memory.foeHitLanded = false;
-    memory.lastAttackTime = -10;
     memory.foeBlockTicks = 0;
-    memory.aggression = 0;
+    memory.mixCounter = 0;
   }
 
-  // Reset per-round trackers if clock rewound for a new round
-  if (time < memory.lastTime - 1.0) {
+  // Reset per-round trackers whenever the round clock resets
+  if (time < (memory.lastTime ?? 0)) {
     memory.lastFoeState = 'idle';
     memory.foeAttackStart = -10;
     memory.foeAttackMove = null;
     memory.foeHitLanded = false;
-    memory.lastAttackTime = -10;
     memory.foeBlockTicks = 0;
   }
   memory.lastTime = time;
 
-  // Do nothing if either fighter is knocked out or round is over
-  if (me.state === 'ko' || foe.state === 'ko' || me.state === 'victory' || foe.state === 'victory') {
+  // Respect downed, thrown, or post-round states (nobody can hit a downed fighter)
+  if (
+    me.state === 'ko' ||
+    foe.state === 'ko' ||
+    me.state === 'down' ||
+    foe.state === 'down' ||
+    me.state === 'thrown' ||
+    foe.state === 'thrown' ||
+    me.state === 'victory' ||
+    foe.state === 'victory'
+  ) {
     return { move: null, fwd: false, back: false, block: false };
   }
-
-  // Exact arena move reach & active-window end times (in seconds)
-  const FOE_REACH = {
-    jab: 1.25,
-    cross: 1.30,
-    hook: 1.15,
-    uppercut: 1.05,
-    frontkick: 1.50,
-    roundhouse: 1.60
-  };
-  const FOE_ACTIVE_END = {
-    jab: 0.42,
-    cross: 0.50,
-    hook: 0.62,
-    uppercut: 0.65,
-    frontkick: 0.62,
-    roundhouse: 0.72
-  };
 
   // Track opponent attack transitions and whether their strike already connected
   if (foe.state === 'attack') {
@@ -76,108 +106,168 @@ export default function brain(state) {
   memory.lastMeHp = me.hp;
   memory.lastFoeHp = foe.hp;
 
-  // Helper: pick highest-reward move for current exact distance
-  function bestStrikeForDistance(dist, preferFast) {
-    if (dist <= 1.03) return preferFast ? 'jab' : 'uppercut';      // 14 dmg (or 5 dmg fast)
-    if (dist <= 1.13) return preferFast ? 'jab' : 'hook';          // 10 dmg
-    if (dist <= 1.23) return preferFast ? 'jab' : 'cross';         // 8 dmg (or 5 dmg fast)
-    if (dist <= 1.29) return 'cross';                              // 8 dmg, 1.30m reach
-    if (dist <= 1.48) return 'frontkick';                          // 12 dmg, 0.30 startup, 1.50m reach
-    if (dist <= 1.59) return 'roundhouse';                         // 16 dmg, 1.60m reach
+  // Knockdown mode when opponent is at or below 35% HP:
+  // A clean hook, uppercut, knee, frontkick, roundhouse, or spinkick at <= 30% HP scores a knockdown!
+  const foeLowHp = (foe.hp / (foe.maxHp || 100)) <= 0.36;
+
+  function bestPunishForDistance(dist, preferFast, forceKnockdown) {
+    if (forceKnockdown) {
+      if (dist <= 0.94) return 'knee';
+      if (dist <= 1.04) return 'uppercut';
+      if (dist <= 1.14) return 'hook';
+      if (dist <= 1.48) return 'frontkick';
+      if (dist <= 1.59) return 'roundhouse';
+      if (dist <= 1.64) return 'spinkick';
+    }
+    if (dist <= 0.94) return preferFast ? 'knee' : 'throw';
+    if (dist <= 1.04) return preferFast ? 'jab' : 'uppercut';
+    if (dist <= 1.09) return preferFast ? 'onetwo' : 'takedown';
+    if (dist <= 1.14) return preferFast ? 'onetwo' : 'hook';
+    if (dist <= 1.24) return preferFast ? 'onetwo' : 'sweep';
+    if (dist <= 1.29) return preferFast ? 'cross' : 'combo';
+    if (dist <= 1.34) return 'lowkick';
+    if (dist <= 1.48) return 'frontkick';
+    if (dist <= 1.54) return 'sidekick';
+    if (dist <= 1.59) return 'roundhouse';
+    if (dist <= 1.64) return 'spinkick';
     return null;
   }
 
-  // 1. FREE PUNISH: Opponent is in hit-stun or taunting (cannot block or counter!)
+  // 1. FREE PUNISH: Opponent is in hit-stun or taunting
   if (foe.state === 'hit' || foe.state === 'taunt') {
-    const punish = bestStrikeForDistance(distance, false);
+    const punish = bestPunishForDistance(distance, false, foeLowHp);
     if (punish !== null) {
-      memory.lastAttackTime = time;
+      memory.mixCounter += 1;
       return { move: punish, fwd: false, back: false, block: false };
     }
     return { move: null, fwd: true, back: false, block: false };
   }
 
-  // 2. DEFENSE & WHIFF/RECOVERY PUNISH: Opponent is mid-attack
+  // 2. DEFENSE, SLIP/DODGE & WHIFF/RECOVERY PUNISH: Opponent is mid-attack
   if (foe.state === 'attack') {
     const atkName = foe.move || memory.foeAttackMove || 'roundhouse';
     const foeReach = FOE_REACH[atkName] || 1.60;
     const activeEnd = FOE_ACTIVE_END[atkName] || 0.68;
     const elapsed = time - memory.foeAttackStart;
 
-    // If their active window is over OR they already hit our block, they are in recovery and CANNOT block!
+    // Once foe's active window ends, they are in recovery and CANNOT block throws/takedowns/sweeps or strikes!
     if (elapsed > activeEnd || memory.foeHitLanded) {
-      const counter = bestStrikeForDistance(distance, elapsed < activeEnd + 0.15);
+      // Recovering kickers cannot counter throws, takedowns, or sweeps
+      if (KICK_MOVES.has(atkName)) {
+        if (distance <= 0.94) return { move: 'throw', fwd: false, back: false, block: false };
+        if (distance <= 1.09) return { move: 'takedown', fwd: false, back: false, block: false };
+        if (distance <= 1.24) return { move: 'sweep', fwd: false, back: false, block: false };
+      }
+      const counter = bestPunishForDistance(distance, elapsed < activeEnd + 0.14, foeLowHp);
       if (counter !== null) {
-        memory.lastAttackTime = time;
+        memory.mixCounter += 1;
         return { move: counter, fwd: false, back: false, block: false };
       }
-      // Step in to punish their recovery if slightly out of range
-      return { move: null, fwd: distance > 1.0, back: false, block: false };
+      return { move: null, fwd: distance > 0.95, back: false, block: false };
     }
 
-    // Foe strike is still in startup/active phase:
-    // If we are near the outer edge of their reach, micro-space backward to make them whiff for 0 damage
-    if (distance > foeReach - 0.10 && distance <= foeReach + 0.18 && me.x > -3.9 && me.x < 3.9) {
+    // Unblockable grapples (throw/takedown/sweep) CANNOT be blocked -> back-step / dodge out or interrupt!
+    if (GRAPPLE_MOVES.has(atkName)) {
+      if (distance <= foeReach + 0.12) {
+        return { move: 'dodge', fwd: false, back: true, block: false };
+      }
+      if (distance <= 1.48) {
+        return { move: 'frontkick', fwd: false, back: false, block: false };
+      }
+    }
+
+    // Against long-startup opponent kicks at mid-close range (0.95m..1.35m), slip inside (< 1.0m)
+    // to smother their kick to half damage and set up an immediate clinch throw/takedown!
+    if (KICK_MOVES.has(atkName) && elapsed < 0.25 && distance > 0.92 && distance <= 1.32) {
+      return { move: 'slip', fwd: true, back: false, block: false };
+    }
+
+    // Near outer edge of their reach: micro-space or dodge backward to make them whiff for 0 damage
+    if (distance > foeReach - 0.12 && distance <= foeReach + 0.16 && me.x > -3.9 && me.x < 3.9) {
+      if (elapsed < 0.28 && distance <= foeReach + 0.04) {
+        return { move: 'dodge', fwd: false, back: true, block: false };
+      }
       return { move: null, fwd: false, back: true, block: false };
     }
 
-    // If we are outside their reach entirely, punish immediately with a longer-range kick!
-    if (distance > foeReach + 0.04 && distance <= 1.59) {
-      const outrangeStrike = distance <= 1.48 ? 'frontkick' : 'roundhouse';
-      memory.lastAttackTime = time;
+    // Outside their reach entirely: counter-snipe with a longer-range kick
+    if (distance > foeReach + 0.04 && distance <= 1.64) {
+      const outrangeStrike = distance <= 1.34 ? 'lowkick' : (distance <= 1.48 ? 'frontkick' : (distance <= 1.59 ? 'roundhouse' : 'spinkick'));
       return { move: outrangeStrike, fwd: false, back: false, block: false };
     }
 
-    // Inside their danger zone during active frames -> solid block (85% damage reduction, zero hit-stun)
+    // Inside danger zone during active frames -> solid guard
     if (distance <= foeReach + 0.12) {
       return { move: null, fwd: false, back: false, block: true };
     }
   }
 
-  // 3. OFFENSIVE SPACING & PRESSURE (Opponent is idle, walking, or blocking)
-  // Out of maximum attack range (> 1.59m): advance into the 1.32m–1.56m kicking sweet spot
-  if (distance > 1.59) {
-    // If we hold a strong HP lead in the final 8 seconds of the 30s round, let the opponent come to us
-    if (time > 22.0 && (me.hp / me.maxHp) > (foe.hp / foe.maxHp) + 0.08) {
+  // 3. GUARD BREAK: Opponent is blocking -> Throws, Takedowns & Sweeps beat block!
+  if (foe.state === 'block') {
+    if (distance <= 0.94) {
+      return { move: 'throw', fwd: false, back: false, block: false };
+    }
+    if (distance <= 1.09) {
+      return { move: 'takedown', fwd: false, back: false, block: false };
+    }
+    if (distance <= 1.24) {
+      return { move: 'sweep', fwd: false, back: false, block: false };
+    }
+    // Step in to grapple a turtling opponent
+    return { move: null, fwd: true, back: false, block: false };
+  }
+
+  // 4. OFFENSIVE SPACING & MIXUPS (Opponent is idle, walking, or evading)
+  if (distance > 1.64) {
+    if (time > 23.0 && (me.hp / (me.maxHp || 100)) > (foe.hp / (foe.maxHp || 100)) + 0.10) {
       return { move: null, fwd: false, back: distance < 2.1, block: false };
     }
     return { move: null, fwd: true, back: false, block: false };
   }
 
-  // Kicking sweet spot (1.31m to 1.59m): we can land frontkick (12 dmg) & roundhouse (16 dmg)
-  // while all opponent punches (max 1.30m) cannot reach us!
-  if (distance > 1.30 && distance <= 1.59) {
-    const kickMove = distance <= 1.48 ? 'frontkick' : 'roundhouse';
-    memory.lastAttackTime = time;
-    return { move: kickMove, fwd: false, back: false, block: false };
+  const slot = (Math.round(time * 12) + memory.mixCounter) % 5;
+
+  // Long kicking range (1.31m to 1.64m): out-ranges all punches and grapples
+  if (distance > 1.30) {
+    memory.mixCounter += 1;
+    if (foeLowHp) {
+      if (distance <= 1.48) return { move: 'frontkick', fwd: false, back: false, block: false };
+      if (distance <= 1.59) return { move: 'roundhouse', fwd: false, back: false, block: false };
+      return { move: 'spinkick', fwd: false, back: false, block: false };
+    }
+    if (distance <= 1.35) {
+      return { move: slot === 0 ? 'frontkick' : 'lowkick', fwd: false, back: false, block: false };
+    }
+    if (distance <= 1.49) {
+      return { move: slot === 0 ? 'roundhouse' : 'frontkick', fwd: false, back: false, block: false };
+    }
+    if (distance <= 1.55) {
+      return { move: slot <= 1 ? 'sidekick' : 'roundhouse', fwd: false, back: false, block: false };
+    }
+    return { move: slot === 0 ? 'spinkick' : 'roundhouse', fwd: false, back: false, block: false };
   }
 
-  // Close-range pocket (<= 1.30m):
-  // If opponent is turtling in block, use high-chip heavy strikes (uppercut = 3 chip, roundhouse = 3 chip)
-  if (foe.state === 'block') {
-    if (distance <= 1.04) {
-      memory.lastAttackTime = time;
-      return { move: 'uppercut', fwd: false, back: false, block: false };
-    }
-    // Step back slightly into kick range to chip safely from outside punch range
-    if (distance < 1.32 && me.x > -3.8 && me.x < 3.8) {
-      return { move: null, fwd: false, back: true, block: false };
-    }
+  // Close-to-mid pocket (<= 1.30m): mix combos, knees, hooks/uppercuts, and sudden takedowns/sweeps
+  memory.mixCounter += 1;
+  if (foeLowHp) {
+    if (distance <= 0.94) return { move: slot === 0 ? 'throw' : 'knee', fwd: false, back: false, block: false };
+    if (distance <= 1.04) return { move: 'uppercut', fwd: false, back: false, block: false };
+    if (distance <= 1.14) return { move: 'hook', fwd: false, back: false, block: false };
+    return { move: 'frontkick', fwd: false, back: false, block: false };
   }
 
-  // Opponent is idle or walking in close range (<= 1.30m):
-  // Mix fast frame-trap strikes (jab/cross) with heavy knockdowns (uppercut/hook)
-  if (distance <= 1.04) {
-    const pick = ((Math.round(time * 10) % 3) === 0) ? 'jab' : 'uppercut';
-    memory.lastAttackTime = time;
+  if (distance <= 0.94) {
+    const pick = slot === 0 ? 'throw' : (slot <= 2 ? 'knee' : 'uppercut');
     return { move: pick, fwd: false, back: false, block: false };
   }
-  if (distance <= 1.14) {
-    const pick = ((Math.round(time * 10) % 2) === 0) ? 'hook' : 'jab';
-    memory.lastAttackTime = time;
+  if (distance <= 1.05) {
+    const pick = slot === 0 ? 'takedown' : (slot <= 2 ? 'uppercut' : 'onetwo');
     return { move: pick, fwd: false, back: false, block: false };
   }
-
-  memory.lastAttackTime = time;
-  return { move: 'cross', fwd: false, back: false, block: false };
+  if (distance <= 1.15) {
+    const pick = slot === 0 ? 'takedown' : (slot <= 2 ? 'hook' : 'onetwo');
+    return { move: pick, fwd: false, back: false, block: false };
+  }
+  const pick = slot === 0 ? 'sweep' : (slot <= 2 ? 'onetwo' : 'combo');
+  return { move: pick, fwd: false, back: false, block: false };
 }

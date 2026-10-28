@@ -120,9 +120,12 @@ export class Tournament {
     });
     const gated = this.league === 'Dojo Invitational';
     const override = await fetch('/api/start-now').then((r) => r.json()).catch(() => null);
-    // No deadlocks: 6 hours after the call for updates, the tournament starts with whoever is ready.
+    // No deadlocks: 6 hours after the call for updates, the tournament starts with whoever is ready. Only once per
+    // call: a new call is written only when a tournament finishes, so if the one the timeout started is cut short
+    // (the page reloads), don't start another; wait for updates or the owner's start-now.
     const call = await fetch('/api/call').then((r) => r.json()).catch(() => null);
-    const timedOut = !!call && Date.now() - Date.parse(call.at) > 6 * 3600 * 1000;
+    const startedSinceCall = !!call && (this.data.tournamentNo ?? 0) > (call.tournament ?? 0);
+    const timedOut = !!call && !startedSinceCall && Date.now() - Date.parse(call.at) > 6 * 3600 * 1000;
     // Never a tournament of one: with fewer than two fighters (after the bench), keep waiting.
     const enough = this.defs.length >= 2;
     return { ready: enough && (!gated || fighters.every((f) => f.updated) || !!override || timedOut), enough, gated, fighters, override,

@@ -364,4 +364,7 @@ function arenaApi() {
 
 export default defineConfig({
   plugins: [arenaApi()],
+  // The owner's phone reaches the dev server over Tailscale (mobile.html): allow the Mac's tailnet names as well as
+  // its IP addresses, which Vite allows anyway.
+  server: { allowedHosts: ['.ts.net', 'mauricios-macbook-air'] },
 });

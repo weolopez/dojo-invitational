@@ -26,13 +26,17 @@ export const ENTRY_COLORS = ['#e8734a', '#4f86f7', '#c9ced6', '#e0b23c', '#c55df
 export const DOJO_BUILDERS = ['claude', 'gemini', 'grok', 'hermes', 'muse', 'aaron', 'me'];
 
 // Moves: clip, damage, reach (m), active window as fraction of the clip, reaction played on the target.
+// Strike reaches (rules v3.10) are measured from the clips: for every attacker and defender pair, the largest
+// root-to-root gap at which the striking fist, shin or knee reaches the target zone (or comes closest to it) during
+// the blow's window, divided by the attacker's reach stat; the smallest over all pairs, plus 2 cm. So a blow that
+// lands is one the limb can physically touch. Grabs keep their reach.
 export const MOVES = {
-  jab: { clip: 'jab', dmg: 5, reach: 1.25, from: 0.25, to: 0.5, react: 'hit_head_light' },
-  cross: { clip: 'cross', dmg: 8, reach: 1.3, from: 0.3, to: 0.55, react: 'hit_head_light' },
-  hook: { clip: 'hook', dmg: 10, reach: 1.15, from: 0.35, to: 0.6, react: 'hit_head_big' },
-  uppercut: { clip: 'uppercut', dmg: 14, reach: 1.05, from: 0.35, to: 0.6, react: 'hit_by_uppercut' },
-  roundhouse: { clip: 'roundhouse_kick', dmg: 16, reach: 1.6, from: 0.35, to: 0.6, react: 'hit_head_big' },
-  frontkick: { clip: 'front_kick', dmg: 12, reach: 1.5, from: 0.3, to: 0.55, react: 'hit_reaction' },
+  jab: { clip: 'jab', dmg: 5, reach: 0.9, from: 0.25, to: 0.5, react: 'hit_head_light' },
+  cross: { clip: 'cross', dmg: 8, reach: 0.84, from: 0.3, to: 0.55, react: 'hit_head_light' },
+  hook: { clip: 'hook', dmg: 10, reach: 0.82, from: 0.35, to: 0.6, react: 'hit_head_big' },
+  uppercut: { clip: 'uppercut', dmg: 14, reach: 0.7, from: 0.35, to: 0.6, react: 'hit_by_uppercut' },
+  roundhouse: { clip: 'roundhouse_kick', dmg: 16, reach: 1.17, from: 0.35, to: 0.6, react: 'hit_head_big' },
+  frontkick: { clip: 'front_kick', dmg: 12, reach: 0.48, from: 0.3, to: 0.55, react: 'hit_reaction' },
   // Throw (grab): short reach, ignores block, but whiffs if the target is mid-strike (strikes beat throws).
   // Fighters with the paired Mixamo shoulder throw (clips 'throw' and 'thrown', RULES.md §4) use it; others fall back
   // to the slowed hook (attacker) and knocked_out then getting_up (defender).
@@ -40,10 +44,10 @@ export const MOVES = {
     paired: { clip: 'throw', react: 'thrown', from: 0.03, to: 0.14, timeScale: 1.25 } },
   // More strikes from the shared clips. `hits` lists every blow of a combination (fractions of the clip, measured
   // from when each hand or foot is furthest forward); each blow can be blocked or land on its own.
-  sidekick: { clip: 'side_kick', dmg: 13, reach: 1.55, from: 0.3, to: 0.45, react: 'hit_reaction' },
-  onetwo: { clip: 'jab_cross', reach: 1.25, react: 'hit_head_light', timeScale: 1.15,
+  sidekick: { clip: 'side_kick', dmg: 13, reach: 1.5, from: 0.3, to: 0.45, react: 'hit_reaction' },
+  onetwo: { clip: 'jab_cross', reach: 0.92, react: 'hit_head_light', timeScale: 1.15,
     hits: [{ from: 0.17, to: 0.28, dmg: 5 }, { from: 0.29, to: 0.42, dmg: 7 }] },
-  combo: { clip: 'punch_combo', reach: 1.2, react: 'hit_head_light', timeScale: 1.1,
+  combo: { clip: 'punch_combo', reach: 0.7, react: 'hit_head_light', timeScale: 1.1,
     hits: [{ from: 0.25, to: 0.35, dmg: 4 }, { from: 0.37, to: 0.46, dmg: 4 }, { from: 0.47, to: 0.56, dmg: 5 }, { from: 0.58, to: 0.68, dmg: 7 }] },
   // Footwork, played from each fighter's own step clips in place while the arena moves them: `shift` metres along the
   // way they face (minus = back) over the window `move`, and strikes miss them during `evade`. Throws miss too.
@@ -51,16 +55,16 @@ export const MOVES = {
   slip: { clip: 'dodge_in', alt: 'slip_in', dmg: 0, footwork: true, shift: 0.6, move: [0.05, 0.55], evade: [0.0, 0.85], timeScale: 1.2 },
   // Mixamo's MMA low kick, Muay Thai knee (close range only) and spinning back kick (lent.js); until a fighter
   // has them they play as the front kick, uppercut and roundhouse.
-  lowkick: { clip: 'low_kick', dmg: 9, reach: 1.45, from: 0.32, to: 0.47, react: 'hit_reaction', needs: 'low_kick', fallback: 'frontkick' },
-  knee: { clip: 'knee', dmg: 12, reach: 0.95, from: 0.66, to: 0.8, react: 'hit_reaction', needs: 'knee', fallback: 'uppercut' },
-  spinkick: { clip: 'spin_kick', dmg: 17, reach: 1.6, from: 0.42, to: 0.56, react: 'hit_head_big', needs: 'spin_kick', fallback: 'roundhouse' },
+  lowkick: { clip: 'low_kick', dmg: 9, reach: 0.92, from: 0.32, to: 0.47, react: 'hit_reaction', needs: 'low_kick', fallback: 'frontkick' },
+  knee: { clip: 'knee', dmg: 12, reach: 0.3, from: 0.66, to: 0.8, react: 'hit_reaction', needs: 'knee', fallback: 'uppercut' },
+  spinkick: { clip: 'spin_kick', dmg: 17, reach: 0.82, from: 0.42, to: 0.56, react: 'hit_head_big', needs: 'spin_kick', fallback: 'roundhouse' },
   // (A kick that lands from closer than JAM metres is smothered: half damage, and it can't knock anyone down.)
   // Grappling with Mixamo's sweep and double-leg takedown (lent.js). A sweep is a low kick that drops a foe who
   // isn't blocking; a takedown is unblockable like a throw, ends in ground-and-pound, and whiffs on a foe mid-strike.
   // Until the clips are in the lending library, both fall back to the throw.
   // (Timings measured on Mixamo's clips: the sweep's foot connects at about half-way; the takedown makes contact at
   // 8–16% of its window, and its four ground punches land at 51, 71, 84 and 96%.)
-  sweep: { clip: 'sweep', dmg: 9, reach: 1.25, from: 0.42, to: 0.56, react: 'sweep_fall', knockdown: true, needs: 'sweep', fallback: 'throw' },
+  sweep: { clip: 'sweep', dmg: 9, reach: 0.64, from: 0.42, to: 0.56, react: 'sweep_fall', knockdown: true, needs: 'sweep', fallback: 'throw' },
   takedown: { clip: 'takedown', dmg: 8, reach: 1.1, from: 0.08, to: 0.16, react: 'takedown_victim', grab: true, needs: 'takedown',
     fallback: 'throw', timeScale: 1.2, ground: [{ at: 0.51, dmg: 4 }, { at: 0.71, dmg: 4 }, { at: 0.84, dmg: 5 }, { at: 0.96, dmg: 5 }] },
 };

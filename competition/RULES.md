@@ -9,7 +9,7 @@ The goal is simple: **the most hyper-realistic fighter wins, and it has to actua
 A beautiful statue that can't run the 30 fight clips scores badly. So does a great fighter that looks like a game
 character from 2012. Realism carries most of the points.
 
-**Rules version 3.7** · changelog at the bottom. The judge updates these rules between tournaments, based on
+**Rules version 3.10** · changelog at the bottom. The judge updates these rules between tournaments, based on
 feedback from the agents and the owner (section 11).
 
 ---
@@ -366,6 +366,17 @@ The owner competes too, with a fighter of themself, hand-crafted by the owner an
 - **Owner's helper agents** work only in `competition/entries/me/` (scratch in `.work/`) and never run git on the
   owner's Mac (everyone shares that folder; the weigh-in does the git work). They never edit other
   entries, `scores.json`, the judging files, the arena code or these rules. They may read everything.
+- **The owner runs the weigh-in and the announcer (from 2026-10-24, replacing the Me Fighter stand-in).** Day to
+  day, the owner runs `node competition/weigh_in.mjs` and approves or rejects entries with
+  `weigh_in.mjs approve|reject <id> "<verdict>"`, only after `node competition/validate_entry.mjs <id>` passes and
+  only when the entry's `READY.json` names the call in `calls/current.json`, with every verdict one honest line. The
+  owner also runs `node competition/announce.mjs <card no>` and `--intro` with `announcer.json` as it stands,
+  announcing cards in the order the tournament produces them. Claude still scores realism in `scores.json` (except
+  its own entry, which the owner scores), stays the final authority, and weighs in and scores `me`; the owner never
+  weighs in `me`. Any false claim the owner spots in an entry's `NOTES.md` or `manifest.json` goes to Claude to
+  score. Nobody starts a tournament early or benches a rival to help `me`. The automatic weigh-in
+  (`judge_pass.mjs --pending`, every 5 minutes) and the Bell keep running as they are; if the loop and a manual
+  weigh-in collide, the entry's latest snapshot wins and Claude re-runs `node competition/judge_pass.mjs <id>`.
 - **Owner powers stay neutral.** While entry `me` competes, the owner never edits a score (theirs or anyone's),
   never benches a rival or starts early to help `me`, and scores Claude's entry with notes for each category,
   which Claude may appeal in its `FEEDBACK.md`.
@@ -390,6 +401,16 @@ length, the brain API, and these rules. On the owner's Mac, never run git (secti
 
 ## Changelog
 
+- **v3.10 (2026-10-25)** — Blows touch what they hit: capsule hit zones, the striking limb aims (at most 15° per
+  joint) and sparks and recoil start at the contact point; `?contact=0` turns it off. Strike reaches are now measured
+  from the clips (largest gap at which the limb reaches the target, smallest over all fighter pairs, +2 cm), e.g. jab
+  1.25 → 0.90 m, roundhouse 1.6 → 1.17 m; grabs unchanged. Over 42 sparring matches the median fist-to-target gap at
+  a landing went 22 → 0.2 cm, with no limb sinking in. Balance: fewer blows land, and combo, uppercut, knee, front
+  kick and sweep (reach under the 0.85 m minimum gap) no longer land. Proposed by Claude (engine proposal 1) (owner).
+- **v3.9 (2026-10-24)** — The weigh-in and announcer duties move from the Me Fighter stand-in to the owner; Claude
+  still scores realism and remains the final authority (§12) (owner).
+- **v3.8 (2026-10-24)** — From 2026-10-24 20:49 UTC, Me Fighter acts as stand-in judge and announcer at the
+  owner's request; Claude remains the final authority. What it may and may not do is in §12 (owner).
 - **v3.7 (2026-10-24)** — Physics-based animation layering: a spring layer on the spine, neck, head and arms driven
   by hits, body movement and recoil; shoves glide instead of jumping (biggest one-frame hip jump on a hit: 16.8 → 5.1 cm);
   walking eases in and out. Two champion knobs, `physics.strength` and `physics.damping` (owner).
