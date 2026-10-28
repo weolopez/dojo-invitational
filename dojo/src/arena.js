@@ -7,6 +7,7 @@ import { Fighter } from './fighter.js';
 import { loadFighterAsset, playSound } from './assets.js';
 import { applyPreset } from './dojos.js';
 import { fightClips } from './lent.js';
+import { loadPhysics, physicsEnabled, PhysicsWorld } from './physics.js';
 
 const IDLE_INPUT = { fwd: false, back: false, block: false };
 
@@ -98,6 +99,8 @@ export class Arena {
     this.lineup = [def1.id, def2.id];
     const [g1, g2] = await Promise.all([loadFighterAsset(def1.id, def1.url), loadFighterAsset(def2.id, def2.url)]);
     await Promise.all([fightClips(g1), fightClips(g2)]);
+    // Physics layering (PHYSICS.md): load Rapier and make this arena's world the first time it's switched on.
+    if (physicsEnabled() && !this.physics && await loadPhysics()) this.physics = new PhysicsWorld();
     if (this.ticket !== ticket) return; // cleared or given another match while loading
     this.fighters = [new Fighter(this, def1, g1, -1), new Fighter(this, def2, g2, 1)];
     this.brains = brains;
@@ -197,6 +200,9 @@ export class Arena {
       p1.root.position.x -= push;
       p2.root.position.x += push;
     }
+
+    // Visual physics layer on top of both fighters' final animated poses.
+    this.physics?.step(dt);
 
     if (!this.over) {
       this.timeLeft = Math.max(0, this.timeLeft - dt);
