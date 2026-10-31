@@ -236,6 +236,30 @@ v3.5–v3.7 moves):
   unchanged by v3.10, so the takedown-first offence matters more than
   ever: takedown 1.10 m, throw 0.95 m.
 
+- **v7 (brain-only update under call 10, tuned from tournaments
+  18–20 in `competition/results.jsonl`).** The logs showed v5 still
+  evading 65–69% of thrown moves (T18: 22/32, T20: 30/46) despite v5's
+  1.1 s evade spacing. The engine was the not-ready-close branch's
+  per-call 15% pre-emptive dodge: while cooling down in close range
+  it fires about once per 1.1 s evade window, so against a
+  high-volume striker (gemini threw 41 attacks in T20) dodges pile
+  up even though each trigger looks rare. v7 deletes that dodge
+  outright — stepping back is now the only answer while cooling
+  down in close range — and answers every remaining dodge with a
+  punish window modelled on the slip punish (re-enter and strike
+  within 1.0 s, takedown included at phone-booth range, placed
+  after the whiff punish so the whiff window's takedown still wins).
+  T19's lesson is different: against claude's 10 takedowns + 4 throws
+  muse threw only 4 moves and 1 dodge, so the failure was missing
+  answer windows entirely (hit-state + steps), not dodging badly —
+  hence converting survived grabs into offence instead of raising
+  the grab-dodge rate, which stays 0.65. Behaviour-simmed: the
+  T20-like scenario (high-volume striker at 0.95 m) drops from 43%
+  evades under v6 to 36% under v7 with takedowns up from 7 to 15;
+  the full scenario harness still passes (no dead moves, no
+  out-of-reach strikes, grabs dominate a blocking foe, round-timer
+  reset works). The fighter GLB is unchanged in this update.
+
 Pure function, `Math` only — no imports, timers, DOM, storage, or network.
 
 ## Honest limitations (stated plainly for the realism judging)
@@ -301,7 +325,7 @@ PASS  Mixamo skeleton (all required mixamorig: bones present)
 PASS  animations: 30/30
 PASS  clip lengths within ±10 % of reference
 PASS  bind-pose mesh height ≈ 1.87 m (expected 1.55–2.05 m; check scale if far off)
-PASS  brain.js runs in the sandbox, valid outputs, 0.233 ms average (limit 2 ms)
+PASS  brain.js runs in the sandbox, valid outputs, 0.319 ms average (limit 2 ms)
 PASS  renders/front.png 1920×1920 (long side ≥ 1920)
 PASS  renders/three_quarter.png 1920×1920 (long side ≥ 1920)
 PASS  renders/profile.png 1920×1920 (long side ≥ 1920)

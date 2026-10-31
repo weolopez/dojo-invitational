@@ -1,4 +1,4 @@
-// Muse fight brain — Dojo Invitational entry, v6.
+// Muse fight brain — Dojo Invitational entry, v7.
 // Pure function, called 10x/sec by the arena. Only Math is used (sandbox-safe:
 // no imports, no fetch, no timers, no DOM, no eval). Move data below mirrors
 // MOVES in dojo/src/config.js under RULES v3.10: strike reaches are now
@@ -9,7 +9,17 @@
 // its close game is hook / cross / onetwo, its long game roundhouse /
 // sidekick, and grabs (unchanged by v3.10) carry more of the offence
 // than ever. Cooldowns below are this brain's own pacing, not arena
-// timings; damage figures match config.js.
+// timings; damage figures match config.js. v7 is the T18-T20 log fix:
+// v5/v6 still evaded 65-69% of thrown moves in T18/T20 despite the 1.1 s
+// evade spacing, because the not-ready-close branch's per-call 15%
+// pre-emptive dodge fires about once per 1.1 s window whenever muse
+// cools down in close range. v7 deletes that dodge outright (step back
+// only) and answers every remaining dodge with a punish window like
+// the slip punish, takedown included at phone-booth range. Grab-dodge
+// stays 0.65: T19's 4 thrown moves show muse rarely got an answer
+// window at all against grab spam (hit-state + steps, not dodges),
+// so the fix is converting survived grabs into offence, not dodging
+// more — and 0.80 pushed the mixed-foe sim back over 40% evades.
 //
 // Style: disciplined counter-striker with a grappling core. The tournament
 // fight logs (results.jsonl, reviewed after every tournament) drive the
@@ -84,6 +94,7 @@ export default function brain(state) {
   memory.foeThrewAt ??= -10;
   memory.evadeUntil ??= 0;
   memory.slippedAt ??= -10;
+  memory.dodgedAt ??= -10;
   // Round-timer reset (RULES v3.4): `time` restarts at 0 every round but
   // `memory` lasts the whole match, so a cooldown set late in round 1
   // (coolUntil > 30) would otherwise keep `ready` false for all of round 2,
@@ -91,7 +102,7 @@ export default function brain(state) {
   memory.lastTime ??= 0;
   if (time < memory.lastTime) {
     memory.coolUntil = 0; memory.foeThrewAt = -10;
-    memory.evadeUntil = 0; memory.slippedAt = -10;
+    memory.evadeUntil = 0; memory.slippedAt = -10; memory.dodgedAt = -10;
   }
   memory.lastTime = time;
 
@@ -117,6 +128,7 @@ export default function brain(state) {
       // Rate-limit evades: never two inside ~1.1 s (the v4 log lesson).
       memory.evadeUntil = time + 1.1;
       if (move === 'slip') memory.slippedAt = time;
+      if (move === 'dodge') memory.dodgedAt = time;
     }
     return { move, fwd: false, back: false, block: false };
   };
@@ -177,6 +189,21 @@ export default function brain(state) {
     if (distance <= 1.65) return strike([['roundhouse', 4], ['sidekick', 4]]);
   }
 
+  // ---- Answer a dodge: we stepped back 0.55 m, so re-enter and punish -----
+  // The dodge bought space, not a reset: if the foe is not attacking,
+  // close back in and strike instead of drifting into another dodge
+  // window (the T20 lesson — defence must convert to offence). This
+  // sits AFTER the whiff punish on purpose: the whiff window's takedown
+  // is the better punish, and this covers the rest of the dodge's 1.0 s.
+  if (time - memory.dodgedAt < 1.0 && foe.state !== 'attack' && ready) {
+    // At phone-booth range the takedown is the best punish (it is in
+    // the strike table via the reach guard, same as the whiff punish).
+    if (distance <= 1.1) return strike([['takedown', 3], ['hook', 4], ['cross', 3], ['onetwo', 2]]);
+    if (distance <= 1.35) return strike([['cross', 4], ['hook', 3], ['lowkick', 2], ['onetwo', 2]]);
+    if (distance <= 1.65) return strike([['roundhouse', 4], ['sidekick', 4]]);
+    return { move: null, fwd: true, back: false, block: false };
+  }
+
   // ---- Knockdown play: the foe is fragile, hunt the knockdown strikes -------
   if (foeFragile && ready && foe.state !== 'attack') {
     if (distance <= 1.1 && Math.random() < 0.18) return attack('takedown');
@@ -231,13 +258,13 @@ export default function brain(state) {
     return strike([['hook', 4], ['cross', 3], ['onetwo', 3], ['jab', 1]]);
   }
   // Not ready and inside the foe's grab reach: step out of 0.95 m rather
-  // than wait in range of an unblockable grab (unless cornered). Dodge
-  // only rarely here: the sim showed the old 0.35 pre-emptive dodge rate
-  // made evades 43% of all moves against an idle foe -- the v4 evade
-  // starvation pattern again, just slower. Stepping back is the calm
+  // than wait in range of an unblockable grab (unless cornered). NO
+  // pre-emptive dodge here: v7 deletes it outright. The old 0.15 rate
+  // looked rare per call but fired about once per 1.1 s evade window
+  // whenever muse cooled down in close range, and T18/T20 still evaded
+  // 65-69% of thrown moves under v5/v6. Stepping back is the calm
   // answer; the dodge stays for real grab threats (defence section).
   if (distance <= 0.95 && !cornered) {
-    if (canEvade && Math.random() < 0.15) return attack('dodge');
     return { move: null, fwd: false, back: Math.random() < 0.65, block: false };
   }
   return { move: null, fwd: false, back: !cornered && Math.random() < 0.4, block: false };
