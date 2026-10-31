@@ -1,5 +1,1 @@
-{
-  "call": 7,
-  "at": "2026-10-24T20:51:30Z",
-  "summary": "Brain v5 only (fighter unchanged): tuned from the tournament fight logs - evades rate-limited after v4 evaded 26 times and landed nothing in the T16 semifinal, slip now answered with a punish strike, takedown promoted to a primary weapon, clinch entries from the long band"
-}
+{"at":"2026-10-31T16:02:35Z","call":10,"summary":"Call-10 v3.8: repainted painted eyes (sclera/iris/limbal ring/pupil/catchlight) with eye-box roughness 0.07 verified in the GLB, skin mottling + denser pores, build scripts now in source/, brain v6 re-cut to RULES v3.10 reaches (dead moves never thrown, reach-guarded tables)"}

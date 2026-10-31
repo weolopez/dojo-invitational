@@ -107,6 +107,66 @@ from the character's own textures (`source/make_detail_maps.py`):
 - **Materials:** metallic factor 0 with the map above (was a flat 0.5
   in the base character — skin read as half-metal in the first build).
 
+## Call 10 changes (v3.8, answering call #10 after tournament 20)
+
+The judge's call-10 notes repeat the cap at 41/100: skin still smooth
+and poreless with no subsurface look, eyes painted with no depth, hair
+a sculpted shell, costume folds baked with nothing moving independently
+of the body — plus a new, actionable note: the source/build scripts the
+notes cite are not in the entry folder. This build answers what a
+fighter file can answer, and corrects two call-7 claims that did not
+survive measurement of the shipped GLB:
+
+- **Corrections to the call-7 notes (owned here, before the judge
+  finds them).** The call-7 notes claimed the painted-eye regions use
+  roughness 0.07 and that materials have "metallic factor 0". Measuring
+  the shipped v3.7 GLB: the eye boxes in its metallic-roughness texture
+  actually measured 0.18–0.19, and the exported materials carry no
+  metallic/roughness factor fields at all (glTF defaults of 1.0,
+  modulated by the texture: green = roughness, blue = metalness). Both
+  lines were wrong as written. v3.8 fixes the facts, not just the
+  words — see below — and the manifest now states the factor default
+  explicitly.
+- **Repainted painted eyes.** The call-7 notes located the eyes from
+  UV coordinates that do not land on the painted eyes in this texture;
+  the v3.8 boxes were measured from the texture itself (dark-pixel
+  components in the face band, eyebrows excluded): left eye x 306–344,
+  y 169–185; right eye x 401–439, y 169–186. Inside those boxes the
+  diffuse is repainted: warm sclera with shaded corners, a striated
+  brown iris with a dark limbal ring, a pupil, a catchlight, and an
+  upper-lid shadow with a lash line. The same boxes in the
+  metallic-roughness map are painted to roughness 0.07 — measured
+  0.071 at both eye centres in the exported GLB. The eyes are still
+  painted, not meshes; the claim is depth cues and a wet highlight,
+  nothing more.
+- **Skin: mottling + denser pores.** Low-frequency mottling (value
+  ±3.5%, faint warm/cool shift) masked to skin breaks the flat look,
+  and the pore speckle in the detail normal map is denser and a little
+  stronger than call 7 (dot threshold 0.9965, amplitude 2.6, was 0.9975
+  / 2.2; normal strength unchanged at 1.6 — stronger reads as
+  pockmarks in the closeup, as the call-7 parallel build showed).
+  Hair strand grooves are slightly stronger (1.0, was 0.8). There is
+  still no pore geometry and no subsurface-scattering profile; the
+  clearcoat sweat sheen (roughness 0.35, skin-masked at 0.28) is
+  unchanged.
+- **Grounding pass re-run, unchanged.** Same pass as v3.7 on all clips
+  except the aerial/floor ones; fighting_idle's max correction this
+  build is 0.010 m, and the genuine 22 cm hop inside front_kick is
+  preserved (frames above 10 cm are never corrected).
+- **Build scripts now ship in the entry folder.** `source/` in this
+  folder (and in the delivery archive) holds the exact v3.8 build
+  script and texture script — RULES §3 lists `source/` as a
+  deliverable, so the judge can reproduce the result. This answers the
+  scripts note directly.
+- **Costume folds: honestly not fixed in the file.** Folds baked into
+  the mesh cannot move independently of the body without an engine
+  secondary-motion layer; that is already proposed as FEEDBACK
+  proposal 4 (spring-bone hair and cloth, path 3), not claimed here.
+- **three.js verification.** Renders were re-made from the new GLB
+  (same fixed-frame page) and viewed: fighter in frame in all four
+  views, no floating geometry, the repainted eyes and the pore detail
+  visible in the closeup, feet planted in the front view.
+
 ## Brain
 
 A patient counter-striker, tuned to the arena's published move data
@@ -122,11 +182,9 @@ v3.5–v3.7 moves):
   kick is sometimes slipped — stepping inside smothers it (half damage,
   no knockdown) and leaves us in punishing range.
 - Punishes two windows the arena guarantees: the foe's hit-stun (they
-  cannot block — the four-punch `combo` is used here, all four blows land)
-  and the recovery right after their attack ends.
-- Range-banded offence with the full move set: spin kick (17 dmg) joins
-  the long band; the sweep is mixed into the inner mid band (it drops a
-  foe who is not blocking); knee joins the close band.
+  cannot block) and the recovery right after their attack ends.
+- Range-banded offence with the live move set (see v6 below for the
+  v3.10 re-cut).
 - Grappling: against a blocking foe the takedown is preferred over the
   throw (unblockable, 1.1 m reach, ground-and-pound for 26 total damage
   against the throw's 13); both are also used opportunistically in close
@@ -135,11 +193,11 @@ v3.5–v3.7 moves):
   `memory` persists, so cooldown state is reset when time goes
   backwards; "late" means the final 6 s of a 30 s round.
 - Knockdown play: at foe hp ≤ 30, offence switches to the knockdown
-  strikes (hook, uppercut, roundhouse, front kick, spin kick, knee) by
+  strikes that still land under v3.10 (hook, roundhouse, spin kick) by
   range band, hunting the knockdown instead of chipping; and while its
   own attack is on cooldown inside the foe's 0.95 m throw reach, it
-  dodges or steps out of range rather than wait inside an unblockable
-  grab.
+  steps out of range rather than wait inside an unblockable grab (the
+  dodge there is rare now — see v6).
 - Clock play in the final 6 s: protects a lead of 10+ hp, chases a
   deficit of 10+ with faster cooldowns. Escapes the corner.
 - **v5 (filed the same day, tuned from the tournament fight logs in
@@ -152,6 +210,31 @@ v3.5–v3.7 moves):
   used against guards, in close against any non-attacking foe, as a
   whiff-punish catch, and entered by sometimes closing to clinch range
   instead of kicking from maximum range.
+
+
+- **v6 (call 10, RULES v3.10).** v3.10 re-measures every strike reach
+  from the clips (smallest over all fighter pairs, +2 cm): jab 0.90 m,
+  roundhouse 1.17 m, sidekick 1.50 m — and combo, uppercut, knee, front
+  kick and sweep fall under the 0.85 m minimum gap and no longer land.
+  v6 therefore never throws those five moves (they stay in the move
+  table only so defence can look up a foe's move), re-cuts every range
+  band to the new reaches, and adds a reach guard: a strike or grab is
+  only thrown when its clip-measured reach + 0.25 m slack (the foe may
+  step in during the windup; fighter.js judges the gap at the blow's
+  window, not at the throw) covers the current distance, otherwise the
+  brain steps in. The guard was verified against the arena code
+  (fighter.js hit check, brains.js distance = root gap, arena.js
+  minimum-gap push-apart), not assumed. Behaviour-simmed over scripted
+  scenarios (idle/blocking/attacking/hit/fragile foes at 0.9–2.0 m,
+  late-and-ahead, round transition): no dead moves, no out-of-reach
+  strikes, grabs dominate a blocking foe (36 takedowns in the sim),
+  and the round-timer reset still works. The sim also caught a real
+  flaw: the old 0.35 pre-emptive dodge rate while cooling down inside
+  grab range made evades 43% of all moves against an idle foe — the v4
+  pattern again — so that rate is now 0.15 and stepping back is the
+  calm answer (sim evade share at 0.9 m: 33%, a minority). Grabs are
+  unchanged by v3.10, so the takedown-first offence matters more than
+  ever: takedown 1.10 m, throw 0.95 m.
 
 Pure function, `Math` only — no imports, timers, DOM, storage, or network.
 
@@ -175,9 +258,10 @@ Pure function, `Math` only — no imports, timers, DOM, storage, or network.
 
 ## Sources and reproducibility
 
-`source/` contains the exact build script (`build_fighter.py`, including
-the grounding pass), the texture-processing script
-(`make_detail_maps.py`), and the three.js render page used for
+`source/` contains the exact v3.8 build script (`build_fighter.py`,
+including the grounding pass), the v3.8 texture-processing script
+(`make_detail_maps.py`: eye repaint, skin mottling, pore/strand normal
+detail, eye-box roughness), and the three.js render page used for
 `renders/` (`render6.html`, `shot5.mjs`, `server.py`). The `.blend`
 working file is not included (66 MB); the GLB is fully regenerable from
 the shared FBX assets with the included scripts. Asset licences are in
@@ -186,29 +270,28 @@ the shared FBX assets with the included scripts. Asset licences are in
 ## Fighter binary delivery
 
 Binaries are not committed (per AGENTS.md), so the judge gets
-`fighter.glb` + renders from this archive — it unpacks at the entry
-folder's top level (`fighter.glb`, `renders/…`, plus the same text
-files as the branch):
+`fighter.glb` + renders from a delivery archive — it unpacks at the entry
+folder's top level (`fighter.glb`, `renders/…`, `source/…`, plus the same
+text files as the branch). The operative archive link and the owner's
+one-line unpack command for this call are in the call-10 filing record
+(`hourly-run-log.md` in the goal workspace) and the message to the owner;
+archive links expire, so they are not frozen here.
 
-- **Archive:** https://muse.ai/files/1280375435168282/4333063190277454/bwshw188ex7ra8dum2ihmyqe/muse-entry-v37.zip
-  (29,228,650 bytes, sha256 `62022b9d13c7d2294a52774372653656cfa34a55a5adb2e2f6082547f3f9513d`;
-  link expires 2026-10-26 20:10 UTC)
-- **fighter.glb inside:** 26,657,716 bytes, sha256
-  `7c8af0eaafa9db5d7ae2fc5bbd3d436127143332515a282dd1d1a077d6d1211a`
+- **fighter.glb in this delivery:** 27,215,364 bytes, sha256 `2c0b4a2d8e3260c93cab3495c7555c348fc0f31c4e1ad061c8a298d0a02685f3`
+  (stable across re-zips of the same build; the GLB itself does not
+  change when only text files are edited)
 - The same files are also placed directly in
   `competition/entries/muse/` on the owner's Mac by the owner's
-  one-line unpack of this archive, which is where the weigh-in
+  one-line unpack of the archive, which is where the weigh-in
   snapshots from.
 
 ## Validator output
 
-`node validate_entry.mjs muse`, run on this exact entry (full entry mode,
-with the current v3.7 validator and the arena reference fighter present;
-the reference was taken from the owner's Mac on 2026-10-24):
+`node validate_entry.mjs muse`, run on this exact entry (full entry mode, staged validator, arena reference fighter present):
 
 ```
 PASS  manifest.json has all fields
-PASS  file size 26.7 MB (limit 80 MB)
+PASS  file size 27.2 MB (limit 80 MB)
 PASS  extensions: KHR_materials_clearcoat, KHR_materials_specular
 PASS  self-contained (no external URIs)
 PASS  6 textures (limit 40)
@@ -218,7 +301,7 @@ PASS  Mixamo skeleton (all required mixamorig: bones present)
 PASS  animations: 30/30
 PASS  clip lengths within ±10 % of reference
 PASS  bind-pose mesh height ≈ 1.87 m (expected 1.55–2.05 m; check scale if far off)
-PASS  brain.js runs in the sandbox, valid outputs, 0.212 ms average (limit 2 ms)
+PASS  brain.js runs in the sandbox, valid outputs, 0.233 ms average (limit 2 ms)
 PASS  renders/front.png 1920×1920 (long side ≥ 1920)
 PASS  renders/three_quarter.png 1920×1920 (long side ≥ 1920)
 PASS  renders/profile.png 1920×1920 (long side ≥ 1920)

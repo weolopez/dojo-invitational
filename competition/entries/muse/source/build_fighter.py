@@ -65,14 +65,17 @@ for mat in bpy.data.materials:
             node.inputs['Metallic'].default_value = 0.0
 
 
-# ---- Call 7 texture work -------------------------------------------------
-# Detail normal map (procedural pore / weave / hair-groove detail derived
-# from masks of the character's own diffuse; see make_detail_maps.py) and a
-# metallic-roughness map (per-region roughness; the gold ornaments metallic).
-diff_img = bpy.data.images.load(f"{BASE}/tex/file11_detail.png")
-detail_img = bpy.data.images.load(f"{BASE}/tex/file12_detail.png")
+# ---- Call 10 texture work ------------------------------------------------
+# v3.8 maps (see make_v38_maps.py): repainted painted eyes (sclera,
+# striated iris, limbal ring, pupil, catchlight) + skin mottling in the
+# diffuse; denser pore speckle in the detail normal; eye boxes in the
+# metallic-roughness map set to roughness 0.07 for a wet highlight.
+# Both GLB materials embed identical copies of the diffuse (verified
+# on the v3.7 export), so one v38 diffuse serves both materials.
+diff_img = bpy.data.images.load(f"{BASE}/tex/file11_v38.png")
+detail_img = bpy.data.images.load(f"{BASE}/tex/file12_v38.png")
 detail_img.colorspace_settings.name = 'Non-Color'
-mr_img = bpy.data.images.load(f"{BASE}/tex/file_mr.png")
+mr_img = bpy.data.images.load(f"{BASE}/tex/file_mr_v38.png")
 mr_img.colorspace_settings.name = 'Non-Color'
 coat_img = bpy.data.images.load(f"{BASE}/tex/file_coat.png")
 coat_img.colorspace_settings.name = 'Non-Color'
@@ -84,7 +87,7 @@ for mat in bpy.data.materials:
     if not bsdf:
         continue
     for node in nt.nodes:
-        if node.type == 'TEX_IMAGE' and node.image and node.image.name.startswith(('file11', 'file14')) and not node.image.name.endswith('.002'):
+        if node.type == 'TEX_IMAGE' and node.image and node.image.name.startswith(('file11', 'file14')):
             for out in node.outputs:
                 for l in out.links:
                     if l.to_socket.name == 'Base Color':
@@ -113,7 +116,12 @@ for mat in bpy.data.materials:
         bsdf.inputs['Coat Roughness'].default_value = 0.35
         print(f"MAT {mat.name}: clearcoat sweat sheen linked")
 
-# ---- Call 7 eyeballs -----------------------------------------------------
+# ---- Call 10 eyes: repainted, not geometry ------------------------------
+# v3.8 keeps the painted eyes (see make_v38_maps.py): the repaint adds
+# sclera, a striated iris, a limbal ring, a pupil and a catchlight to
+# the diffuse, and the MR map gives the eye boxes roughness 0.07.
+# Real eyeball geometry stays disabled (below): the skinning offset
+# is still unresolved, and added spheres render displaced.
 # The base character's eyes are painted on the head mesh. Add real eyeball
 # geometry (sclera sphere + iris disc + pupil disc), weighted 100% to the
 # Head bone, with clearcoat for a wet look. Positions were located from the

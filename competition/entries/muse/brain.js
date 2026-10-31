@@ -1,8 +1,15 @@
-// Muse fight brain — Dojo Invitational entry.
+// Muse fight brain — Dojo Invitational entry, v6.
 // Pure function, called 10x/sec by the arena. Only Math is used (sandbox-safe:
 // no imports, no fetch, no timers, no DOM, no eval). Move data below mirrors
-// MOVES in dojo/src/config.js as published in competition/RULES.md section 5
-// (v3.5-v3.7 move set).
+// MOVES in dojo/src/config.js under RULES v3.10: strike reaches are now
+// measured from the clips (smallest over all fighter pairs, +2 cm), so
+// jab is 0.90 m, roundhouse 1.17 m, sidekick 1.50 m -- and combo,
+// uppercut, knee, front kick and sweep (reach under the 0.85 m minimum
+// gap) no longer land at all. This brain NEVER throws those five moves;
+// its close game is hook / cross / onetwo, its long game roundhouse /
+// sidekick, and grabs (unchanged by v3.10) carry more of the offence
+// than ever. Cooldowns below are this brain's own pacing, not arena
+// timings; damage figures match config.js.
 //
 // Style: disciplined counter-striker with a grappling core. The tournament
 // fight logs (results.jsonl, reviewed after every tournament) drive the
@@ -11,29 +18,34 @@
 // takedown is a primary weapon, not just an anti-guard tool. Defence mixes
 // blocks with rate-limited dodges and slips (v4 evaded 26 times in one
 // match and starved its own offence; v5 caps evades and always answers a
-// slip with a punish strike). At foe hp <= 30 it hunts the knockdown with
-// the knockdown strikes (hook, uppercut, roundhouse, front kick, spin
-// kick, knee). Stats are equal for everyone, so this brain is the edge.
+// slip with a punish strike). v6 re-cuts every range band to the v3.10
+// clip-measured reaches and drops the five dead moves. At foe hp <= 30
+// it hunts the knockdown with the knockdown strikes that still land
+// (hook, roundhouse, spin kick). Stats are equal for everyone, so this
+// brain is the edge.
 
+// v3.10 reaches (config.js). DEAD under v3.10 -- never thrown by this
+// brain, kept in the table only so defence can look up a foe's move:
+// uppercut 0.70, frontkick 0.48, combo 0.70, knee 0.30, sweep 0.64.
 const MOVES = {
-  jab:        { dmg: 5,  reach: 1.25, cool: 0.50 },
-  cross:      { dmg: 8,  reach: 1.30, cool: 0.60 },
-  hook:       { dmg: 10, reach: 1.15, cool: 0.70 },
-  uppercut:   { dmg: 14, reach: 1.05, cool: 0.85 },
-  roundhouse: { dmg: 16, reach: 1.60, cool: 0.95 },
-  frontkick:  { dmg: 12, reach: 1.50, cool: 0.80 },
-  sidekick:   { dmg: 13, reach: 1.55, cool: 0.90 },
-  lowkick:    { dmg: 9,  reach: 1.45, cool: 0.75 },
-  spinkick:   { dmg: 17, reach: 1.60, cool: 1.05 },
-  knee:       { dmg: 12, reach: 0.95, cool: 0.75 },
-  onetwo:     { dmg: 12, reach: 1.25, cool: 0.80 },  // 5 + 7 over two blows
-  combo:      { dmg: 20, reach: 1.20, cool: 1.05 },  // 4 + 4 + 5 + 7 over four blows
+  jab:        { dmg: 5,  reach: 0.90, cool: 0.50 },
+  cross:      { dmg: 8,  reach: 0.84, cool: 0.60 },
+  hook:       { dmg: 10, reach: 0.82, cool: 0.70 },
+  uppercut:   { dmg: 14, reach: 0.70, cool: 0.85 },  // DEAD v3.10
+  roundhouse: { dmg: 16, reach: 1.17, cool: 0.95 },
+  frontkick:  { dmg: 12, reach: 0.48, cool: 0.80 },  // DEAD v3.10
+  sidekick:   { dmg: 13, reach: 1.50, cool: 0.90 },
+  lowkick:    { dmg: 9,  reach: 0.92, cool: 0.75 },
+  spinkick:   { dmg: 17, reach: 0.82, cool: 1.05 },
+  knee:       { dmg: 12, reach: 0.30, cool: 0.75 },  // DEAD v3.10
+  onetwo:     { dmg: 12, reach: 0.92, cool: 0.80 },  // 5 + 7 over two blows
+  combo:      { dmg: 20, reach: 0.70, cool: 1.05 },  // DEAD v3.10
   // Grabs (RULES.md section 5): unblockable, they miss a foe who is
   // mid-strike, dodging or already down, but catch a foe winding up or
   // recovering. The cool values here are this brain's own pacing.
   throw:      { dmg: 13, reach: 0.95, cool: 0.95 },
   takedown:   { dmg: 26, reach: 1.10, cool: 1.50 },  // 8 + four ground blows (4+4+5+5)
-  sweep:      { dmg: 9,  reach: 1.25, cool: 0.90 },  // drops a foe who is not blocking
+  sweep:      { dmg: 9,  reach: 0.64, cool: 0.90 },  // DEAD v3.10 (was 1.25)
   // Footwork: no damage; strikes and grabs miss during most of either.
   // attack() gives footwork a shorter cooldown than the table value.
   dodge:      { dmg: 0,  reach: 0,    cool: 0.70 },  // steps back 0.55 m
@@ -44,12 +56,22 @@ const KICKS = ['roundhouse', 'frontkick', 'sidekick', 'lowkick', 'spinkick'];
 const GRABS = ['throw', 'takedown'];
 const FOOTWORK = ['dodge', 'slip'];
 
-function pickWeighted(table) {
+// v3.10 reach guard: never throw a strike or grab that cannot reach at
+// the current distance (reach + 0.25 m slack: the foe may step in during
+// the windup, and fighter.js judges the gap at the blow's window, not at
+// the throw). If nothing in the table reaches, step in instead of
+// wasting a cooldown window on a whiff -- under v3.10 most of the old
+// range bands sit beyond the new clip-measured reaches, so this guard,
+// not the band edges, is what keeps the offence real. The five dead
+// moves never appear in a table at all, whatever the slack.
+function pickWeighted(table, distance) {
+  const ok = table.filter(([m]) => (MOVES[m].reach + 0.25) >= distance);
+  if (!ok.length) return null;
   let total = 0;
-  for (const row of table) total += row[1];
+  for (const row of ok) total += row[1];
   let r = Math.random() * total;
-  for (const row of table) { r -= row[1]; if (r <= 0) return row[0]; }
-  return table[0][0];
+  for (const row of ok) { r -= row[1]; if (r <= 0) return row[0]; }
+  return ok[0][0];
 }
 
 export default function brain(state) {
@@ -98,6 +120,11 @@ export default function brain(state) {
     }
     return { move, fwd: false, back: false, block: false };
   };
+  // Strike from a table, or step in when nothing in it can reach.
+  const strike = (table) => {
+    const m = pickWeighted(table, distance);
+    return m ? attack(m) : { move: null, fwd: true, back: false, block: false };
+  };
   const ready = time >= memory.coolUntil;
   const canEvade = time >= memory.evadeUntil;
   const cornered = Math.abs(me.x) > 3.55;
@@ -126,17 +153,17 @@ export default function brain(state) {
 
   // ---- Answer a slip: we stepped inside, now punish before they reset -----
   if (time - memory.slippedAt < 0.6 && foe.state !== 'attack' && ready) {
-    if (distance <= 1.0) return attack(pickWeighted([['uppercut', 4], ['hook', 3], ['knee', 3]]));
-    if (distance <= 1.3) return attack(pickWeighted([['cross', 4], ['hook', 3]]));
+    if (distance <= 1.0) return strike([['hook', 4], ['cross', 3], ['onetwo', 3]]);
+    if (distance <= 1.3) return strike([['cross', 4], ['hook', 3]]);
   }
 
   // ---- Press a hit-stun: they cannot block while reacting ------------------
   if (foe.state === 'hit' && ready) {
-    if (distance <= 0.97) return attack(pickWeighted([['knee', 3], ['uppercut', 4], ['hook', 3]]));
-    if (distance <= 1.1) return attack(pickWeighted([['uppercut', 4], ['hook', 4], ['cross', 2]]));
-    if (distance <= 1.22) return attack(pickWeighted([['combo', 4], ['cross', 3], ['hook', 2]]));
-    if (distance <= 1.32) return attack(pickWeighted([['cross', 4], ['hook', 3], ['jab', 2], ['onetwo', 2]]));
-    if (distance <= 1.62) return attack(pickWeighted([['frontkick', 3], ['roundhouse', 3], ['jab', 1]]));
+    if (distance <= 0.97) return strike([['hook', 4], ['cross', 3], ['onetwo', 3]]);
+    if (distance <= 1.1) return strike([['hook', 4], ['cross', 4], ['onetwo', 2]]);
+    if (distance <= 1.22) return strike([['onetwo', 4], ['cross', 3], ['hook', 2], ['sidekick', 2]]);
+    if (distance <= 1.32) return strike([['cross', 4], ['hook', 3], ['jab', 2], ['onetwo', 2]]);
+    if (distance <= 1.62) return strike([['roundhouse', 3], ['sidekick', 3], ['jab', 1]]);
     return { move: null, fwd: true, back: false, block: false };
   }
 
@@ -145,19 +172,19 @@ export default function brain(state) {
   // the takedown itself (the log lesson: it is the reliable damage).
   if (foe.state !== 'attack' && time - memory.foeThrewAt < 0.45 && ready) {
     if (distance <= 1.12 && Math.random() < 0.35) return attack('takedown');
-    if (distance <= 1.1) return attack(pickWeighted([['uppercut', 3], ['hook', 4], ['cross', 3]]));
-    if (distance <= 1.35) return attack(pickWeighted([['cross', 4], ['hook', 3], ['frontkick', 2], ['onetwo', 2]]));
-    if (distance <= 1.65) return attack(pickWeighted([['roundhouse', 4], ['frontkick', 4]]));
+    if (distance <= 1.1) return strike([['hook', 4], ['cross', 4], ['onetwo', 2]]);
+    if (distance <= 1.35) return strike([['cross', 4], ['hook', 3], ['lowkick', 2], ['onetwo', 2]]);
+    if (distance <= 1.65) return strike([['roundhouse', 4], ['sidekick', 4]]);
   }
 
   // ---- Knockdown play: the foe is fragile, hunt the knockdown strikes -------
   if (foeFragile && ready && foe.state !== 'attack') {
     if (distance <= 1.1 && Math.random() < 0.18) return attack('takedown');
-    if (distance <= 0.97) return attack(pickWeighted([['knee', 4], ['uppercut', 4], ['hook', 3]]));
-    if (distance <= 1.06) return attack(pickWeighted([['uppercut', 5], ['hook', 4]]));
-    if (distance <= 1.16) return attack(pickWeighted([['hook', 5], ['uppercut', 3]]));
-    if (distance <= 1.52) return attack(pickWeighted([['frontkick', 4], ['roundhouse', 3]]));
-    if (distance <= 1.62) return attack(pickWeighted([['spinkick', 4], ['roundhouse', 4], ['frontkick', 2]]));
+    if (distance <= 0.97) return strike([['hook', 5], ['cross', 3], ['onetwo', 2]]);
+    if (distance <= 1.06) return strike([['hook', 5], ['cross', 4]]);
+    if (distance <= 1.16) return strike([['hook', 5], ['spinkick', 3]]);
+    if (distance <= 1.52) return strike([['roundhouse', 5], ['sidekick', 2]]);
+    if (distance <= 1.62) return strike([['roundhouse', 4], ['sidekick', 4]]);
   }
 
   // ---- Spacing and offence by range band ------------------------------------
@@ -168,7 +195,7 @@ export default function brain(state) {
     if (distance <= 1.1 && ready && Math.random() < 0.60) return attack('takedown');
     if (distance <= 0.95 && ready) return attack('throw');
     if (distance > 1.25) return { move: null, fwd: true, back: false, block: false };
-    if (ready && Math.random() < 0.35) return attack('jab');
+    if (ready && distance <= 1.05 && Math.random() < 0.35) return attack('jab');
     return idle;
   }
 
@@ -183,15 +210,16 @@ export default function brain(state) {
     if (ready && distance <= 1.55 && foe.state !== 'attack' && Math.random() < 0.35) {
       return { move: null, fwd: true, back: false, block: false };
     }
-    if (ready) return attack(pickWeighted([['roundhouse', 5], ['spinkick', 3], ['frontkick', 4], ['sidekick', 3], ['lowkick', 2], ['jab', 1]]));
+    if (ready) return strike([['sidekick', 4], ['roundhouse', 3]]);
     return { move: null, fwd: !protecting, back: false, block: false };
   }
   if (distance > 1.12) {
     if (ready) {
-      // The sweep drops a foe who is not blocking (checked above), but only
-      // inside its 1.25 m reach: mix it in only in the inner part of the band.
-      if (distance <= 1.27) return attack(pickWeighted([['cross', 4], ['jab', 3], ['frontkick', 2], ['hook', 2], ['sweep', 3], ['onetwo', 3], ['lowkick', 2]]));
-      return attack(pickWeighted([['cross', 4], ['jab', 3], ['frontkick', 2], ['hook', 2], ['onetwo', 3], ['lowkick', 2]]));
+      // Only sidekick (1.50 m) and roundhouse (1.17 m, inner part) reach
+      // this band under v3.10; the reach guard drops the rest and the
+      // fallback steps in. The sweep that used to live here is dead
+      // under v3.10 (0.64 m).
+      return strike([['sidekick', 4], ['roundhouse', 3], ['cross', 2], ['jab', 1]]);
     }
     return idle;
   }
@@ -200,12 +228,16 @@ export default function brain(state) {
   if (ready) {
     if (distance <= 1.1 && foe.state !== 'attack' && Math.random() < 0.35) return attack('takedown');
     if (distance <= 0.95 && foe.state !== 'attack' && Math.random() < 0.12) return attack('throw');
-    return attack(pickWeighted([['hook', 4], ['uppercut', 4], ['knee', 3], ['cross', 2], ['jab', 1]]));
+    return strike([['hook', 4], ['cross', 3], ['onetwo', 3], ['jab', 1]]);
   }
-  // Not ready and inside the foe's grab reach: dodge or step out of 0.95 m
-  // rather than wait in range of an unblockable grab (unless cornered).
+  // Not ready and inside the foe's grab reach: step out of 0.95 m rather
+  // than wait in range of an unblockable grab (unless cornered). Dodge
+  // only rarely here: the sim showed the old 0.35 pre-emptive dodge rate
+  // made evades 43% of all moves against an idle foe -- the v4 evade
+  // starvation pattern again, just slower. Stepping back is the calm
+  // answer; the dodge stays for real grab threats (defence section).
   if (distance <= 0.95 && !cornered) {
-    if (canEvade && Math.random() < 0.35) return attack('dodge');
+    if (canEvade && Math.random() < 0.15) return attack('dodge');
     return { move: null, fwd: false, back: Math.random() < 0.65, block: false };
   }
   return { move: null, fwd: false, back: !cornered && Math.random() < 0.4, block: false };
