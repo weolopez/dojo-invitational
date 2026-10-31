@@ -1,7 +1,8 @@
 // One arena: its own scene, camera, dojo, two fighters and the match rules (rounds, timer, KO).
 // Several arenas can run at once; the page renders each into its own viewport.
 import * as THREE from 'three';
-import { ARENA_HALF, MIN_GAP, ROUNDS_TO_WIN } from './config.js';
+import { ARENA_HALF, BODY_GAP, MIN_GAP, MIN_ROOT_GAP, ROUNDS_TO_WIN } from './config.js';
+import { bodyGap } from './contact.js';
 import { Effects } from './effects.js';
 import { Fighter } from './fighter.js';
 import { loadFighterAsset, playSound } from './assets.js';
@@ -193,12 +194,20 @@ export class Arena {
 
     // Keep fighters apart and inside the mat.
     for (const f of this.fighters) f.root.position.x = THREE.MathUtils.clamp(f.root.position.x, -ARENA_HALF, ARENA_HALF);
-    // Keep the minimum gap, except while a takedown has them tangled; separate smoothly afterwards.
+    // Bodies don't pass through each other: keep the torsos (head, chest and belly capsules, contact.js) BODY_GAP
+    // apart, so fighters can close to the range their short blows really reach. Except while a takedown has them
+    // tangled; they separate smoothly afterwards. (Skeletons without the bones keep the old fixed MIN_GAP.)
     const gap = p2.root.position.x - p1.root.position.x;
-    if (gap < MIN_GAP && !p1.clinch && !p2.clinch) {
-      const push = Math.min((MIN_GAP - gap) / 2, gap > MIN_GAP - 0.1 ? Infinity : 1.2 * dt);
-      p1.root.position.x -= push;
-      p2.root.position.x += push;
+    if (p1.clinch || p2.clinch) this.untangling = true;
+    else {
+      const body = bodyGap(p1, p2);
+      const overlap = Math.max(body === null ? MIN_GAP - gap : BODY_GAP - body, MIN_ROOT_GAP - gap);
+      if (overlap > 0) {
+        // Instantly, except while drifting apart after a takedown (or they'd pop apart).
+        const push = this.untangling ? Math.min(overlap / 2, 1.2 * dt) : overlap / 2;
+        p1.root.position.x -= push;
+        p2.root.position.x += push;
+      } else this.untangling = false;
     }
 
     // Visual physics layer on top of both fighters' final animated poses.

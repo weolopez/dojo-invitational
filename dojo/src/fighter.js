@@ -5,6 +5,8 @@ import * as SkeletonUtils from 'three/addons/utils/SkeletonUtils.js';
 import { JAM, KICKS, KNOCKDOWN, MOVES } from './config.js';
 import { Inertializer, LookAt, PhysicalLayer } from './motion.js';
 import { Ragdoll } from './physics.js';
+import { Contact } from './contact.js';
+import { chooseReaction, LIBRARY } from './reactions.js';
 
 // Body physics: a shove is a velocity that friction slows down (it glides the given distance), and walking speeds up
 // and slows down over a few frames, instead of the body jumping from one frame to the next.
@@ -16,7 +18,7 @@ const TWISTING = ['hook', 'roundhouse', 'spinkick'];
 const GROUND = new Set(['knocked_out', 'knockdown_front', 'thrown', 'getting_up', 'getup_back', 'getup_front', 'sweep_fall', 'takedown_victim']);
 // The clips prepared or lent at load time (lent.js).
 const PREPARED = ['throw', 'thrown', 'knockdown_front', 'getup_back', 'getup_front', 'sweep', 'sweep_fall', 'takedown',
-  'takedown_victim', 'dodge_in', 'dodge_back', 'low_kick', 'knee', 'spin_kick'];
+  'takedown_victim', 'dodge_in', 'dodge_back', 'low_kick', 'knee', 'spin_kick', ...LIBRARY];
 
 export function newTally() {
   return { thrown: 0, hits: 0, damage: 0, blocks: 0, bestCombo: 0, kos: 0, moves: {} };
@@ -64,6 +66,8 @@ export class Fighter {
     const prepared = gltf.userData.fightClips ?? { clips: {}, lent: [] };
     for (const [name, clip] of Object.entries(prepared.clips)) this.actions[name] = this.mixer.clipAction(clip);
     this.lent = prepared.lent;
+    // Which way each strike reaction (and its mirror image) throws the head (reactions.js).
+    this.reactSides = prepared.reactSides ?? {};
     this.mixer.addEventListener('finished', () => this.onClipFinished());
 
     this.stats = def.stats;
@@ -89,6 +93,8 @@ export class Fighter {
     this.lookAt = new LookAt(this.model);
     // Physics layering (PHYSICS.md): a ragdoll when the arena has a physics world. Visual only.
     this.ragdoll = arena.physics && side !== undefined ? new Ragdoll(arena.physics, this) : null;
+    // Blows that touch what they hit (contact.js): hit zones, striking limbs and the aiming IK.
+    this.contact = new Contact(this, gltf);
     this.reset();
   }
 
@@ -188,6 +194,14 @@ export class Fighter {
     this.arena.sound('swing', 0.35);
   }
 
+  /** How far each move reaches for this fighter (m, root to root), as the brain API reports it. */
+  reaches() {
+    if (this.reachTable) return this.reachTable;
+    const out = {};
+    for (const [name, def] of Object.entries(MOVES)) if (!def.footwork) out[name] = +((def.reach ?? 0) * this.stats.reach).toFixed(3);
+    return (this.reachTable = Object.freeze(out));
+  }
+
   taunt() {
     if (this.busy) return;
     this.state = 'taunt';
@@ -248,7 +262,9 @@ export class Fighter {
     const fx = this.arena.effects;
     const dmg = blocked ? Math.ceil(move.dmg * 0.15) : move.dmg;
     this.hp = Math.max(0, this.hp - dmg);
-    const where = this.hitPoint(move.high);
+    // Sparks where the fist or shin actually met the body (contact.js), or at the head or chest without it.
+    const where = move.contact?.point?.clone() ?? this.hitPoint(move.high);
+    const high = move.contact ? move.contact.zone === 'head' : move.high;
     if (this.hp === 0) {
       this.state = 'ko';
       // A throw that knocks you out ends the way the throw does: flat on the mat.
@@ -265,13 +281,20 @@ export class Fighter {
       this.arena.sound('block', 0.6);
       fx.sparks(where, 0x9fd8ff, 14, 1.4);
       this.physical.hit(new THREE.Vector3(this.side, 0, 0), move.dmg * 0.35, false);
+      this.contactImpulse(move, 0.35);
       this.shove(0.08);
       return;
     }
     this.combo = 0;
     this.state = 'hit';
     // The paired fall plays in step with the thrower's clip; fighters without the clip fall back to the knock-down.
-    const react = this.actions[move.react] ? move.react : (move.grab || move.knockdown ? 'knocked_out' : 'hit_reaction');
+    // Strikes: the reaction is chosen by where the blow landed and which side it came from (reactions.js). Grabs,
+    // sweeps and paired moves keep their own reaction clip.
+    const struck = !move.grab && !move.knockdown && !move.sync
+      ? chooseReaction(move, move.landed?.zone, move.landed?.side, this.actions, this.reactSides, this.lastReaction) : null;
+    if (struck) this.lastReaction = struck;
+    const react = struck ?? (this.actions[move.react] ? move.react : (move.grab || move.knockdown ? 'knocked_out' : 'hit_reaction'));
+    if (import.meta.env?.DEV && struck) (window.__reactLog ??= []).push({ move: move.name, zone: move.landed?.zone ?? null, side: move.landed?.side ?? null, clip: react });
     const reaction = this.fade(react, true);
     if (reaction && move.sync) { reaction.time = move.sync.time; reaction.timeScale = move.sync.timeScale; }
     if (move.grab || move.knockdown) {
@@ -298,12 +321,21 @@ export class Fighter {
       return;
     }
     // The blow moves the body: head snaps or torso folds the way it came, then the clip's reaction takes over.
-    this.physical.hit(new THREE.Vector3(this.side, 0, 0), move.dmg, move.high, TWISTING.includes(move.name) ? (Math.random() < 0.5 ? -1 : 1) : 0);
+    this.contactImpulse(move, 1);
+    this.physical.hit(new THREE.Vector3(this.side, 0, 0), move.dmg, high, TWISTING.includes(move.name) ? (Math.random() < 0.5 ? -1 : 1) : 0);
     this.shove(move.heavy ? 0.26 : 0.16);
     this.arena.sound(move.heavy ? 'heavy' : 'hit', 0.8);
     fx.sparks(where, move.heavy ? 0xffb347 : 0xffe9a8, move.heavy ? 36 : 20, move.heavy ? 2.6 : 1.8);
     fx.shake(move.heavy ? 0.09 : 0.035);
     fx.hitStop(move.heavy ? 0.09 : 0.045);
+  }
+
+  /** The spring impulse at the real contact point: a blow off the body's centre line twists it about the spine. */
+  contactImpulse(move, share) {
+    if (!move.contact) return;
+    const r = move.contact.point.clone().sub(this.hitPoint(false));
+    const torque = r.cross(move.contact.travel.clone().setY(0).normalize());
+    this.physical.impulse(torque, 6 * share * Math.min(1.6, move.dmg / 8), 'hit', ['Spine1', 'Spine2', 'Neck', 'Head']);
   }
 
   win() {
@@ -391,9 +423,16 @@ export class Fighter {
           const hpBefore = opponent.hp;
           const sync = this.move.paired ? { time: this.current.time, timeScale: this.current.timeScale } : null;
           // A kick from too close is smothered: half damage, and no knockdown.
-          const jammed = KICKS.includes(this.move.name) && gap < JAM;
+          const jammed = KICKS.includes(this.move.name) && gap < JAM * this.move.reach;
           const hit = { ...this.move, dmg: jammed ? Math.ceil(blow.dmg / 2) : blow.dmg, ...(jammed ? { name: 'jammed' } : {}) };
-          opponent.takeHit({ ...hit, ...(sync ? { sync } : {}) }, blocked);
+          // Where the fist or shin meets the target (contact.js; null for grabs and with ?contact=0).
+          const aim = this.contact.aimFor(blow, opponent);
+          const contact = this.contact.contactPoint(aim, opponent);
+          // Where it landed and which hand or leg threw it, for the reaction (reactions.js), even with ?contact=0.
+          const landed = aim ? { zone: aim.zone, side: aim.side } : null;
+          opponent.takeHit({ ...hit, ...(sync ? { sync } : {}), ...(contact ? { contact } : {}), ...(landed ? { landed } : {}) }, blocked);
+          this.contact.registered(aim);
+          if (aim) this.contactProbe = { aim, opponent, blocked };
           if (!blocked && !this.move.grab) opponent.ragdoll?.hit(this, hit, this.move.high);
           this.tally.damage += hpBefore - opponent.hp;
           if (this.move.grab && opponent.downed) {
@@ -449,7 +488,7 @@ export class Fighter {
     this.animate(dt, opponent);
   }
 
-  /** Clips, then inertial blending, then the head turning to the opponent. */
+  /** Clips, then inertial blending, the springs, the head turning to the opponent, and last the aiming IK. */
   animate(dt, opponent) {
     // Down: get up once the hips have been on the mat for the tuned time (realism.js knockdown.lie).
     if (this.downed && !this.gettingUp && this.state === 'hit' && this.bones.hips) {
@@ -469,5 +508,8 @@ export class Fighter {
     this.physical.apply(dt); // after recording, like look-at: it's reapplied every frame, never blended away
     const looking = ['idle', 'walk_f', 'walk_b', 'block', 'attack'].includes(this.state) && !this.downed;
     this.lookAt.apply(dt, looking, opponent?.bones.head?.getWorldPosition(new THREE.Vector3()), this.root);
+    // Last: blows that are going to land or be blocked turn the striking limb a little towards what they hit.
+    this.contact.apply(dt, opponent);
+    if (this.contactProbe) { this.contact.report(this.contactProbe); this.contactProbe = null; }
   }
 }

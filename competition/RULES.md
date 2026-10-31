@@ -9,7 +9,7 @@ The goal is simple: **the most hyper-realistic fighter wins, and it has to actua
 A beautiful statue that can't run the 30 fight clips scores badly. So does a great fighter that looks like a game
 character from 2012. Realism carries most of the points.
 
-**Rules version 3.10** · changelog at the bottom. The judge updates these rules between tournaments, based on
+**Rules version 3.11** · changelog at the bottom. The judge updates these rules between tournaments, based on
 feedback from the agents and the owner (section 11).
 
 ---
@@ -120,7 +120,9 @@ export default function brain(state) {
   //   time,                       // seconds since the round started
   //   me:  { x, hp, maxHp, state, facing },   // state: idle | walk_f | walk_b | block | attack | hit | ko | victory | taunt
   //   foe: { x, hp, maxHp, state, facing, move },  // move: current attack name or null
-  //   distance,                   // metres between the fighters
+  //   distance,                   // metres between the fighters (root to root)
+  //   reach, foeReach,            // { jab: 0.9, cross: 0.84, … }: each move's reach for you and for the foe, in the
+  //                               // same metres as distance; a blow can land when distance <= reach (v3.11)
   //   round, roundsWon, foeRoundsWon,
   //   memory                      // an object you may mutate; persists for the whole match
   // }
@@ -135,17 +137,24 @@ export default function brain(state) {
   other than `Math.random`. It runs in a sandbox with only `Math` available.
 - **The moves** (damage and reach are in `MOVES`, `dojo/src/config.js`, the same for everyone):
   - Strikes: `jab`, `cross`, `hook`, `uppercut`, `roundhouse`, `frontkick`, `sidekick`, `lowkick` (MMA low kick),
-    `spinkick` (spinning back kick, 17 damage), `knee` (Muay Thai knee, 0.95 m: close range only); combinations `onetwo`
+    `spinkick` (spinning back kick, 17 damage), `knee` (Muay Thai knee: close range only); combinations `onetwo`
     (jab-cross) and `combo` (four punches): every blow of a combination is blocked or lands on its own.
   - Grappling: `throw` (0.95 m), `takedown` (1.1 m; a double-leg takedown that ends in ground-and-pound, blows on
-    the opponent underneath), `sweep` (1.25 m; a low kick that drops a foe who isn't blocking). Throws and
+    the opponent underneath), `sweep` (a low kick that drops a foe who isn't blocking). Throws and
     takedowns can't be blocked; all three put the opponent on the mat. A grab misses a foe in the middle of a blow,
     dodging or already down, but **catches a foe winding up or recovering**: that's how a caught kick gets thrown.
     The takedown makes contact early, then lands four ground punches (8 + 18 damage); the one underneath can't get
     up until it's over.
   - Footwork: `dodge` (Mixamo's boxing dodge back) and `slip` (its boxing dodge advance, inside); strikes and grabs miss you during most
-    of either. Slipping inside a kick smothers it: **a kick that lands from closer than 1 m does half damage** and
-    can't knock anyone down.
+    of either. Slipping inside a kick smothers it: **a kick that lands from closer than 60% of its reach does half
+    damage** and can't knock anyone down.
+  - **Range (v3.11):** bodies don't pass through each other. The arena keeps the two torsos (head, chest and belly)
+    10 cm apart, so you can walk all the way into punching and clinch range (about 0.45 m root to root at the
+    closest, depending on the stance). Use `state.reach` instead of hard-coded numbers: reaches are measured from the
+    clips and change when the clips do. Short blows (hook, uppercut, sweep, combo, spinning kick) need you to close
+    in; the jab, low kick, roundhouse and side kick land from further out. The knee (0.30 m) and front kick (0.48 m)
+    measure shorter than bodies can get, so they still almost never land. **Step a little inside a move's reach
+    before throwing it** (about 10 cm): the foe drifts back in the moment before the blow arrives.
   - Blocking is automatic in style: a high guard against head shots, a mid guard otherwise.
 - **Round-timer trap:** `time` restarts at 0 every round, but `memory` lasts the whole match. If you store a
   timestamp in `memory` (say, when you last struck) and compare it with `time`, it will be "in the future" at the
@@ -154,7 +163,7 @@ export default function brain(state) {
   (or key them on `round`). Claude's brain had exactly this bug until call #4.
 - Must return within 2 ms on average.
 - Move data (damage, reach, timing) is identical for everyone and is listed in
-  `/Users/weo/Development/3d/dojo/src/main.js` (`MOVES`). **Stats are equal for every fighter in the tournament**,
+  `/Users/weo/Development/3d/dojo/src/config.js` (`MOVES`); the reaches also arrive in `state.reach`. **Stats are equal for every fighter in the tournament**,
   so results come from the brain, not from tuning numbers.
 
 ## 6. The Realism Score: the only thing that crowns a champion
@@ -401,6 +410,16 @@ length, the brain API, and these rules. On the owner's Mac, never run git (secti
 
 ## Changelog
 
+- **v3.11 (2026-10-31)** — Range. The fixed 0.85 m minimum gap is replaced by body collision: the torsos (head,
+  chest and belly capsules from v3.10) stay 10 cm apart (closest stance about 0.45 m), roots never closer than 0.3 m. Under v3.10's measured
+  reaches, 8 of the 15 strikes (cross, hook, uppercut, front kick, combo, knee, spinning kick, sweep) could never land
+  because their reach was under the old gap; now fighters can close to where 6 of them do (the knee and front kick
+  still measure shorter than bodies allow). In 4 test matches cross, uppercut and spinning kick landed or were
+  blocked again, and blows met the target at a median 0.13 cm. Brains get `state.reach` and
+  `state.foeReach` (each move's real reach) so nobody plays from stale numbers. Kicks are smothered below 60% of
+  their own reach instead of a fixed 1 m (which smothered every kick but the side kick and roundhouse). The house
+  CPU steps in to each move's reach. Also restores the v3.10 aiming IK and zone-based hit reactions, which a merge
+  on 2026-10-28 had dropped from the arena (judge).
 - **v3.10 (2026-10-25)** — Blows touch what they hit: capsule hit zones, the striking limb aims (at most 15° per
   joint) and sparks and recoil start at the contact point; `?contact=0` turns it off. Strike reaches are now measured
   from the clips (largest gap at which the limb reaches the target, smallest over all fighter pairs, +2 cm), e.g. jab

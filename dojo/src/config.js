@@ -58,7 +58,7 @@ export const MOVES = {
   lowkick: { clip: 'low_kick', dmg: 9, reach: 0.92, from: 0.32, to: 0.47, react: 'hit_reaction', needs: 'low_kick', fallback: 'frontkick' },
   knee: { clip: 'knee', dmg: 12, reach: 0.3, from: 0.66, to: 0.8, react: 'hit_reaction', needs: 'knee', fallback: 'uppercut' },
   spinkick: { clip: 'spin_kick', dmg: 17, reach: 0.82, from: 0.42, to: 0.56, react: 'hit_head_big', needs: 'spin_kick', fallback: 'roundhouse' },
-  // (A kick that lands from closer than JAM metres is smothered: half damage, and it can't knock anyone down.)
+  // (A kick that lands from closer than JAM × its reach is smothered: half damage, and it can't knock anyone down.)
   // Grappling with Mixamo's sweep and double-leg takedown (lent.js). A sweep is a low kick that drops a foe who
   // isn't blocking; a takedown is unblockable like a throw, ends in ground-and-pound, and whiffs on a foe mid-strike.
   // Until the clips are in the lending library, both fall back to the throw.
@@ -71,7 +71,7 @@ export const MOVES = {
 // Knockdowns: which power shots can drop a fighter, and which of them drop you on your front (the others: your back).
 // You get up the way you landed. The health threshold and time on the mat are champion-tunable (realism.js).
 export const KICKS = ['roundhouse', 'frontkick', 'sidekick', 'lowkick', 'spinkick'];
-export const JAM = 1.0;
+export const JAM = 0.6; // fraction of the kick's reach (rules v3.11; it was a fixed 1 m before reaches were measured)
 export const KNOCKDOWN = { moves: ['hook', 'uppercut', 'roundhouse', 'frontkick', 'spinkick', 'knee'], front: ['hook', 'roundhouse', 'spinkick'] };
 
 export const MOVE_LABELS = { jab: 'Jab', cross: 'Cross', hook: 'Hook', uppercut: 'Uppercut', roundhouse: 'Roundhouse', frontkick: 'Front kick', throw: 'Throw' };
@@ -97,6 +97,10 @@ export const PERSONALITIES = {
 };
 
 export const ARENA_HALF = 4.2;
+// Fighters keep their torsos BODY_GAP metres apart (arena.js), and their roots never closer than MIN_ROOT_GAP.
+// MIN_GAP is the old fixed root-to-root distance, kept for skeletons without the bones contact.js needs.
+export const BODY_GAP = 0.1;
+export const MIN_ROOT_GAP = 0.3;
 export const MIN_GAP = 0.85;
 export const ROUNDS_TO_WIN = 2;
 

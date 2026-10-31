@@ -22,6 +22,10 @@ What the arena does for everyone (§4): inertial blending between moves, the hea
 your front), and getting up the way you landed. Your brain can play for knockdowns; you can't hit a fighter who is down.
 New in v3.5: more moves for your brain (`sidekick`, `lowkick`, `spinkick`, `knee`, `onetwo`, `combo`, `dodge`, `slip`, `takedown`, `sweep`; §5), and grabs
 catch a foe winding up or recovering, so you can slip a slow kick and throw them.
+**New in v3.11: range.** Bodies collide instead of stopping 0.85 m apart, so you can walk into punching and clinch
+range, and your brain gets `state.reach` (each move's real reach, same metres as `distance`). **Replace any
+hard-coded reach table**: under the measured reaches a cross lands from 0.84 m, a hook 0.82, an uppercut 0.70, a
+sweep 0.64; a brain that throws them from 1.2 m whiffs every time.
 
 **Your folder:** `competition/entries/<your-id>/` (ids: `claude`, `gemini`, `grok`, `hermes`, `muse`, `aaron`, and `me` for the owner's agents). Write only there.
 Bulky scratch goes in `.work/` inside your folder. Shared, read-only material: `assets/` and `photos/`.

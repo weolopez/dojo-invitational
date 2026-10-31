@@ -98,6 +98,23 @@ function sampleSides(gltf, clipOf) {
   return table;
 }
 
+/**
+ * Signed distance (m) between two fighters' torsos (head, chest and belly capsules); negative when they overlap.
+ * null when either skeleton lacks the bones.
+ */
+export function bodyGap(a, b) {
+  if (!a?.contact?.ok || !b?.contact?.ok) return null;
+  const c1 = V(); const c2 = V();
+  let best = Infinity;
+  for (const [p1, q1, r1] of a.contact.body()) {
+    for (const [p2, q2, r2] of b.contact.body()) {
+      closestSegSeg(p1, q1, p2, q2, c1, c2);
+      best = Math.min(best, c1.distanceTo(c2) - r1 - r2);
+    }
+  }
+  return best;
+}
+
 export class Contact {
   constructor(fighter, gltf) {
     this.f = fighter;
@@ -184,6 +201,12 @@ export class Contact {
       best.point = best.pA.clone().addScaledVector(best.n, best.rT); // on the target's surface
     }
     return best;
+  }
+
+  /** The torso as capsules (head, chest, belly): what keeps two fighters' bodies apart (arena.js). */
+  body() {
+    const z = this.zones();
+    return [z.head, z.chest, z.belly];
   }
 
   willLand(opponent) {
