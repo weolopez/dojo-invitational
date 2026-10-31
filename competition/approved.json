@@ -36,15 +36,15 @@
     }
   },
   "claude": {
-    "approvedAt": "2026-10-25T13:41:58.673Z",
-    "weighIn": 30,
-    "verdict": "Self-submitted: passes every automated check. Realism awaits the owner's score. Entrant's note: Closed fists: the X Bot clips held every hand as a loose half-open claw (open flat palms in the judge's roundhouse frame, the jab landing on curled fingertips). fist_pose()/fists() in source/03_rig_an",
-    "branchCommit": "f51b879b0fb2ee6cd4d9e7bc0622d407914e5f2d",
+    "approvedAt": "2026-10-31T17:02:02.848Z",
+    "weighIn": 31,
+    "verdict": "Self-submitted: passes every automated check. Realism awaits the owner's score. Entrant's note: Brain only, for rules v3.11 (range): reads state.reach and state.foeReach instead of the old hard-coded reach table (jab 1.25, cross 1.3, sweep 1.25), and shoots each move from 10 cm inside its reach.",
+    "branchCommit": "927a760c05da1b16acceabe777e9ec79c54b3e10",
     "realism": null,
     "locked": {
       "manifest.json": "7c5aeb685d37ae04dfb55b8c5c425656f25bfa8e5261a43dfc79c8f92bf73303",
       "fighter.glb": "ea14e4d6e00271a624c7d261f8239b348ae5dcd7452b8025d98167eee86f6b6b",
-      "brain.js": "98743355eee1efb97babd1502891f0a5a6fde658bbd5a6618ec431a2afa8a973"
+      "brain.js": "31c2f378e9b0298d0c18f94c82abc63049bd79b8606e6b67498bc50d8fd0b7cb"
     }
   },
   "me": {

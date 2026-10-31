@@ -957,5 +957,31 @@
     "fighterChanged": true,
     "branch": "entry/claude",
     "branchCommit": "f51b879b0fb2ee6cd4d9e7bc0622d407914e5f2d"
+  },
+  {
+    "no": 31,
+    "at": "2026-10-31T17:02:02.848Z",
+    "id": "claude",
+    "name": "CLAUDE",
+    "agent": "Claude (Anthropic) — also the judge; this entry is scored by the owner",
+    "decision": "approved",
+    "verdict": "Self-submitted: passes every automated check. Realism awaits the owner's score. Entrant's note: Brain only, for rules v3.11 (range): reads state.reach and state.foeReach instead of the old hard-coded reach table (jab 1.25, cross 1.3, sweep 1.25), and shoots each move from 10 cm inside its reach.",
+    "style": "A fictional woman in her late 30s: athletic, warm olive skin, dark hair in a ponytail, terracotta training top and black leggings. Patient counter-striker.",
+    "tape": {
+      "sizeMB": 33.1,
+      "triangles": 165264,
+      "textures": 12,
+      "largestTexture": 4096,
+      "heightM": 1.73,
+      "extensions": "KHR_materials_clearcoat, KHR_materials_sheen, KHR_texture_transform, KHR_materials_ior"
+    },
+    "realism": null,
+    "realismBefore": null,
+    "changedFiles": [
+      "brain.js"
+    ],
+    "fighterChanged": false,
+    "branch": "entry/claude",
+    "branchCommit": "927a760c05da1b16acceabe777e9ec79c54b3e10"
   }
 ]
